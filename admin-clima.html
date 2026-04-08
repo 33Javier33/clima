@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin · Clima App</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --ink:#0d1117; --glass:rgba(255,255,255,0.05); --glass2:rgba(255,255,255,0.08);
+  --cold:#7eb8d4; --ice:#b8dce8; --text:#ccd9e6; --dim:#7a92a8;
+  --green:#4caf50; --red:#e05555; --orange:#ff9800;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--ink);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;}
+
+/* Login */
+.login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+.login-card{background:var(--glass);border:1px solid rgba(126,184,212,0.15);border-radius:20px;padding:32px 28px;width:100%;max-width:360px;text-align:center;}
+.login-card h1{font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--ice);margin-bottom:6px;}
+.login-card p{font-size:0.65rem;color:var(--dim);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:28px;}
+.login-input{width:100%;background:var(--glass2);border:1px solid rgba(126,184,212,0.15);border-radius:10px;padding:12px 16px;font-family:'DM Mono',monospace;font-size:0.85rem;color:var(--ice);outline:none;margin-bottom:12px;}
+.login-input:focus{border-color:var(--cold);}
+.login-btn{width:100%;background:rgba(126,184,212,0.15);border:1px solid rgba(126,184,212,0.3);color:var(--ice);font-family:'DM Mono',monospace;font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;padding:12px;border-radius:10px;cursor:pointer;transition:background 0.2s;}
+.login-btn:hover{background:rgba(126,184,212,0.25);}
+.login-error{color:var(--red);font-size:0.65rem;margin-top:8px;display:none;}
+
+/* App */
+.admin-app{display:none;min-height:100vh;}
+.topbar{background:rgba(13,17,23,0.95);backdrop-filter:blur(12px);border-bottom:1px solid rgba(126,184,212,0.1);padding:16px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;}
+.topbar h1{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--ice);flex:1;}
+.topbar-badge{font-size:0.55rem;background:rgba(74,144,184,0.2);color:var(--cold);border-radius:99px;padding:3px 10px;letter-spacing:0.1em;text-transform:uppercase;}
+.logout-btn{background:none;border:1px solid rgba(126,184,212,0.15);color:var(--dim);font-family:'DM Mono',monospace;font-size:0.6rem;padding:6px 12px;border-radius:8px;cursor:pointer;transition:color 0.2s;}
+.logout-btn:hover{color:var(--red);}
+
+.main{padding:20px;max-width:900px;margin:0 auto;}
+
+/* Stats */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
+.stat-box{background:var(--glass);border:1px solid rgba(126,184,212,0.08);border-radius:14px;padding:16px;text-align:center;}
+.stat-box .sv{font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--ice);}
+.stat-box .sl{font-size:0.55rem;color:var(--dim);letter-spacing:0.12em;text-transform:uppercase;margin-top:4px;}
+
+/* Toolbar */
+.toolbar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.tb-input{flex:1;min-width:180px;background:var(--glass2);border:1px solid rgba(126,184,212,0.15);border-radius:10px;padding:9px 14px;font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--ice);outline:none;}
+.tb-input:focus{border-color:var(--cold);}
+.tb-btn{background:var(--glass2);border:1px solid rgba(126,184,212,0.15);color:var(--cold);font-family:'DM Mono',monospace;font-size:0.65rem;padding:9px 14px;border-radius:10px;cursor:pointer;transition:background 0.2s;white-space:nowrap;}
+.tb-btn:hover{background:rgba(74,144,184,0.2);}
+
+/* User cards */
+.user-card{background:var(--glass);border:1px solid rgba(126,184,212,0.08);border-radius:16px;padding:16px;margin-bottom:12px;transition:border-color 0.2s;}
+.user-card.blocked{border-color:rgba(224,85,85,0.25);background:rgba(224,85,85,0.04);}
+.user-header{display:flex;align-items:center;gap:12px;margin-bottom:12px;cursor:pointer;}
+.user-avatar{width:38px;height:38px;border-radius:50%;background:rgba(126,184,212,0.15);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+.user-info{flex:1;min-width:0;}
+.user-name{font-size:0.85rem;color:var(--ice);}
+.user-email{font-size:0.6rem;color:var(--dim);margin-top:2px;}
+.user-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
+.badge{font-size:0.5rem;padding:2px 8px;border-radius:99px;letter-spacing:0.08em;text-transform:uppercase;}
+.badge-trial{background:rgba(255,152,0,0.15);color:var(--orange);}
+.badge-premium{background:rgba(76,175,80,0.15);color:var(--green);}
+.badge-blocked{background:rgba(224,85,85,0.15);color:var(--red);}
+.badge-expired{background:rgba(150,150,150,0.15);color:var(--dim);}
+.badge-days{background:rgba(126,184,212,0.1);color:var(--cold);}
+.user-chevron{font-size:0.7rem;color:var(--dim);transition:transform 0.3s;flex-shrink:0;}
+.user-card.expanded .user-chevron{transform:rotate(180deg);}
+
+/* User detail */
+.user-detail{max-height:0;overflow:hidden;transition:max-height 0.4s cubic-bezier(0.4,0,0.2,1);}
+.user-card.expanded .user-detail{max-height:600px;}
+.user-detail-inner{border-top:1px solid rgba(255,255,255,0.06);padding-top:14px;}
+
+/* Block toggle */
+.block-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.block-label{font-size:0.65rem;color:var(--dim);flex:1;}
+.toggle-switch{position:relative;width:44px;height:24px;cursor:pointer;}
+.toggle-switch input{opacity:0;width:0;height:0;}
+.toggle-track{position:absolute;inset:0;background:rgba(255,255,255,0.1);border-radius:99px;transition:background 0.2s;}
+.toggle-thumb{position:absolute;top:3px;left:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform 0.2s,background 0.2s;}
+.toggle-switch input:checked + .toggle-track{background:rgba(224,85,85,0.5);}
+.toggle-switch input:checked + .toggle-track + .toggle-thumb{transform:translateX(20px);background:var(--red);}
+
+/* Módulos */
+.modules-title{font-size:0.58rem;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:10px;}
+.modules-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.module-row{background:var(--glass2);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;}
+.module-name{font-size:0.65rem;color:var(--text);flex:1;}
+.mod-toggle{position:relative;width:36px;height:20px;cursor:pointer;flex-shrink:0;}
+.mod-toggle input{opacity:0;width:0;height:0;}
+.mod-track{position:absolute;inset:0;background:rgba(255,255,255,0.08);border-radius:99px;transition:background 0.2s;}
+.mod-thumb{position:absolute;top:3px;left:3px;width:14px;height:14px;background:#555;border-radius:50%;transition:transform 0.2s,background 0.2s;}
+.mod-toggle input:checked + .mod-track{background:rgba(76,175,80,0.3);}
+.mod-toggle input:checked + .mod-track + .mod-thumb{transform:translateX(16px);background:var(--green);}
+
+/* Planes rápidos */
+.plans-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.plan-btn{font-size:0.6rem;padding:6px 14px;border-radius:99px;border:1px solid rgba(126,184,212,0.2);background:none;color:var(--dim);cursor:pointer;font-family:'DM Mono',monospace;transition:all 0.2s;}
+.plan-btn:hover{background:rgba(126,184,212,0.1);color:var(--ice);}
+.plan-btn.basico:hover{border-color:var(--dim);}
+.plan-btn.estandar:hover{border-color:var(--orange);color:var(--orange);}
+.plan-btn.premium:hover{border-color:var(--green);color:var(--green);}
+
+/* Contact (solo admin) */
+.contact-box{background:rgba(126,184,212,0.06);border:1px solid rgba(126,184,212,0.15);border-radius:12px;padding:14px;margin-bottom:14px;}
+.contact-box .cb-label{font-size:0.55rem;color:var(--dim);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;}
+.contact-box .cb-val{font-size:0.78rem;color:var(--ice);}
+
+/* Loading / empty */
+.loading{text-align:center;padding:40px;font-size:0.7rem;color:var(--dim);}
+.empty{text-align:center;padding:40px;font-size:0.75rem;color:var(--dim);}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a2d40;border:1px solid rgba(126,184,212,0.3);border-radius:12px;padding:10px 20px;font-size:0.7rem;color:var(--ice);z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.3s;white-space:nowrap;}
+.toast.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <h1>Clima App</h1>
+    <p>Panel de Administrador · CarlosPN Interactive®</p>
+    <input class="login-input" type="password" id="passInput" placeholder="Contraseña de acceso" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button class="login-btn" onclick="doLogin()">Ingresar</button>
+    <div class="login-error" id="loginError">Contraseña incorrecta</div>
+  </div>
+</div>
+
+<!-- ── ADMIN APP ── -->
+<div class="admin-app" id="adminApp">
+  <div class="topbar">
+    <h1>Panel Admin</h1>
+    <span class="topbar-badge">CarlosPN Interactive®</span>
+    <button class="logout-btn" onclick="doLogout()">Salir</button>
+  </div>
+
+  <div class="main">
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-box"><div class="sv" id="statTotal">–</div><div class="sl">Usuarios</div></div>
+      <div class="stat-box"><div class="sv" id="statTrial">–</div><div class="sl">En trial</div></div>
+      <div class="stat-box"><div class="sv" id="statPremium">–</div><div class="sl">Premium</div></div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <input class="tb-input" id="searchInput" type="text" placeholder="Buscar usuario..." oninput="filterUsers()"/>
+      <button class="tb-btn" onclick="loadUsers()">↻ Actualizar</button>
+    </div>
+
+    <!-- Lista de usuarios -->
+    <div id="userList"><div class="loading">Cargando usuarios...</div></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIGURACIÓN (SOLO URL del GAS — datos privados están en GAS) ──
+// Cambia esta URL por la de tu Web App desplegada
+const GAS_URL = '// ═══════════════════════════════════════════════════════════════
+// CLIMA APP — Google Apps Script Backend
+// CarlosPN Interactive®
+// ═══════════════════════════════════════════════════════════════
+
+const PROPS      = PropertiesService.getScriptProperties();
+const MASTER_SHEET = 'Control';
+const LOG_SHEET    = 'Log';
+const TRIAL_DAYS   = 7;
+
+const MODULES = [
+  'clima_basico',
+  'pronostico_7dias',
+  'seccion_explorar',
+  'temas_premium',
+  'info_ciudad',
+  'lugares_turismo',
+];
+
+// ── SS se obtiene de forma lazy (no al cargar) ─────────────────
+function getSS() {
+  return SpreadsheetApp.openById(PROPS.getProperty('SHEET_ID'));
+}
+
+// ── Función de prueba — ejecuta ESTA para otorgar permisos ─────
+function testConexion() {
+  const ss = getSSafe();
+  if (!ss) {
+    Logger.log('❌ No se pudo abrir el Sheet. Verifica SHEET_ID.');
+    return;
+  }
+  ensureMasterSheet();
+  Logger.log('✅ Conexión OK. Hojas creadas/verificadas.');
+}
+
+function getSSafe() {
+  try {
+    return SpreadsheetApp.openById(PROPS.getProperty('SHEET_ID'));
+  } catch(e) {
+    Logger.log('Error al abrir Sheet: ' + e.message);
+    return null;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// PUNTO DE ENTRADA HTTP
+// ══════════════════════════════════════════════════════════════
+function doPost(e) {
+  try {
+    const body   = JSON.parse(e.postData.contents);
+    const action = body.action;
+    const pass   = body.adminPass;
+
+    if (action === 'register')     return respond(registerUser(body));
+    if (action === 'checkLicense') return respond(checkLicense(body));
+
+    if (!verifyAdmin(pass)) return respond({ ok: false, error: 'No autorizado' });
+    if (action === 'getUsers')       return respond(getUsers());
+    if (action === 'updateModule')   return respond(updateModule(body));
+    if (action === 'blockUser')      return respond(blockUser(body));
+    if (action === 'getContactInfo') return respond(getContactInfo());
+
+    return respond({ ok: false, error: 'Acción desconocida' });
+  } catch(err) {
+    return respond({ ok: false, error: err.message });
+  }
+}
+
+function doGet(e) {
+  return respond({ ok: true, msg: 'Clima App API activa' });
+}
+
+// ══════════════════════════════════════════════════════════════
+// AUTENTICACIÓN
+// ══════════════════════════════════════════════════════════════
+function verifyAdmin(pass) {
+  return pass && pass === PROPS.getProperty('ADMIN_PASSWORD');
+}
+
+// ══════════════════════════════════════════════════════════════
+// REGISTRO DE USUARIO
+// ══════════════════════════════════════════════════════════════
+function registerUser(body) {
+  const { nombre, apellido, email, whatsapp } = body;
+  if (!nombre || !email || !whatsapp)
+    return { ok: false, error: 'Faltan campos obligatorios' };
+
+  const SS = getSS();
+  const userId    = generateId(email);
+  const trialEnd  = new Date();
+  trialEnd.setDate(trialEnd.getDate() + TRIAL_DAYS);
+  const trialEndStr = trialEnd.toISOString().split('T')[0];
+
+  ensureMasterSheet();
+
+  const master = SS.getSheetByName(MASTER_SHEET);
+  const data = master.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][2] === email) {
+      return { ok: true, userId, existing: true, trialEnd: data[i][5], modules: JSON.parse(data[i][7] || '{}') };
+    }
+  }
+
+  const modulesInit = {};
+  MODULES.forEach(m => { modulesInit[m] = m === 'clima_basico'; });
+
+  master.appendRow([
+    userId,
+    `${nombre} ${apellido}`,
+    email,
+    whatsapp,
+    new Date().toISOString().split('T')[0],
+    trialEndStr,
+    'trial',
+    JSON.stringify(modulesInit),
+    'activo',
+  ]);
+
+  createUserSheet(SS, userId, nombre, apellido, email, whatsapp, trialEndStr, modulesInit);
+  notifyAdmin(nombre, apellido, email, whatsapp);
+  appendLog(SS, 'REGISTER', email, `Trial hasta ${trialEndStr}`);
+
+  return { ok: true, userId, trialEnd: trialEndStr, modules: modulesInit };
+}
+
+// ══════════════════════════════════════════════════════════════
+// VERIFICAR LICENCIA
+// ══════════════════════════════════════════════════════════════
+function checkLicense(body) {
+  const { userId, email } = body;
+  if (!userId && !email) return { ok: false, error: 'Sin identificador' };
+
+  const SS     = getSS();
+  const master = SS.getSheetByName(MASTER_SHEET);
+  if (!master) return { ok: false, error: 'Sin base de datos' };
+
+  const data = master.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    if (row[0] === userId || row[2] === email) {
+      const trialEnd = new Date(row[5]);
+      const now      = new Date();
+      const estado   = row[6];
+      const acceso   = row[8];
+
+      if (acceso === 'bloqueado')
+        return { ok: true, status: 'blocked', modules: {} };
+
+      const modules  = JSON.parse(row[7] || '{}');
+      const expired  = estado === 'trial' && now > trialEnd;
+
+      return {
+        ok:       true,
+        status:   expired ? 'expired' : estado,
+        trialEnd: row[5],
+        modules:  expired ? {} : modules,
+        daysLeft: estado === 'trial' ? Math.max(0, Math.ceil((trialEnd - now) / 86400000)) : null,
+      };
+    }
+  }
+  return { ok: true, status: 'not_found' };
+}
+
+// ══════════════════════════════════════════════════════════════
+// ADMIN: LISTAR USUARIOS
+// ══════════════════════════════════════════════════════════════
+function getUsers() {
+  const SS     = getSS();
+  const master = SS.getSheetByName(MASTER_SHEET);
+  if (!master) return { ok: false, error: 'Sin hoja maestra' };
+
+  const data  = master.getDataRange().getValues();
+  const users = [];
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    if (!row[0]) continue;
+    users.push({
+      userId:   row[0],
+      nombre:   row[1],
+      email:    row[2],
+      whatsapp: row[3],
+      registro: row[4],
+      trialEnd: row[5],
+      estado:   row[6],
+      modules:  JSON.parse(row[7] || '{}'),
+      acceso:   row[8],
+    });
+  }
+  return { ok: true, users, modules: MODULES };
+}
+
+// ══════════════════════════════════════════════════════════════
+// ADMIN: ACTUALIZAR MÓDULO
+// ══════════════════════════════════════════════════════════════
+function updateModule(body) {
+  const { userId, module, value, plan } = body;
+  const SS     = getSS();
+  const master = SS.getSheetByName(MASTER_SHEET);
+  const data   = master.getDataRange().getValues();
+
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0] === userId) {
+      const modules = JSON.parse(data[i][7] || '{}');
+      if (plan) {
+        const plans = {
+          basico:   ['clima_basico'],
+          estandar: ['clima_basico','pronostico_7dias','info_ciudad'],
+          premium:  MODULES,
+        };
+        MODULES.forEach(m => { modules[m] = (plans[plan] || []).includes(m); });
+        master.getRange(i + 1, 7).setValue('premium');
+      } else {
+        modules[module] = value;
+      }
+      master.getRange(i + 1, 8).setValue(JSON.stringify(modules));
+      updateUserSheet(SS, userId, modules, master.getRange(i + 1, 7).getValue());
+      appendLog(SS, 'UPDATE_MODULE', data[i][2], `${module}=${value}`);
+      return { ok: true, modules };
+    }
+  }
+  return { ok: false, error: 'Usuario no encontrado' };
+}
+
+// ══════════════════════════════════════════════════════════════
+// ADMIN: BLOQUEAR / DESBLOQUEAR
+// ══════════════════════════════════════════════════════════════
+function blockUser(body) {
+  const { userId, block } = body;
+  const SS     = getSS();
+  const master = SS.getSheetByName(MASTER_SHEET);
+  const data   = master.getDataRange().getValues();
+
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0] === userId) {
+      const newAcceso = block ? 'bloqueado' : 'activo';
+      master.getRange(i + 1, 9).setValue(newAcceso);
+      updateUserSheet(SS, userId, JSON.parse(data[i][7] || '{}'), data[i][6], newAcceso);
+      appendLog(SS, 'BLOCK_USER', data[i][2], newAcceso);
+      return { ok: true, acceso: newAcceso };
+    }
+  }
+  return { ok: false, error: 'Usuario no encontrado' };
+}
+
+// ══════════════════════════════════════════════════════════════
+// ADMIN: CONTACTO
+// ══════════════════════════════════════════════════════════════
+function getContactInfo() {
+  return {
+    ok:       true,
+    email:    PROPS.getProperty('ADMIN_EMAIL'),
+    whatsapp: PROPS.getProperty('ADMIN_WHATSAPP'),
+  };
+}
+
+// ══════════════════════════════════════════════════════════════
+// HOJAS
+// ══════════════════════════════════════════════════════════════
+function ensureMasterSheet() {
+  const SS = getSS();
+  let master = SS.getSheetByName(MASTER_SHEET);
+  if (!master) {
+    master = SS.insertSheet(MASTER_SHEET, 0);
+    master.appendRow(['userId','nombre','email','whatsapp','registro','trial_end','estado','modulos','acceso']);
+    master.setFrozenRows(1);
+    master.getRange(1,1,1,9).setBackground('#1a2d40').setFontColor('#ffffff').setFontWeight('bold');
+  }
+  let log = SS.getSheetByName(LOG_SHEET);
+  if (!log) {
+    log = SS.insertSheet(LOG_SHEET);
+    log.appendRow(['fecha','accion','email','detalle']);
+    log.setFrozenRows(1);
+    log.getRange(1,1,1,4).setBackground('#1a2d40').setFontColor('#ffffff').setFontWeight('bold');
+  }
+  Logger.log('Hojas verificadas correctamente.');
+}
+
+function createUserSheet(SS, userId, nombre, apellido, email, whatsapp, trialEnd, modules) {
+  const sheetName = `${nombre} ${apellido}`.slice(0, 30);
+  let sheet = SS.getSheetByName(sheetName);
+  if (sheet) SS.deleteSheet(sheet);
+  sheet = SS.insertSheet(sheetName);
+
+  sheet.appendRow(['── DATOS DEL USUARIO ──']);
+  sheet.appendRow(['ID',          userId]);
+  sheet.appendRow(['Nombre',      `${nombre} ${apellido}`]);
+  sheet.appendRow(['Email',       email]);
+  sheet.appendRow(['WhatsApp',    whatsapp]);
+  sheet.appendRow(['Registro',    new Date().toISOString().split('T')[0]]);
+  sheet.appendRow(['Trial hasta', trialEnd]);
+  sheet.appendRow(['Estado',      'trial']);
+  sheet.appendRow(['Acceso',      'activo']);
+  sheet.appendRow([]);
+  sheet.appendRow(['── MÓDULOS ──']);
+  sheet.appendRow(['Módulo', 'Activo']);
+  MODULES.forEach(m => sheet.appendRow([m, modules[m] ? '✅ Activo' : '❌ Inactivo']));
+
+  sheet.getRange(1,1,1,2).setBackground('#0d1117').setFontColor('#7eb8d4').setFontWeight('bold');
+  sheet.getRange(11,1,1,2).setBackground('#0d1117').setFontColor('#7eb8d4').setFontWeight('bold');
+  sheet.setColumnWidth(1, 200);
+  sheet.setColumnWidth(2, 150);
+}
+
+function updateUserSheet(SS, userId, modules, estado, acceso) {
+  const master = SS.getSheetByName(MASTER_SHEET);
+  const data   = master.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0] === userId) {
+      const sheet = SS.getSheetByName(data[i][1].slice(0, 30));
+      if (!sheet) return;
+      sheet.getRange(8, 2).setValue(estado || data[i][6]);
+      if (acceso) sheet.getRange(9, 2).setValue(acceso);
+      MODULES.forEach((m, idx) => {
+        sheet.getRange(13 + idx, 2).setValue(modules[m] ? '✅ Activo' : '❌ Inactivo');
+      });
+      break;
+    }
+  }
+}
+
+function appendLog(SS, action, email, detail) {
+  const log = SS.getSheetByName(LOG_SHEET);
+  if (log) log.appendRow([new Date().toISOString(), action, email, detail]);
+}
+
+// ══════════════════════════════════════════════════════════════
+// NOTIFICACIÓN AL ADMIN
+// ══════════════════════════════════════════════════════════════
+function notifyAdmin(nombre, apellido, email, whatsapp) {
+  try {
+    const adminEmail = PROPS.getProperty('ADMIN_EMAIL');
+    if (!adminEmail) return;
+    const wa = PROPS.getProperty('ADMIN_WHATSAPP');
+    MailApp.sendEmail({
+      to:      adminEmail,
+      subject: `🌤 Clima App — Nuevo registro: ${nombre} ${apellido}`,
+      htmlBody: `<div style="font-family:monospace;background:#0d1117;color:#b8dce8;padding:24px;border-radius:12px">
+        <h2 style="color:#7eb8d4">Nuevo usuario registrado</h2>
+        <table>
+          <tr><td><b>Nombre:</b></td><td>${nombre} ${apellido}</td></tr>
+          <tr><td><b>Email:</b></td><td>${email}</td></tr>
+          <tr><td><b>WhatsApp:</b></td><td>${whatsapp}</td></tr>
+          <tr><td><b>Trial:</b></td><td>${TRIAL_DAYS} días</td></tr>
+        </table>
+        <p style="color:#7a92a8;margin-top:16px">Contacto admin (privado): ${wa}</p>
+      </div>`,
+    });
+  } catch(_) {}
+}
+
+// ══════════════════════════════════════════════════════════════
+// UTILIDADES
+// ══════════════════════════════════════════════════════════════
+function generateId(email) {
+  const hash = Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, email + Date.now());
+  return hash.map(b => (b < 0 ? b + 256 : b).toString(16).padStart(2,'0')).join('').slice(0, 12);
+}
+
+function respond(data) {
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+';
+
+let adminPass  = '';
+let allUsers   = [];
+let contactInfo = null;
+
+const MODULE_LABELS = {
+  clima_basico:      '🌡 Clima básico',
+  pronostico_7dias:  '📅 Pronóstico 7 días',
+  seccion_explorar:  '🗺 Explorar ciudad',
+  temas_premium:     '🎨 Temas premium',
+  info_ciudad:       'ℹ️ Info ciudad',
+  lugares_turismo:   '🏛 Turismo/Lugares',
+};
+
+// ── AUTH ─────────────────────────────────────────────────────
+async function doLogin() {
+  const pass = document.getElementById('passInput').value.trim();
+  if (!pass) return;
+  try {
+    const res = await gasPost({ action: 'getUsers', adminPass: pass });
+    if (!res.ok) throw new Error();
+    adminPass = pass;
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminApp').style.display = 'block';
+    renderUsers(res.users);
+    loadContactInfo();
+  } catch(_) {
+    document.getElementById('loginError').style.display = 'block';
+  }
+}
+
+function doLogout() {
+  adminPass = '';
+  allUsers  = [];
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('adminApp').style.display   = 'none';
+  document.getElementById('passInput').value = '';
+  document.getElementById('loginError').style.display = 'none';
+}
+
+// ── CARGAR USUARIOS ───────────────────────────────────────────
+async function loadUsers() {
+  document.getElementById('userList').innerHTML = '<div class="loading">Actualizando...</div>';
+  try {
+    const res = await gasPost({ action: 'getUsers', adminPass });
+    if (!res.ok) throw new Error(res.error);
+    renderUsers(res.users);
+  } catch(e) {
+    document.getElementById('userList').innerHTML = `<div class="empty">Error: ${e.message}</div>`;
+  }
+}
+
+async function loadContactInfo() {
+  try {
+    const res = await gasPost({ action: 'getContactInfo', adminPass });
+    if (res.ok) contactInfo = res;
+  } catch(_) {}
+}
+
+// ── RENDERIZAR USUARIOS ───────────────────────────────────────
+function renderUsers(users) {
+  allUsers = users || [];
+  // Stats
+  document.getElementById('statTotal').textContent   = allUsers.length;
+  document.getElementById('statTrial').textContent   = allUsers.filter(u => u.estado === 'trial').length;
+  document.getElementById('statPremium').textContent = allUsers.filter(u => u.estado === 'premium').length;
+  displayUsers(allUsers);
+}
+
+function displayUsers(users) {
+  const list = document.getElementById('userList');
+  if (!users.length) { list.innerHTML = '<div class="empty">Sin usuarios registrados aún.</div>'; return; }
+
+  list.innerHTML = users.map(u => buildUserCard(u)).join('');
+}
+
+function buildUserCard(u) {
+  const now     = new Date();
+  const trial   = new Date(u.trialEnd);
+  const expired = u.estado === 'trial' && now > trial;
+  const days    = Math.max(0, Math.ceil((trial - now) / 86400000));
+  const blocked = u.acceso === 'bloqueado';
+
+  const statusBadge = blocked
+    ? '<span class="badge badge-blocked">Bloqueado</span>'
+    : expired
+      ? '<span class="badge badge-expired">Trial expirado</span>'
+      : u.estado === 'premium'
+        ? '<span class="badge badge-premium">Premium</span>'
+        : `<span class="badge badge-trial">Trial</span><span class="badge badge-days">${days}d restantes</span>`;
+
+  const modulesGrid = Object.entries(MODULE_LABELS).map(([key, label]) => {
+    const checked = u.modules[key] ? 'checked' : '';
+    return `
+      <div class="module-row">
+        <span class="module-name">${label}</span>
+        <label class="mod-toggle">
+          <input type="checkbox" ${checked} onchange="toggleModule('${u.userId}','${key}',this.checked)"/>
+          <div class="mod-track"></div>
+          <div class="mod-thumb"></div>
+        </label>
+      </div>`;
+  }).join('');
+
+  const contactHtml = contactInfo ? `
+    <div class="contact-box">
+      <div class="cb-label">Tu contacto admin (privado)</div>
+      <div class="cb-val">📧 ${contactInfo.email}</div>
+      <div class="cb-val" style="margin-top:4px">💬 ${contactInfo.whatsapp}</div>
+    </div>` : '';
+
+  return `
+    <div class="user-card${blocked ? ' blocked' : ''}" id="card-${u.userId}">
+      <div class="user-header" onclick="toggleCard('${u.userId}')">
+        <div class="user-avatar">👤</div>
+        <div class="user-info">
+          <div class="user-name">${u.nombre}</div>
+          <div class="user-email">${u.email} · ${u.whatsapp}</div>
+          <div class="user-badges">${statusBadge}</div>
+        </div>
+        <div class="user-chevron">▾</div>
+      </div>
+      <div class="user-detail">
+        <div class="user-detail-inner">
+
+          ${contactHtml}
+
+          <div class="block-row">
+            <span class="block-label">🔒 Bloquear acceso completo</span>
+            <label class="toggle-switch">
+              <input type="checkbox" ${blocked ? 'checked' : ''} onchange="toggleBlock('${u.userId}',this.checked)"/>
+              <div class="toggle-track"></div>
+              <div class="toggle-thumb"></div>
+            </label>
+          </div>
+
+          <div class="modules-title">Módulos activos</div>
+
+          <div class="plans-row">
+            <button class="plan-btn basico"   onclick="applyPlan('${u.userId}','basico')">Básico</button>
+            <button class="plan-btn estandar" onclick="applyPlan('${u.userId}','estandar')">Estándar</button>
+            <button class="plan-btn premium"  onclick="applyPlan('${u.userId}','premium')">⭐ Premium</button>
+          </div>
+
+          <div class="modules-grid">${modulesGrid}</div>
+
+        </div>
+      </div>
+    </div>`;
+}
+
+function toggleCard(userId) {
+  const card = document.getElementById(`card-${userId}`);
+  card.classList.toggle('expanded');
+}
+
+function filterUsers() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const filtered = q
+    ? allUsers.filter(u => u.nombre.toLowerCase().includes(q) || u.email.toLowerCase().includes(q))
+    : allUsers;
+  displayUsers(filtered);
+}
+
+// ── ACCIONES ADMIN ────────────────────────────────────────────
+async function toggleBlock(userId, block) {
+  try {
+    const res = await gasPost({ action: 'blockUser', adminPass, userId, block });
+    if (!res.ok) throw new Error(res.error);
+    const card = document.getElementById(`card-${userId}`);
+    card.classList.toggle('blocked', block);
+    toast(block ? '🔒 Usuario bloqueado' : '🔓 Usuario desbloqueado');
+    // Actualizar objeto local
+    const u = allUsers.find(x => x.userId === userId);
+    if (u) u.acceso = res.acceso;
+  } catch(e) {
+    toast('Error: ' + e.message, true);
+  }
+}
+
+async function toggleModule(userId, module, value) {
+  try {
+    const res = await gasPost({ action: 'updateModule', adminPass, userId, module, value });
+    if (!res.ok) throw new Error(res.error);
+    const u = allUsers.find(x => x.userId === userId);
+    if (u) u.modules = res.modules;
+    toast(`✅ ${MODULE_LABELS[module]} ${value ? 'activado' : 'desactivado'}`);
+  } catch(e) {
+    toast('Error: ' + e.message, true);
+  }
+}
+
+async function applyPlan(userId, plan) {
+  const labels = { basico:'Básico', estandar:'Estándar', premium:'Premium ⭐' };
+  if (!confirm(`¿Aplicar plan ${labels[plan]} al usuario?`)) return;
+  try {
+    const res = await gasPost({ action: 'updateModule', adminPass, userId, plan });
+    if (!res.ok) throw new Error(res.error);
+    const u = allUsers.find(x => x.userId === userId);
+    if (u) { u.modules = res.modules; u.estado = plan === 'basico' ? 'trial' : 'premium'; }
+    await loadUsers();
+    toast(`Plan ${labels[plan]} aplicado`);
+  } catch(e) {
+    toast('Error: ' + e.message, true);
+  }
+}
+
+// ── GAS FETCH ─────────────────────────────────────────────────
+async function gasPost(data) {
+  const res = await fetch(GAS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(data),
+    redirect: 'follow',
+  });
+  return res.json();
+}
+
+// ── TOAST ─────────────────────────────────────────────────────
+function toast(msg, error = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.borderColor = error ? 'rgba(224,85,85,0.4)' : 'rgba(126,184,212,0.3)';
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>
