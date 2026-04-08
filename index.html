@@ -1048,42 +1048,65 @@
 
   /* Sección de lugares ── fin */
   .places-section { margin-bottom: 20px; animation: fadeUp 0.7s 0.5s ease both; }
+
+  /* Botón toggle de la sección */
+  .places-toggle {
+    width: 100%;
+    background: var(--glass);
+    border: 1px solid rgba(126,184,212,0.1);
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer; color: var(--text);
+    font-family: 'DM Mono', monospace; font-size: 0.75rem;
+    transition: background 0.2s, border-color 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .places-toggle:active { background: var(--glass2); }
+  .places-toggle.open { border-color: rgba(126,184,212,0.22); background: var(--glass2); }
+  .places-toggle-emoji { font-size: 1.1rem; }
+  .places-toggle-txt { flex: 1; text-align: left; }
+  .places-toggle-sub { font-size: 0.58rem; color: var(--dim); display: block; margin-top: 1px; }
+  .places-toggle-arrow { font-size: 0.7rem; color: var(--dim); transition: transform 0.3s; }
+  .places-toggle.open .places-toggle-arrow { transform: rotate(180deg); }
+
+  /* Cuerpo colapsable */
+  .places-body {
+    max-height: 0; overflow: hidden;
+    transition: max-height 0.45s cubic-bezier(0.4,0,0.2,1);
+  }
+  .places-body.open { max-height: 700px; }
+  .places-body-inner { padding-top: 10px; }
+
   .places-tabs {
     display: flex; gap: 6px; overflow-x: auto;
-    padding-bottom: 4px; scrollbar-width: none;
-    margin-bottom: 12px;
+    padding-bottom: 6px; scrollbar-width: none; margin-bottom: 12px;
   }
   .places-tabs::-webkit-scrollbar { display: none; }
   .place-tab {
     font-size: 0.6rem; padding: 5px 12px; white-space: nowrap;
     border-radius: 99px; border: 1px solid rgba(126,184,212,0.15);
     background: none; color: var(--dim); cursor: pointer;
-    font-family: 'DM Mono', monospace; transition: all 0.2s;
-    flex-shrink: 0;
+    font-family: 'DM Mono', monospace; transition: all 0.2s; flex-shrink: 0;
   }
   .place-tab.active { background: rgba(126,184,212,0.12); color: var(--ice); border-color: var(--cold); }
   .places-list { display: flex; flex-direction: column; gap: 8px; }
   .place-card {
-    background: var(--glass);
-    border: 1px solid rgba(126,184,212,0.08);
-    border-radius: 14px;
-    padding: 12px 14px;
+    background: var(--glass); border: 1px solid rgba(126,184,212,0.08);
+    border-radius: 14px; padding: 12px 14px;
     display: flex; align-items: center; gap: 12px;
-    text-decoration: none;
-    transition: border-color 0.2s, background 0.2s;
-    cursor: pointer;
+    cursor: pointer; transition: border-color 0.2s, background 0.2s;
     -webkit-tap-highlight-color: transparent;
   }
   .place-card:active { background: var(--glass2); border-color: rgba(126,184,212,0.2); }
   .place-icon {
-    font-size: 1.4rem; flex-shrink: 0;
-    width: 38px; height: 38px;
+    font-size: 1.3rem; flex-shrink: 0; width: 36px; height: 36px;
     background: var(--glass2); border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
   }
   .place-info { flex: 1; min-width: 0; }
-  .place-name { font-size: 0.8rem; color: var(--ice); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .place-meta { font-size: 0.6rem; color: var(--dim); }
+  .place-name { font-size: 0.78rem; color: var(--ice); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .place-meta { font-size: 0.58rem; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .place-dist { font-size: 0.6rem; color: var(--cold); flex-shrink: 0; }
   .places-loading { text-align: center; padding: 20px; font-size: 0.65rem; color: var(--dim); }
   .places-empty  { text-align: center; padding: 20px; font-size: 0.68rem; color: var(--dim); }
@@ -1708,19 +1731,30 @@ function buildHTML(data) {
       <div class="hourly-scroll">${hourlyHTML}</div>
     </div>
 
-    <!-- Sección de lugares -->
+    <!-- Sección de lugares (colapsable) -->
     <div class="places-section" id="placesSection">
-      <div class="section-title">Explorar · ${currentCity.name}</div>
-      <div class="places-tabs" id="placesTabs">
-        <button class="place-tab active" data-cat="restaurant">🍽 Restaurantes</button>
-        <button class="place-tab" data-cat="hotel">🏨 Hoteles</button>
-        <button class="place-tab" data-cat="hostel">🏠 Hospedajes</button>
-        <button class="place-tab" data-cat="attraction">🏛 Turismo</button>
-        <button class="place-tab" data-cat="supermarket">🛒 Supermercados</button>
-        <button class="place-tab" data-cat="toilets">🚽 Baños</button>
-      </div>
-      <div class="places-list" id="placesList">
-        <div class="places-loading">🔍 Buscando lugares...</div>
+      <button class="places-toggle" id="placesToggle" onclick="togglePlaces()">
+        <span class="places-toggle-emoji">🗺</span>
+        <span class="places-toggle-txt">
+          Explorar ${currentCity.name}
+          <span class="places-toggle-sub">Restaurantes, hoteles, turismo y más</span>
+        </span>
+        <span class="places-toggle-arrow">▾</span>
+      </button>
+      <div class="places-body" id="placesBody">
+        <div class="places-body-inner">
+          <div class="places-tabs" id="placesTabs">
+            <button class="place-tab active" data-cat="restaurant">🍽 Restaurantes</button>
+            <button class="place-tab" data-cat="hotel">🏨 Hoteles</button>
+            <button class="place-tab" data-cat="hostel">🏠 Hospedajes</button>
+            <button class="place-tab" data-cat="attraction">🏛 Turismo</button>
+            <button class="place-tab" data-cat="supermarket">🛒 Supermercados</button>
+            <button class="place-tab" data-cat="toilets">🚽 Baños</button>
+          </div>
+          <div class="places-list" id="placesList">
+            <div class="places-loading">🔍 Buscando lugares...</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1947,12 +1981,31 @@ async function loadPlacesCat(cat) {
   }
 }
 
+let placesLoaded = false;
+
+function togglePlaces() {
+  const btn  = document.getElementById('placesToggle');
+  const body = document.getElementById('placesBody');
+  if (!btn || !body) return;
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  btn.classList.toggle('open', !isOpen);
+  if (!isOpen && !placesLoaded) {
+    placesLoaded = true;
+    loadPlacesCat(activePlaceCat);
+  }
+}
+
 function loadPlaces(lat, lon, name) {
   activePlaceCat = 'restaurant';
+  placesLoaded = false;
+  const btn  = document.getElementById('placesToggle');
+  const body = document.getElementById('placesBody');
+  if (btn)  btn.classList.remove('open');
+  if (body) body.classList.remove('open');
   const tabs = document.getElementById('placesTabs');
   if (!tabs) return;
   tabs.querySelectorAll('.place-tab').forEach(t => {
-    t.classList.toggle('active', t.dataset.cat === activePlaceCat);
     t.addEventListener('click', () => {
       tabs.querySelectorAll('.place-tab').forEach(x => x.classList.remove('active'));
       t.classList.add('active');
@@ -1960,7 +2013,6 @@ function loadPlaces(lat, lon, name) {
       loadPlacesCat(activePlaceCat);
     });
   });
-  loadPlacesCat(activePlaceCat);
 }
 
 // Expandir/colapsar tarjetas extra
