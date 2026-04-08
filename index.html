@@ -7,7 +7,7 @@
 <link rel="manifest" href="./manifest.json"/>
 <meta name="theme-color" content="#0d1117"/>
 <link rel="apple-touch-icon" href="./img/icon-192x192.png"/>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400&family=Noto+Serif:ital,wght@0,400;0,700;1,400&family=Space+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
   /* ── TEMA: Lago (default) ── */
   :root {
@@ -93,6 +93,15 @@
     --drop-color:rgba(106,176,224,0.45);
     --bg:linear-gradient(175deg,#060c10 0%,#0a1820 40%,#060c10 100%);
     --bg-glow:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(40,120,180,0.2) 0%,transparent 60%);
+  }
+  [data-theme="stratus"] {
+    --ink:#10141a;--glass:rgba(49,53,60,0.4);--glass2:rgba(49,53,60,0.6);
+    --cold:#a9c7ff;--ice:#dfe2eb;--rain:#295ea6;--text:#dfe2eb;--dim:#908f9d;
+    --drop-color:rgba(169,199,255,0.35);
+    --bg:linear-gradient(175deg,#0a0e14 0%,#10141a 50%,#0a0e14 100%);
+    --bg-glow:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(41,94,166,0.18) 0%,transparent 60%);
+    --font-display:'Noto Serif',serif;
+    --font-label:'Space Grotesk',sans-serif;
   }
 
   * { margin:0; padding:0; box-sizing:border-box; }
@@ -613,8 +622,66 @@
   .t-tormenta { background: radial-gradient(circle at 40% 40%, #5a9aee, #060a10); }
   .t-aurora   { background: radial-gradient(circle at 40% 40%, #30d4a0, #030a08); }
   .t-monzon   { background: radial-gradient(circle at 40% 40%, #6ab0e0, #060c10); }
+  .t-stratus  { background: radial-gradient(circle at 40% 40%, #a9c7ff, #10141a); border: 1px solid rgba(169,199,255,0.4); }
 
-  /* ── Modal de configuraciones ── */
+  /* ── Stratus: fuentes especiales ── */
+  [data-theme="stratus"] .city,
+  [data-theme="stratus"] .temp-big,
+  [data-theme="stratus"] .e-val,
+  [data-theme="stratus"] .help-panel h2 {
+    font-family: 'Noto Serif', serif !important;
+  }
+  [data-theme="stratus"] .section-title,
+  [data-theme="stratus"] .stat-label,
+  [data-theme="stratus"] .e-label,
+  [data-theme="stratus"] .region,
+  [data-theme="stratus"] .updated,
+  [data-theme="stratus"] .day-name,
+  [data-theme="stratus"] .weather-desc {
+    font-family: 'Space Grotesk', sans-serif !important;
+    letter-spacing: 0.18em;
+  }
+  [data-theme="stratus"] .main-card {
+    backdrop-filter: blur(24px);
+    background: rgba(49,53,60,0.4);
+    border-color: rgba(144,143,157,0.15);
+  }
+  /* ── Tarjeta foto ciudad ── */
+  .city-photo-card {
+    position: relative; border-radius: 20px;
+    overflow: hidden; height: 160px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(126,184,212,0.1);
+    animation: fadeUp 0.7s ease both;
+  }
+  .city-photo-card img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    filter: brightness(0.6) saturate(0.85);
+    transition: filter 0.5s ease;
+  }
+  [data-theme="stratus"] .city-photo-card img {
+    filter: brightness(0.45) saturate(0.3) contrast(1.1);
+  }
+  .city-photo-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 55%);
+    display: flex; align-items: flex-end;
+    padding: 14px 16px;
+  }
+  .city-photo-caption {
+    font-size: 0.55rem; color: rgba(255,255,255,0.5);
+    letter-spacing: 0.12em; text-transform: uppercase;
+  }
+  .photo-badge {
+    position: absolute; top: 12px; right: 12px;
+    background: rgba(0,0,0,0.4); backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 99px; padding: 3px 10px;
+    font-size: 0.5rem; color: rgba(255,255,255,0.55);
+    letter-spacing: 0.12em; text-transform: uppercase;
+  }
+
   .modal-overlay {
     position: fixed; inset: 0; z-index: 200;
     background: rgba(0,0,0,0.55);
@@ -1155,6 +1222,7 @@
       <button class="theme-btn t-tormenta"      data-theme="tormenta" data-label="Tormenta"></button>
       <button class="theme-btn t-aurora"        data-theme="aurora"   data-label="Aurora"></button>
       <button class="theme-btn t-monzon"        data-theme="monzon"   data-label="Monzón"></button>
+      <button class="theme-btn t-stratus"       data-theme="stratus"  data-label="Stratus"></button>
     </div>
   </div>
 
@@ -1516,6 +1584,11 @@ function buildHTML(data) {
   }).join('');
 
   return `
+    <!-- Foto de ciudad -->
+    <div class="city-photo-card" id="cityPhotoCard">
+      <div style="width:100%;height:100%;background:var(--glass2);display:flex;align-items:center;justify-content:center;font-size:0.6rem;color:var(--dim)">Cargando foto...</div>
+    </div>
+
     <!-- Tarjeta principal -->
     <div class="main-card gap-section">
       <div class="temp-row">
@@ -1882,6 +1955,39 @@ function startSky(sunriseISO, sunsetISO) {
   skyTimer = setInterval(updateSky, 60000); // actualiza cada minuto
 }
 
+// ── Foto de ciudad (Wikipedia) ───────────────────────────────────
+const cityPhotoCache = {};
+
+async function fetchCityPhoto(cityName) {
+  if (cityPhotoCache[cityName]) return cityPhotoCache[cityName];
+  try {
+    const url = `https://es.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(cityName)}&prop=pageimages&format=json&origin=*&pithumbsize=800`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const pages = data.query?.pages || {};
+    const page = Object.values(pages)[0];
+    const src = page?.thumbnail?.source || null;
+    cityPhotoCache[cityName] = src;
+    return src;
+  } catch(_) { return null; }
+}
+
+async function loadCityPhoto(cityName) {
+  const card = document.getElementById('cityPhotoCard');
+  if (!card) return;
+  const src = await fetchCityPhoto(cityName);
+  if (src) {
+    card.innerHTML = `
+      <img src="${src}" alt="${cityName}" loading="lazy"/>
+      <div class="city-photo-overlay">
+        <div class="city-photo-caption">${cityName}</div>
+      </div>
+      <div class="photo-badge">📷 Wikipedia</div>`;
+  } else {
+    card.style.display = 'none';
+  }
+}
+
 // Expandir/colapsar día
 function toggleDay(el) {
   const isOpen = el.classList.contains('open');
@@ -1904,6 +2010,7 @@ async function loadWeather() {
     const data = await fetchWeather();
     content.innerHTML = buildHTML(data);
     renderFavStrip();
+    loadCityPhoto(currentCity.name);
   } catch(e) {
     content.innerHTML = `
       <div class="error-state">
@@ -2129,7 +2236,7 @@ document.getElementById('settingsBtn').addEventListener('click', openSettings);
 document.getElementById('modalOverlay').addEventListener('click', closeAll);
 
 // ── Theme switcher ────────────────────────────────────────────────
-const THEMES = ['','amanecer','bosque','polar','desierto','volcan','oceano','noche','sakura','tormenta','aurora','monzon'];
+const THEMES = ['','amanecer','bosque','polar','desierto','volcan','oceano','noche','sakura','tormenta','aurora','monzon','stratus'];
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
   document.querySelectorAll('.theme-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === theme));
