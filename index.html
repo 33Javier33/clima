@@ -1045,6 +1045,48 @@
   .btn-info:hover { color: var(--cold); }
 
   .gap-section { margin-bottom: 20px; }
+
+  /* Sección de lugares ── fin */
+  .places-section { margin-bottom: 20px; animation: fadeUp 0.7s 0.5s ease both; }
+  .places-tabs {
+    display: flex; gap: 6px; overflow-x: auto;
+    padding-bottom: 4px; scrollbar-width: none;
+    margin-bottom: 12px;
+  }
+  .places-tabs::-webkit-scrollbar { display: none; }
+  .place-tab {
+    font-size: 0.6rem; padding: 5px 12px; white-space: nowrap;
+    border-radius: 99px; border: 1px solid rgba(126,184,212,0.15);
+    background: none; color: var(--dim); cursor: pointer;
+    font-family: 'DM Mono', monospace; transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .place-tab.active { background: rgba(126,184,212,0.12); color: var(--ice); border-color: var(--cold); }
+  .places-list { display: flex; flex-direction: column; gap: 8px; }
+  .place-card {
+    background: var(--glass);
+    border: 1px solid rgba(126,184,212,0.08);
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex; align-items: center; gap: 12px;
+    text-decoration: none;
+    transition: border-color 0.2s, background 0.2s;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .place-card:active { background: var(--glass2); border-color: rgba(126,184,212,0.2); }
+  .place-icon {
+    font-size: 1.4rem; flex-shrink: 0;
+    width: 38px; height: 38px;
+    background: var(--glass2); border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .place-info { flex: 1; min-width: 0; }
+  .place-name { font-size: 0.8rem; color: var(--ice); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .place-meta { font-size: 0.6rem; color: var(--dim); }
+  .place-dist { font-size: 0.6rem; color: var(--cold); flex-shrink: 0; }
+  .places-loading { text-align: center; padding: 20px; font-size: 0.65rem; color: var(--dim); }
+  .places-empty  { text-align: center; padding: 20px; font-size: 0.68rem; color: var(--dim); }
   .app.searching #content { display: none; }
   .search-results {
     display: none;
@@ -1372,12 +1414,14 @@
 
 <script>
 // Estado de ciudad actual
-let currentCity = {
-  lat: -41.3197,
-  lon: -72.9830,
-  name: 'Puerto Varas',
-  region: 'Región de Los Lagos · Chile'
-};
+// Restaurar ciudad guardada o usar Puerto Varas por defecto
+let currentCity = (() => {
+  try {
+    const saved = localStorage.getItem('climaCity');
+    if (saved) return JSON.parse(saved);
+  } catch(_) {}
+  return { lat: -41.3197, lon: -72.9830, name: 'Puerto Varas', region: 'Región de Los Lagos · Chile' };
+})();
 let useFahrenheit = false;
 let windUnit = 'kmh';   // kmh | ms | mph | kn
 let use12h = false;
@@ -1664,6 +1708,22 @@ function buildHTML(data) {
       <div class="hourly-scroll">${hourlyHTML}</div>
     </div>
 
+    <!-- Sección de lugares -->
+    <div class="places-section" id="placesSection">
+      <div class="section-title">Explorar · ${currentCity.name}</div>
+      <div class="places-tabs" id="placesTabs">
+        <button class="place-tab active" data-cat="restaurant">🍽 Restaurantes</button>
+        <button class="place-tab" data-cat="hotel">🏨 Hoteles</button>
+        <button class="place-tab" data-cat="hostel">🏠 Hospedajes</button>
+        <button class="place-tab" data-cat="attraction">🏛 Turismo</button>
+        <button class="place-tab" data-cat="supermarket">🛒 Supermercados</button>
+        <button class="place-tab" data-cat="toilets">🚽 Baños</button>
+      </div>
+      <div class="places-list" id="placesList">
+        <div class="places-loading">🔍 Buscando lugares...</div>
+      </div>
+    </div>
+
     <!-- Cuadrícula de datos extras -->
     <div class="extra-cards gap-section">
 
@@ -1783,6 +1843,124 @@ function uvLabel(uv) {
   if (uv < 8) return 'Alto';
   if (uv < 11) return 'Muy alto';
   return 'Extremo';
+}
+
+// ── Sección de lugares (Overpass API / OpenStreetMap) ─────────────
+const placesCache = {};
+let activePlaceCat = 'restaurant';
+
+const PLACE_CATEGORIES = {
+  restaurant:  { label:'Restaurantes', icon:'🍽', query: (lat,lon) => `node["amenity"="restaurant"](around:3000,${lat},${lon});way["amenity"="restaurant"](around:3000,${lat},${lon});` },
+  hotel:       { label:'Hoteles',      icon:'🏨', query: (lat,lon) => `node["tourism"="hotel"](around:5000,${lat},${lon});` },
+  hostel:      { label:'Hospedajes',   icon:'🏠', query: (lat,lon) => `node["tourism"~"hostel|guest_house|motel|apartment"](around:5000,${lat},${lon});` },
+  attraction:  { label:'Turismo',      icon:'🏛', query: (lat,lon) => `node["tourism"~"attraction|museum|viewpoint|gallery|artwork"](around:5000,${lat},${lon});node["historic"](around:5000,${lat},${lon});` },
+  supermarket: { label:'Supermercados',icon:'🛒', query: (lat,lon) => `node["shop"~"supermarket|convenience"](around:3000,${lat},${lon});` },
+  toilets:     { label:'Baños',        icon:'🚽', query: (lat,lon) => `node["amenity"="toilets"](around:3000,${lat},${lon});` },
+};
+
+function distKm(lat1, lon1, lat2, lon2) {
+  const R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLon = (lon2-lon1)*Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function fmtDist(km) {
+  return km < 1 ? Math.round(km*1000)+'m' : km.toFixed(1)+'km';
+}
+
+async function fetchPlacesCat(lat, lon, cat) {
+  const key = `${lat.toFixed(3)},${lon.toFixed(3)},${cat}`;
+  if (placesCache[key]) return placesCache[key];
+  const catDef = PLACE_CATEGORIES[cat];
+  const query = `[out:json][timeout:25];(${catDef.query(lat,lon)});out body 20;`;
+
+  const ENDPOINTS = [
+    'https://overpass-api.de/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter'
+  ];
+
+  let data = null;
+  for (const endpoint of ENDPOINTS) {
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'data=' + encodeURIComponent(query)
+      });
+      if (!res.ok) continue;
+      data = await res.json();
+      break;
+    } catch(_) { continue; }
+  }
+
+  if (!data) throw new Error('Sin respuesta de Overpass');
+
+  const results = (data.elements || [])
+    .filter(e => e.tags?.name)
+    .map(e => ({
+      name: e.tags.name,
+      lat: e.lat ?? e.center?.lat,
+      lon: e.lon ?? e.center?.lon,
+      addr: [e.tags['addr:street'], e.tags['addr:housenumber']].filter(Boolean).join(' ') || e.tags['addr:full'] || '',
+      opening: e.tags.opening_hours || '',
+    }))
+    .filter(e => e.lat && e.lon)
+    .sort((a,b) => distKm(lat,lon,a.lat,a.lon) - distKm(lat,lon,b.lat,b.lon))
+    .slice(0, 12);
+
+  placesCache[key] = results;
+  return results;
+}
+
+function renderPlaces(places, lat, lon, cat) {
+  const list = document.getElementById('placesList');
+  if (!list) return;
+  const catDef = PLACE_CATEGORIES[cat];
+  if (!places.length) {
+    list.innerHTML = `<div class="places-empty">No encontramos ${catDef.label.toLowerCase()} cercanos.</div>`;
+    return;
+  }
+  list.innerHTML = places.map(p => {
+    const d = fmtDist(distKm(lat, lon, p.lat, p.lon));
+    const meta = [p.addr, p.opening].filter(Boolean).join(' · ') || 'Sin dirección registrada';
+    const mapsUrl = `https://www.openstreetmap.org/?mlat=${p.lat}&mlon=${p.lon}&zoom=17`;
+    return `<div class="place-card" onclick="window.open('${mapsUrl}','_blank')">
+      <div class="place-icon">${catDef.icon}</div>
+      <div class="place-info">
+        <div class="place-name">${p.name}</div>
+        <div class="place-meta">${meta}</div>
+      </div>
+      <div class="place-dist">${d}</div>
+    </div>`;
+  }).join('');
+}
+
+async function loadPlacesCat(cat) {
+  const list = document.getElementById('placesList');
+  if (!list) return;
+  list.innerHTML = `<div class="places-loading">🔍 Buscando ${PLACE_CATEGORIES[cat].label.toLowerCase()}...</div>`;
+  try {
+    const places = await fetchPlacesCat(currentCity.lat, currentCity.lon, cat);
+    renderPlaces(places, currentCity.lat, currentCity.lon, cat);
+  } catch(_) {
+    list.innerHTML = `<div class="places-empty">No se pudo cargar. Verifica tu conexión.</div>`;
+  }
+}
+
+function loadPlaces(lat, lon, name) {
+  activePlaceCat = 'restaurant';
+  const tabs = document.getElementById('placesTabs');
+  if (!tabs) return;
+  tabs.querySelectorAll('.place-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.cat === activePlaceCat);
+    t.addEventListener('click', () => {
+      tabs.querySelectorAll('.place-tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      activePlaceCat = t.dataset.cat;
+      loadPlacesCat(activePlaceCat);
+    });
+  });
+  loadPlacesCat(activePlaceCat);
 }
 
 // Expandir/colapsar tarjetas extra
@@ -2108,6 +2286,9 @@ function toggleDay(el) {
 }
 
 async function loadWeather() {
+  // Guardar ciudad actual en localStorage
+  try { localStorage.setItem('climaCity', JSON.stringify(currentCity)); } catch(_) {}
+
   const content = document.getElementById('content');
   content.innerHTML = `
     <div class="loading-state">
@@ -2120,7 +2301,12 @@ async function loadWeather() {
     const data = await fetchWeather();
     content.innerHTML = buildHTML(data);
     renderFavStrip();
-    loadCityPhoto(currentCity.name);
+    // Para GPS la foto usa el nombre de la ciudad base (no el barrio)
+    const photoName = currentCity.name.includes(',')
+      ? currentCity.name.split(',').slice(-1)[0].trim()
+      : currentCity.name;
+    loadCityPhoto(photoName);
+    loadPlaces(currentCity.lat, currentCity.lon, currentCity.name);
   } catch(e) {
     content.innerHTML = `
       <div class="error-state">
