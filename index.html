@@ -1075,8 +1075,11 @@
     max-height: 0; overflow: hidden;
     transition: max-height 0.45s cubic-bezier(0.4,0,0.2,1);
   }
-  .places-body.open { max-height: 700px; }
-  .places-body-inner { padding-top: 10px; }
+  .places-body.open { max-height: 420px; overflow-y: auto; }
+  .places-body.open::-webkit-scrollbar { width: 3px; }
+  .places-body.open::-webkit-scrollbar-track { background: transparent; }
+  .places-body.open::-webkit-scrollbar-thumb { background: rgba(126,184,212,0.25); border-radius: 99px; }
+  .places-body-inner { padding-top: 10px; padding-right: 2px; }
 
   .places-tabs {
     display: flex; gap: 6px; overflow-x: auto;
