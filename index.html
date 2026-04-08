@@ -493,7 +493,7 @@
   .ds-label { font-size: 0.5rem; color: var(--dim); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 3px; }
   .ds-val   { font-size: 0.8rem; color: var(--ice); }
 
-  /* Sección UV + Viento */
+  /* ── Tarjetas extras (aspecto original + expandibles) ── */
   .extra-cards {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -505,7 +505,12 @@
     border: 1px solid rgba(126,184,212,0.08);
     border-radius: 16px;
     padding: 16px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
   }
+  .extra-card.expanded { border-color: rgba(126,184,212,0.25); }
   .extra-card .e-label {
     font-size: 0.55rem;
     letter-spacing: 0.15em;
@@ -515,21 +520,53 @@
   }
   .extra-card .e-val {
     font-family: 'Playfair Display', serif;
-    font-size: 2rem;
-    color: var(--ice);
-    line-height: 1;
+    font-size: 2rem; color: var(--ice); line-height: 1;
   }
   .extra-card .e-unit {
     font-family: 'DM Mono', monospace;
-    font-size: 0.65rem;
-    color: var(--cold);
-    margin-top: 4px;
+    font-size: 0.65rem; color: var(--cold); margin-top: 4px;
   }
-  .wind-dir {
-    font-size: 0.7rem;
-    color: var(--dim);
-    margin-top: 4px;
+  .wind-dir { font-size: 0.7rem; color: var(--dim); margin-top: 4px; }
+
+  /* Chevron discreto — solo visible al expandir */
+  .e-chevron {
+    position: absolute; bottom: 8px; right: 10px;
+    font-size: 0.55rem; color: var(--dim);
+    opacity: 0; transition: opacity 0.2s, transform 0.3s;
   }
+  .extra-card:hover .e-chevron,
+  .extra-card.expanded .e-chevron { opacity: 1; }
+  .extra-card.expanded .e-chevron { transform: rotate(180deg); }
+
+  /* Detalle expandible */
+  .e-detail {
+    max-height: 0; overflow: hidden;
+    transition: max-height 0.38s cubic-bezier(0.4,0,0.2,1), opacity 0.3s;
+    opacity: 0;
+  }
+  .extra-card.expanded .e-detail { max-height: 280px; opacity: 1; }
+  .e-detail-inner {
+    border-top: 1px solid rgba(255,255,255,0.07);
+    margin-top: 12px; padding-top: 10px;
+  }
+  .e-explain {
+    font-size: 0.68rem; color: var(--text);
+    line-height: 1.65; opacity: 0.85;
+  }
+  .e-scale { margin-top: 8px; display: flex; flex-direction: column; gap: 3px; }
+  .e-scale-row {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 0.6rem;
+  }
+  .e-scale-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .e-scale-label { color: var(--dim); flex: 1; }
+  .e-scale-val   { color: var(--text); font-size: 0.58rem; text-align: right; }
+  .e-chevron {
+    position: absolute; bottom: 10px; right: 12px;
+    font-size: 0.65rem; color: var(--dim);
+    transition: transform 0.3s;
+  }
+  .extra-card.expanded .e-chevron { transform: rotate(180deg); }
 
   /* Estado / loading */
   .loading-state {
@@ -1629,38 +1666,102 @@ function buildHTML(data) {
 
     <!-- Cuadrícula de datos extras -->
     <div class="extra-cards gap-section">
-      <div class="extra-card">
+
+      <div class="extra-card" onclick="toggleExtraCard(this)">
         <div class="e-label">Índice UV</div>
         <div class="e-val">${Math.round(cur.uv_index ?? 0)}</div>
         <div class="e-unit">${uvLabel(cur.uv_index ?? 0)}</div>
+        <div class="e-detail"><div class="e-detail-inner">
+          <div class="e-explain">Mide la intensidad de la radiación ultravioleta del sol. Cuanto más alto, más rápido puede quemarte la piel, aunque esté nublado.</div>
+          <div class="e-scale">
+            <div class="e-scale-row"><div class="e-scale-dot" style="background:#4caf50"></div><div class="e-scale-label">0–2 Bajo</div><div class="e-scale-val">Sin protección necesaria</div></div>
+            <div class="e-scale-row"><div class="e-scale-dot" style="background:#ffeb3b"></div><div class="e-scale-label">3–5 Moderado</div><div class="e-scale-val">Usar protector solar</div></div>
+            <div class="e-scale-row"><div class="e-scale-dot" style="background:#ff9800"></div><div class="e-scale-label">6–7 Alto</div><div class="e-scale-val">SPF 30+ obligatorio</div></div>
+            <div class="e-scale-row"><div class="e-scale-dot" style="background:#f44336"></div><div class="e-scale-label">8–10 Muy alto</div><div class="e-scale-val">Evitar sol 11h–15h</div></div>
+            <div class="e-scale-row"><div class="e-scale-dot" style="background:#9c27b0"></div><div class="e-scale-label">11+ Extremo</div><div class="e-scale-val">Quemadura en minutos</div></div>
+          </div>
+        </div></div>
+        <div class="e-chevron">▾</div>
       </div>
-      <div class="extra-card">
+
+      <div class="extra-card" onclick="toggleExtraCard(this)">
         <div class="e-label">Viento</div>
         <div class="e-val">${toWind(cur.wind_speed_10m)}</div>
         <div class="e-unit">${windLabel()}</div>
         <div class="wind-dir">${windDirection(cur.wind_direction_10m)} · ${cur.wind_direction_10m}°</div>
+        <div class="e-detail"><div class="e-detail-inner">
+          <div class="e-explain">Velocidad y dirección del viento. La dirección indica de dónde viene: viento del Sur sopla desde el sur hacia el norte.</div>
+          <div class="e-scale">
+            <div class="e-scale-row"><div class="e-scale-dot" style="background:#4caf50"></div><div class="e-scale-label">&lt;20 km/h</div><div class="e-scale-val">Brisa suave</div></div>
+            <div class="e-scale-row"><div class="e-scale-dot" style="background:#ffeb3b"></div><div class="e-scale-label">20–40 km/h</div><div class="e-scale-val">Moderado, mueve ramas</div></div>
+            <div class="e-scale-row"><div class="e-scale-dot" style="background:#ff9800"></div><div class="e-scale-label">40–60 km/h</div><div class="e-scale-val">Fuerte, dificulta caminar</div></div>
+            <div class="e-scale-row"><div class="e-scale-dot" style="background:#f44336"></div><div class="e-scale-label">&gt;60 km/h</div><div class="e-scale-val">Ventarrón, posible daño</div></div>
+          </div>
+        </div></div>
+        <div class="e-chevron">▾</div>
       </div>
-      <div class="extra-card">
+
+      <div class="extra-card" onclick="toggleExtraCard(this)">
         <div class="e-label">Presión</div>
         <div class="e-val" style="font-size:1.5rem">${Math.round(cur.surface_pressure ?? 0)}</div>
         <div class="e-unit">hPa</div>
+        <div class="e-detail"><div class="e-detail-inner">
+          <div class="e-explain">El peso del aire sobre ti. Cuando sube, el tiempo tiende a mejorar. Cuando baja, generalmente viene lluvia o viento.</div>
+          <div class="e-scale">
+            <div class="e-scale-row"><div class="e-scale-dot" style="background:#2196f3"></div><div class="e-scale-label">&lt;1000 hPa</div><div class="e-scale-val">Baja → mal tiempo</div></div>
+            <div class="e-scale-row"><div class="e-scale-dot" style="background:#4caf50"></div><div class="e-scale-label">1010–1025 hPa</div><div class="e-scale-val">Normal → estable</div></div>
+            <div class="e-scale-row"><div class="e-scale-dot" style="background:#ffeb3b"></div><div class="e-scale-label">&gt;1025 hPa</div><div class="e-scale-val">Alta → despejado</div></div>
+          </div>
+        </div></div>
+        <div class="e-chevron">▾</div>
       </div>
-      <div class="extra-card">
+
+      <div class="extra-card" onclick="toggleExtraCard(this)">
         <div class="e-label">Nubosidad</div>
         <div class="e-val" style="font-size:1.5rem">${cur.cloud_cover ?? 0}</div>
         <div class="e-unit">% del cielo</div>
+        <div class="e-detail"><div class="e-detail-inner">
+          <div class="e-explain">Qué porcentaje del cielo está cubierto por nubes ahora mismo. 0% es cielo totalmente despejado, 100% es completamente nublado.</div>
+          <div class="e-scale">
+            <div class="e-scale-row"><div class="e-scale-dot" style="background:#ffeb3b"></div><div class="e-scale-label">0–25%</div><div class="e-scale-val">☀️ Despejado</div></div>
+            <div class="e-scale-row"><div class="e-scale-dot" style="background:#b0bec5"></div><div class="e-scale-label">25–50%</div><div class="e-scale-val">⛅ Parcialmente nublado</div></div>
+            <div class="e-scale-row"><div class="e-scale-dot" style="background:#78909c"></div><div class="e-scale-label">50–75%</div><div class="e-scale-val">🌥 Mayormente nublado</div></div>
+            <div class="e-scale-row"><div class="e-scale-dot" style="background:#546e7a"></div><div class="e-scale-label">75–100%</div><div class="e-scale-val">☁️ Cubierto</div></div>
+          </div>
+        </div></div>
+        <div class="e-chevron">▾</div>
       </div>
-      <div class="extra-card">
+
+      <div class="extra-card" onclick="toggleExtraCard(this)">
         <div class="e-label">Visibilidad</div>
         <div class="e-val" style="font-size:1.5rem">${visKm}</div>
         <div class="e-unit">km</div>
+        <div class="e-detail"><div class="e-detail-inner">
+          <div class="e-explain">Distancia máxima a la que puedes ver con claridad. La niebla, lluvia intensa o contaminación la reducen. En día despejado supera los 30 km.</div>
+          <div class="e-scale">
+            <div class="e-scale-row"><div class="e-scale-dot" style="background:#f44336"></div><div class="e-scale-label">&lt;1 km</div><div class="e-scale-val">Niebla densa, peligroso</div></div>
+            <div class="e-scale-row"><div class="e-scale-dot" style="background:#ff9800"></div><div class="e-scale-label">1–5 km</div><div class="e-scale-val">Niebla o lluvia fuerte</div></div>
+            <div class="e-scale-row"><div class="e-scale-dot" style="background:#ffeb3b"></div><div class="e-scale-label">5–20 km</div><div class="e-scale-val">Reducida, nublado</div></div>
+            <div class="e-scale-row"><div class="e-scale-dot" style="background:#4caf50"></div><div class="e-scale-label">&gt;20 km</div><div class="e-scale-val">Excelente, día claro</div></div>
+          </div>
+        </div></div>
+        <div class="e-chevron">▾</div>
       </div>
-      <div class="extra-card">
+
+      <div class="extra-card" onclick="toggleExtraCard(this)">
         <div class="e-label">Amanecer</div>
         <div class="e-val" style="font-size:1.3rem">🌅</div>
         <div class="e-unit">${fmtTime(sunrise)}</div>
         <div class="wind-dir">🌇 ${fmtTime(sunset)}</div>
+        <div class="e-detail"><div class="e-detail-inner">
+          <div class="e-explain">El amanecer es cuando el sol aparece en el horizonte. El atardecer cuando desaparece. La cantidad de horas de luz cambia según la estación y dónde estés.</div>
+          <div class="e-scale">
+            <div class="e-scale-row"><div class="e-scale-dot" style="background:#ffeb3b"></div><div class="e-scale-label">Horas de luz hoy</div><div class="e-scale-val">${(() => { try { const sr=new Date(sunrise),ss=new Date(sunset),h=Math.floor((ss-sr)/3600000),m=Math.round(((ss-sr)%3600000)/60000); return h+'h '+m+'min'; } catch(e){ return '--'; } })()}</div></div>
+          </div>
+        </div></div>
+        <div class="e-chevron">▾</div>
       </div>
+
     </div>
 
     <!-- Próximos 6 días -->
@@ -1682,6 +1783,15 @@ function uvLabel(uv) {
   if (uv < 8) return 'Alto';
   if (uv < 11) return 'Muy alto';
   return 'Extremo';
+}
+
+// Expandir/colapsar tarjetas extra
+function toggleExtraCard(el) {
+  const isOpen = el.classList.contains('expanded');
+  // Cerrar todas
+  document.querySelectorAll('.extra-card.expanded').forEach(c => c.classList.remove('expanded'));
+  // Abrir la tocada si no estaba abierta
+  if (!isOpen) el.classList.add('expanded');
 }
 
 // Cache de info por ciudad+topic
