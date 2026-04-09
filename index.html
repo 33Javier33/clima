@@ -1046,6 +1046,67 @@
 
   .gap-section { margin-bottom: 20px; }
 
+  /* ── Sistema Trial/Premium ── */
+  .trial-overlay {
+    position: fixed; inset: 0; z-index: 9000;
+    background: rgba(0,0,0,0.92); backdrop-filter: blur(8px);
+    display: flex; align-items: flex-end;
+    opacity: 0; pointer-events: none; transition: opacity 0.4s;
+  }
+  .trial-overlay.show { opacity: 1; pointer-events: all; }
+  .trial-panel {
+    background: #0e1a26; border-top: 1px solid rgba(126,184,212,0.2);
+    border-radius: 24px 24px 0 0; width: 100%; max-width: 480px;
+    margin: 0 auto; max-height: 90vh; overflow-y: auto;
+    padding: 20px 22px 44px;
+  }
+  .trial-panel::-webkit-scrollbar { display: none; }
+  .trial-badge {
+    display: inline-block; font-size: 0.55rem; letter-spacing: 0.15em;
+    text-transform: uppercase; background: rgba(255,152,0,0.15);
+    color: #ff9800; border-radius: 99px; padding: 3px 12px; margin-bottom: 14px;
+  }
+  .trial-panel h2 { font-family:'Playfair Display',serif; font-size:1.5rem; color:var(--ice); margin-bottom:8px; }
+  .trial-panel .t-sub { font-size:0.68rem; color:var(--dim); line-height:1.6; margin-bottom:20px; }
+  .plan-cards { display:flex; flex-direction:column; gap:10px; margin-bottom:20px; }
+  .plan-card {
+    border:1px solid rgba(126,184,212,0.1); border-radius:14px; padding:14px 16px;
+    cursor:pointer; transition:border-color 0.2s,background 0.2s; background:var(--glass);
+  }
+  .plan-card:hover { border-color:rgba(126,184,212,0.3); background:var(--glass2); }
+  .plan-card.selected { border-color:var(--cold); background:rgba(74,144,184,0.1); }
+  .plan-name { font-size:0.85rem; color:var(--ice); margin-bottom:4px; }
+  .plan-features { font-size:0.62rem; color:var(--dim); line-height:1.7; }
+  .plan-price { font-size:0.7rem; color:var(--cold); margin-top:6px; }
+  .trial-form { display:flex; flex-direction:column; gap:10px; margin-bottom:16px; }
+  .t-input {
+    background:var(--glass2); border:1px solid rgba(126,184,212,0.15);
+    border-radius:10px; padding:11px 14px;
+    font-family:'DM Mono',monospace; font-size:0.78rem; color:var(--ice); outline:none;
+  }
+  .t-input:focus { border-color:var(--cold); }
+  .t-input::placeholder { color:var(--dim); }
+  .t-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .t-submit {
+    background:rgba(126,184,212,0.15); border:1px solid rgba(126,184,212,0.3);
+    color:var(--ice); font-family:'DM Mono',monospace; font-size:0.72rem;
+    letter-spacing:0.12em; text-transform:uppercase; padding:13px;
+    border-radius:12px; cursor:pointer; transition:background 0.2s; margin-top:4px;
+  }
+  .t-submit:hover { background:rgba(126,184,212,0.25); }
+  .t-submit:disabled { opacity:0.5; cursor:not-allowed; }
+  .t-privacy { font-size:0.58rem; color:var(--dim); text-align:center; line-height:1.5; }
+  .trial-banner {
+    background:rgba(255,152,0,0.1); border:1px solid rgba(255,152,0,0.25);
+    border-radius:10px; padding:8px 14px; display:flex; align-items:center; gap:8px;
+    font-size:0.65rem; color:#ff9800; cursor:pointer; margin-bottom:12px;
+  }
+  .trial-banner.hidden { display:none; }
+  .t-success { text-align:center; padding:20px 0; }
+  .t-success .s-icon { font-size:2.5rem; margin-bottom:12px; }
+  .t-success h3 { font-family:'Playfair Display',serif; color:var(--ice); margin-bottom:8px; }
+  .t-success p { font-size:0.68rem; color:var(--dim); line-height:1.6; }
+
   /* Sección de lugares ── fin */
   .places-section { margin-bottom: 20px; animation: fadeUp 0.7s 0.5s ease both; }
 
@@ -1247,6 +1308,13 @@
 <div id="update-banner">
   🔄 <span>Nueva versión disponible</span>
   <button class="upd-btn" onclick="activarActualizacion()">Actualizar</button>
+</div>
+
+<!-- ── Modal Trial/Premium ── -->
+<div class="trial-overlay" id="trialOverlay">
+  <div class="trial-panel" id="trialPanel">
+    <!-- contenido dinámico -->
+  </div>
 </div>
 
 <div class="bg-layer"></div>
@@ -2680,6 +2748,369 @@ try {
 
 // Arrancar
 loadWeather();
+// Verificar licencia (con pequeño delay para no bloquear la carga inicial)
+setTimeout(initLicense, 1500);
+
+// ══════════════════════════════════════════════════════════════
+// SISTEMA TRIAL SILENCIOSO — CarlosPN Interactive®
+// Flujo: fingerprint → registro automático → verificación server-side
+// ══════════════════════════════════════════════════════════════
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwrNQ1OUfhy7bWmdz7cmlGQi8CRskm2I8xC5K2pVOgmq2lEso0vfciZrM0x0npnJo-_/exec';
+
+const PLAN_LABELS = {
+  basico:   { name: '🌡 Básico',   price: 'Contactar', features: 'Clima actual · Próximas horas' },
+  estandar: { name: '📅 Estándar', price: 'Contactar', features: 'Básico + Pronóstico 7 días · Info ciudad · Temas' },
+  premium:  { name: '⭐ Premium',  price: 'Contactar', features: 'Todo incluido · Sin restricciones' },
+};
+
+let licenseStatus  = 'unknown';
+let licenseModules = {};
+let selectedPlan   = 'estandar';
+let deviceId       = null;   // fingerprint del dispositivo
+
+// ── 1. GENERACIÓN DE FINGERPRINT PERSISTENTE ─────────────────
+// Combina múltiples fuentes para maximizar persistencia.
+// Sobrevive cierre de app/navegador vía localStorage + IndexedDB.
+async function generateFingerprint() {
+  // Intentar recuperar ID ya generado (localStorage primero)
+  const stored = localStorage.getItem('climaDeviceId');
+  if (stored) return stored;
+
+  // Intentar recuperar desde IndexedDB (más persistente que localStorage)
+  const idbId = await getFromIDB('climaDeviceId');
+  if (idbId) {
+    localStorage.setItem('climaDeviceId', idbId); // resincronizar
+    return idbId;
+  }
+
+  // Generar nuevo ID basado en características del dispositivo
+  const components = [
+    navigator.userAgent || '',
+    navigator.language  || '',
+    screen.width + 'x' + screen.height,
+    screen.colorDepth,
+    new Date().getTimezoneOffset(),
+    navigator.hardwareConcurrency || '',
+    navigator.deviceMemory        || '',
+    // Canvas fingerprint
+    await canvasFingerprint(),
+    // Número aleatorio único (sal)
+    Math.random().toString(36).slice(2) + Date.now().toString(36),
+  ];
+
+  const raw  = components.join('|');
+  const hash = await digestSHA256(raw);
+  const id   = hash.slice(0, 24);
+
+  // Persistir en ambos storages
+  localStorage.setItem('climaDeviceId', id);
+  await saveToIDB('climaDeviceId', id);
+
+  return id;
+}
+
+async function canvasFingerprint() {
+  try {
+    const c   = document.createElement('canvas');
+    const ctx = c.getContext('2d');
+    ctx.textBaseline = 'top';
+    ctx.font = '14px Arial';
+    ctx.fillText('CarlosPN🌤', 2, 2);
+    return c.toDataURL().slice(-20);
+  } catch(_) { return 'nocanvas'; }
+}
+
+async function digestSHA256(str) {
+  try {
+    const buf  = new TextEncoder().encode(str);
+    const hash = await crypto.subtle.digest('SHA-256', buf);
+    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+  } catch(_) {
+    // Fallback si crypto.subtle no está disponible (http://)
+    let h = 0;
+    for (let i = 0; i < str.length; i++) {
+      h = Math.imul(31, h) + str.charCodeAt(i) | 0;
+    }
+    return Math.abs(h).toString(16).padStart(8,'0') + Date.now().toString(16);
+  }
+}
+
+// IndexedDB helpers
+function getFromIDB(key) {
+  return new Promise(function(resolve) {
+    try {
+      const req = indexedDB.open('climaDB', 1);
+      req.onupgradeneeded = function(e) { e.target.result.createObjectStore('kv'); };
+      req.onsuccess = function(e) {
+        const tx  = e.target.result.transaction('kv', 'readonly');
+        const get = tx.objectStore('kv').get(key);
+        get.onsuccess = function() { resolve(get.result || null); };
+        get.onerror   = function() { resolve(null); };
+      };
+      req.onerror = function() { resolve(null); };
+    } catch(_) { resolve(null); }
+  });
+}
+
+function saveToIDB(key, value) {
+  return new Promise(function(resolve) {
+    try {
+      const req = indexedDB.open('climaDB', 1);
+      req.onupgradeneeded = function(e) { e.target.result.createObjectStore('kv'); };
+      req.onsuccess = function(e) {
+        const tx = e.target.result.transaction('kv', 'readwrite');
+        tx.objectStore('kv').put(value, key);
+        tx.oncomplete = function() { resolve(); };
+        tx.onerror    = function() { resolve(); };
+      };
+      req.onerror = function() { resolve(); };
+    } catch(_) { resolve(); }
+  });
+}
+
+// ── 2. INICIALIZACIÓN SILENCIOSA ──────────────────────────────
+async function initLicense() {
+  // Obtener o generar fingerprint del dispositivo
+  deviceId = await generateFingerprint();
+
+  try {
+    // Verificar estado en el servidor — no se puede manipular cambiando
+    // la hora del teléfono porque la fecha de inicio está en el servidor.
+    const res = await gasPost({ action: 'checkLicense', userId: deviceId });
+
+    if (!res.ok) {
+      // No encontrado → registrar silenciosamente (primera vez)
+      await registerSilent(deviceId);
+      return;
+    }
+
+    licenseStatus  = res.status;
+    licenseModules = res.modules || {};
+
+    // Cachear para uso offline
+    localStorage.setItem('climaLicenseCache', JSON.stringify({
+      status: licenseStatus, modules: licenseModules,
+      cachedAt: Date.now()
+    }));
+
+    if (res.status === 'not_found') {
+      await registerSilent(deviceId);
+    } else if (res.status === 'expired') {
+      showRegistrationForm(true, res.hoursLeft, res.daysLeft);
+    } else if (res.status === 'blocked') {
+      showBlockedScreen();
+    } else if (res.status === 'trial') {
+      // App completamente funcional — mostrar banner discreto
+      _showTrialBanner(res.daysLeft, res.hoursLeft);
+      applyModules();
+    } else if (res.status === 'premium') {
+      // Acceso completo sin banner
+      applyModules();
+    }
+
+  } catch(_) {
+    // Sin conexión — usar caché local
+    const cached = localStorage.getItem('climaLicenseCache');
+    if (cached) {
+      try {
+        const c = JSON.parse(cached);
+        licenseStatus  = c.status;
+        licenseModules = c.modules || {};
+        // Si el caché es de hace más de 24h y dice trial, mostrar banner de aviso offline
+        const hoursOld = (Date.now() - (c.cachedAt || 0)) / 3600000;
+        if (c.status === 'trial' && hoursOld < 48) {
+          applyModules();
+        } else if (c.status === 'premium') {
+          applyModules();
+        }
+        // Si el caché dice expired y hay conexión perdida, no bloqueamos — beneficio de la duda
+      } catch(_) {}
+    }
+    // Sin caché ni conexión: dejar la app funcionar (primera apertura offline)
+  }
+}
+
+// ── 3. REGISTRO SILENCIOSO (anónimo, sin datos del usuario) ───
+async function registerSilent(deviceId) {
+  try {
+    const res = await gasPost({
+      action:   'registerSilent',
+      deviceId: deviceId,
+      ua:       navigator.userAgent.slice(0, 120),   // solo para info del admin
+      lang:     navigator.language || 'es',
+    });
+
+    if (res.ok) {
+      licenseStatus  = 'trial';
+      licenseModules = res.modules || {};
+      localStorage.setItem('climaLicenseCache', JSON.stringify({
+        status: 'trial', modules: licenseModules, cachedAt: Date.now()
+      }));
+      _showTrialBanner(res.daysLeft, res.hoursLeft);
+      applyModules();
+    }
+  } catch(_) {
+    // Registro falló (sin conexión) — dejar app funcionar
+    applyModules();
+  }
+}
+
+// ── 4. BANNER DISCRETO DE TRIAL ───────────────────────────────
+function _showTrialBanner(daysLeft, hoursLeft) {
+  const existing = document.getElementById('trialBanner');
+  if (existing) existing.remove();
+
+  // Mostrar en horas si quedan menos de 2 días
+  let timeText;
+  if (daysLeft <= 1 && hoursLeft !== undefined) {
+    timeText = hoursLeft + ' hora' + (hoursLeft !== 1 ? 's' : '');
+  } else {
+    timeText = (daysLeft || '?') + ' día' + (daysLeft !== 1 ? 's' : '');
+  }
+
+  const banner = document.createElement('div');
+  banner.id        = 'trialBanner';
+  banner.className = 'trial-banner';
+  banner.innerHTML = '⏳ <span>Versión de prueba: <b>' + timeText + '</b> restante' + (daysLeft !== 1 ? 's' : '') + '. Toca para suscribirte.</span>';
+  banner.onclick   = function() { showRegistrationForm(false); };
+
+  const header = document.querySelector('.header');
+  if (header) header.insertAdjacentElement('afterend', banner);
+}
+
+// ── 5. FORMULARIO DE SUSCRIPCIÓN (solo email + teléfono) ──────
+// Los datos personales se capturan SOLO en esta fase de pago,
+// vinculándose al deviceId ya existente en la BD.
+function showRegistrationForm(expired, hoursLeft, daysLeft) {
+  expired = expired || false;
+  const panel = document.getElementById('trialPanel');
+
+  let timeMsg = '';
+  if (expired) {
+    timeMsg = 'Tu período de prueba gratuita ha terminado.';
+  }
+
+  panel.innerHTML = ''
+    + '<div class="panel-handle"></div>'
+    + '<div class="trial-badge">' + (expired ? '⏰ Prueba finalizada' : '🚀 Continuar con Clima App') + '</div>'
+    + '<h2>' + (expired ? 'Elige tu plan' : 'Suscríbete') + '</h2>'
+    + '<p class="t-sub">' + (expired ? timeMsg + ' Selecciona un plan para seguir usando la app.' : 'Selecciona el plan que necesitas. Te contactaremos para activar tu acceso.') + '</p>'
+
+    + '<div class="plan-cards">'
+    + Object.entries(PLAN_LABELS).map(function(entry) {
+        const key = entry[0]; const p = entry[1];
+        return '<div class="plan-card' + (key === selectedPlan ? ' selected' : '') + '" data-plan="' + key + '" onclick="selectPlan(\'' + key + '\')">'
+          + '<div class="plan-name">' + p.name + '</div>'
+          + '<div class="plan-features">' + p.features + '</div>'
+          + '<div class="plan-price">' + p.price + '</div>'
+          + '</div>';
+      }).join('')
+    + '</div>'
+
+    // Solo email y teléfono — no nombre/apellido (registro era anónimo)
+    + '<div class="trial-form">'
+    + '<input class="t-input" id="tEmail"  type="email" placeholder="Correo electrónico"/>'
+    + '<input class="t-input" id="tPhone"  type="tel"   placeholder="WhatsApp o teléfono (ej: +56912345678)"/>'
+    + '</div>'
+    + '<button class="t-submit" id="tSubmit" onclick="submitRegistration()">Solicitar acceso</button>'
+    + '<p class="t-privacy" style="margin-top:12px">🔒 Solo usamos estos datos para activar tu cuenta.</p>';
+
+  document.getElementById('trialOverlay').classList.add('show');
+}
+
+function selectPlan(plan) {
+  selectedPlan = plan;
+  document.querySelectorAll('.plan-card').forEach(function(c) {
+    c.classList.toggle('selected', c.dataset.plan === plan);
+  });
+}
+
+// ── 6. ENVÍO DEL FORMULARIO DE SUSCRIPCIÓN ───────────────────
+// Vincula el email/teléfono al deviceId ya registrado en la BD.
+async function submitRegistration() {
+  const email = document.getElementById('tEmail')  ? document.getElementById('tEmail').value.trim()  : '';
+  const phone = document.getElementById('tPhone')  ? document.getElementById('tPhone').value.trim()  : '';
+
+  if (!email || !phone) {
+    alert('Completa el correo y el teléfono para continuar.');
+    return;
+  }
+
+  const btn = document.getElementById('tSubmit');
+  btn.disabled    = true;
+  btn.textContent = 'Enviando...';
+
+  try {
+    const res = await gasPost({
+      action:   'linkContact',   // vincula contacto al deviceId existente
+      deviceId: deviceId,
+      email:    email,
+      phone:    phone,
+      plan:     selectedPlan,
+    });
+
+    if (!res.ok) throw new Error(res.error || 'Error del servidor');
+
+    // Guardar email localmente para futuras verificaciones
+    localStorage.setItem('climaEmail', email);
+    localStorage.setItem('climaLicenseCache', JSON.stringify({
+      status: 'trial', modules: res.modules || licenseModules, cachedAt: Date.now()
+    }));
+
+    document.getElementById('trialPanel').innerHTML = ''
+      + '<div class="panel-handle"></div>'
+      + '<div class="t-success">'
+      + '<div class="s-icon">✅</div>'
+      + '<h3>Solicitud enviada</h3>'
+      + '<p>Recibimos tu solicitud para el plan <b>' + PLAN_LABELS[selectedPlan].name + '</b>.<br><br>'
+      + 'Te contactaremos a <b>' + email + '</b> para confirmar el pago y activar tu acceso.<br><br>'
+      + 'Mientras tanto puedes seguir usando la app.</p>'
+      + '<button class="t-submit" style="margin-top:20px" onclick="closeTrialOverlay()">Continuar</button>'
+      + '</div>';
+
+  } catch(e) {
+    btn.disabled    = false;
+    btn.textContent = 'Solicitar acceso';
+    alert('Error al enviar. Verifica tu conexión e inténtalo de nuevo.');
+  }
+}
+
+function showBlockedScreen() {
+  document.getElementById('trialPanel').innerHTML = ''
+    + '<div class="panel-handle"></div>'
+    + '<div class="t-success">'
+    + '<div class="s-icon">🔒</div>'
+    + '<h3>Acceso suspendido</h3>'
+    + '<p>Tu cuenta ha sido suspendida temporalmente.<br>Contacta al soporte para restablecer tu acceso.</p>'
+    + '</div>';
+  document.getElementById('trialOverlay').classList.add('show');
+}
+
+function closeTrialOverlay() {
+  document.getElementById('trialOverlay').classList.remove('show');
+  licenseStatus = 'trial';
+  applyModules();
+}
+
+// ── 7. APLICAR RESTRICCIONES DE MÓDULOS ──────────────────────
+function applyModules() {
+  localStorage.setItem('climaLicenseCache', JSON.stringify({
+    status: licenseStatus, modules: licenseModules, cachedAt: Date.now()
+  }));
+  // Aquí se aplicarán las restricciones visuales cuando el admin las active
+  // Ejemplo: if (!licenseModules.seccion_explorar) { ... }
+}
+
+// ── GAS fetch ─────────────────────────────────────────────────
+async function gasPost(data) {
+  const res = await fetch(GAS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(data),
+    redirect: 'follow',
+  });
+  return res.json();
+}
 
 // ── Service Worker + Forzar actualización ────────────────────────
 if ('serviceWorker' in navigator) {
