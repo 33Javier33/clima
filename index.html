@@ -1044,6 +1044,46 @@
   }
   .btn-info:hover { color: var(--cold); }
 
+  /* ── Módulos bloqueados por plan ── */
+  .mod-locked {
+    position: relative;
+    pointer-events: none;
+    user-select: none;
+  }
+  .mod-locked::after {
+    content: '🔒 Plan superior requerido';
+    position: absolute; inset: 0;
+    background: rgba(13,17,23,0.82);
+    backdrop-filter: blur(3px);
+    border-radius: inherit;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem; letter-spacing: 0.1em;
+    color: var(--dim); text-transform: uppercase;
+    border: 1px solid rgba(126,184,212,0.1);
+    pointer-events: all;
+    cursor: not-allowed;
+  }
+  .mod-locked-section {
+    position: relative;
+    pointer-events: none;
+  }
+  .mod-locked-section::before {
+    content: '🔒 No disponible en tu plan';
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    background: rgba(13,17,23,0.88);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(126,184,212,0.12);
+    border-radius: 10px;
+    padding: 8px 18px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem; color: var(--dim);
+    letter-spacing: 0.1em; text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .mod-locked-section > * { opacity: 0.15; filter: blur(2px); }
   .gap-section { margin-bottom: 20px; }
 
   /* ── Sistema Trial/Premium ── */
@@ -1797,7 +1837,7 @@ function buildHTML(data) {
     </div>
 
     <!-- Próximas horas -->
-    <div class="gap-section">
+    <div class="gap-section" id="secPronosticoHoras">
       <div class="section-title">Próximas horas</div>
       <div class="hourly-scroll">${hourlyHTML}</div>
     </div>
@@ -1830,9 +1870,9 @@ function buildHTML(data) {
     </div>
 
     <!-- Cuadrícula de datos extras -->
-    <div class="extra-cards gap-section">
+    <div class="extra-cards gap-section" id="secDatosDetalle">
 
-      <div class="extra-card" onclick="toggleExtraCard(this)">
+      <div class="extra-card" id="modUV" onclick="toggleExtraCard(this)">
         <div class="e-label">Índice UV</div>
         <div class="e-val">${Math.round(cur.uv_index ?? 0)}</div>
         <div class="e-unit">${uvLabel(cur.uv_index ?? 0)}</div>
@@ -1849,7 +1889,7 @@ function buildHTML(data) {
         <div class="e-chevron">▾</div>
       </div>
 
-      <div class="extra-card" onclick="toggleExtraCard(this)">
+      <div class="extra-card" id="modViento" onclick="toggleExtraCard(this)">
         <div class="e-label">Viento</div>
         <div class="e-val">${toWind(cur.wind_speed_10m)}</div>
         <div class="e-unit">${windLabel()}</div>
@@ -1866,7 +1906,7 @@ function buildHTML(data) {
         <div class="e-chevron">▾</div>
       </div>
 
-      <div class="extra-card" onclick="toggleExtraCard(this)">
+      <div class="extra-card" id="modPresion" onclick="toggleExtraCard(this)">
         <div class="e-label">Presión</div>
         <div class="e-val" style="font-size:1.5rem">${Math.round(cur.surface_pressure ?? 0)}</div>
         <div class="e-unit">hPa</div>
@@ -1881,7 +1921,7 @@ function buildHTML(data) {
         <div class="e-chevron">▾</div>
       </div>
 
-      <div class="extra-card" onclick="toggleExtraCard(this)">
+      <div class="extra-card" id="modNubosidad" onclick="toggleExtraCard(this)">
         <div class="e-label">Nubosidad</div>
         <div class="e-val" style="font-size:1.5rem">${cur.cloud_cover ?? 0}</div>
         <div class="e-unit">% del cielo</div>
@@ -1897,7 +1937,7 @@ function buildHTML(data) {
         <div class="e-chevron">▾</div>
       </div>
 
-      <div class="extra-card" onclick="toggleExtraCard(this)">
+      <div class="extra-card" id="modVisibilidad" onclick="toggleExtraCard(this)">
         <div class="e-label">Visibilidad</div>
         <div class="e-val" style="font-size:1.5rem">${visKm}</div>
         <div class="e-unit">km</div>
@@ -1913,7 +1953,7 @@ function buildHTML(data) {
         <div class="e-chevron">▾</div>
       </div>
 
-      <div class="extra-card" onclick="toggleExtraCard(this)">
+      <div class="extra-card" id="modAmanecer" onclick="toggleExtraCard(this)">
         <div class="e-label">Amanecer</div>
         <div class="e-val" style="font-size:1.3rem">🌅</div>
         <div class="e-unit">${fmtTime(sunrise)}</div>
@@ -1930,7 +1970,7 @@ function buildHTML(data) {
     </div>
 
     <!-- Próximos 6 días -->
-    <div class="gap-section">
+    <div class="gap-section" id="secPronosticoDias">
       <div class="section-title">Próximos días · toca para expandir</div>
       <div class="daily-list">${dailyHTML}</div>
     </div>
@@ -3097,8 +3137,80 @@ function applyModules() {
   localStorage.setItem('climaLicenseCache', JSON.stringify({
     status: licenseStatus, modules: licenseModules, cachedAt: Date.now()
   }));
-  // Aquí se aplicarán las restricciones visuales cuando el admin las active
-  // Ejemplo: if (!licenseModules.seccion_explorar) { ... }
+
+  // Mapa: clave del módulo → ID del elemento en el DOM
+  const MODULE_ELEMENTS = {
+    pronostico_horas:  'secPronosticoHoras',
+    pronostico_dias:   'secPronosticoDias',
+    seccion_explorar:  'placesSection',
+    temas_visuales:    'themeSwitcher',
+    info_ciudad:       'infoBtn',          // botón ℹ️ en header
+    foto_ciudad:       'cityPhotoCard',
+    datos_detalle:     'secDatosDetalle',  // grid completo UV/viento/presión…
+    // Tarjetas individuales dentro de datos_detalle:
+    datos_uv:          'modUV',
+    datos_viento:      'modViento',
+    datos_presion:     'modPresion',
+    datos_nubosidad:   'modNubosidad',
+    datos_visibilidad: 'modVisibilidad',
+    datos_amanecer:    'modAmanecer',
+  };
+
+  // Helper: aplicar o quitar bloqueo a un elemento
+  function setLocked(elId, locked, isSection) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    const cls = isSection ? 'mod-locked-section' : 'mod-locked';
+    if (locked) {
+      el.classList.add(cls);
+      el.setAttribute('title', 'No disponible en tu plan actual');
+    } else {
+      el.classList.remove('mod-locked', 'mod-locked-section');
+      el.removeAttribute('title');
+    }
+  }
+
+  // Si premium o sin módulos definidos → desbloquear todo
+  if (licenseStatus === 'premium' || Object.keys(licenseModules).length === 0) {
+    Object.values(MODULE_ELEMENTS).forEach(id => setLocked(id, false, false));
+    return;
+  }
+
+  // Aplicar estado de cada módulo
+  // Secciones grandes (con overlay de sección)
+  setLocked('secPronosticoHoras', !licenseModules['pronostico_horas'], true);
+  setLocked('secPronosticoDias',  !licenseModules['pronostico_dias'],  true);
+  setLocked('placesSection',      !licenseModules['seccion_explorar'], true);
+  setLocked('cityPhotoCard',      !licenseModules['foto_ciudad'],      true);
+
+  // Botón de temas — si está bloqueado, ocultar el botón del panel
+  const themeBtn = document.getElementById('settingsBtn');
+  if (themeBtn) {
+    themeBtn.style.opacity = licenseModules['temas_visuales'] ? '' : '0.35';
+    themeBtn.style.pointerEvents = licenseModules['temas_visuales'] ? '' : 'none';
+  }
+
+  // Botón info ciudad
+  const infoBtn = document.getElementById('infoBtn');
+  if (infoBtn) {
+    infoBtn.style.opacity = licenseModules['info_ciudad'] ? '' : '0.35';
+    infoBtn.style.pointerEvents = licenseModules['info_ciudad'] ? '' : 'none';
+  }
+
+  // Tarjetas individuales de datos detalle
+  // Si datos_detalle está desactivado → bloquear todo el grid
+  if (licenseModules['datos_detalle'] === false) {
+    setLocked('secDatosDetalle', true, true);
+  } else {
+    setLocked('secDatosDetalle', false, false);
+    // Permitir bloqueo individual de cada tarjeta
+    setLocked('modUV',          licenseModules['datos_uv']          === false, false);
+    setLocked('modViento',      licenseModules['datos_viento']       === false, false);
+    setLocked('modPresion',     licenseModules['datos_presion']      === false, false);
+    setLocked('modNubosidad',   licenseModules['datos_nubosidad']    === false, false);
+    setLocked('modVisibilidad', licenseModules['datos_visibilidad']  === false, false);
+    setLocked('modAmanecer',    licenseModules['datos_amanecer']     === false, false);
+  }
 }
 
 // ── GAS fetch ─────────────────────────────────────────────────
@@ -3111,6 +3223,48 @@ async function gasPost(data) {
   });
   return res.json();
 }
+
+// ══════════════════════════════════════════════════════════════
+// TELEMETRÍA DE USO — ping silencioso cada 5 minutos
+// Solo se envía si el deviceId ya está disponible.
+// No bloquea ni interfiere con ninguna otra función.
+// ══════════════════════════════════════════════════════════════
+const PING_INTERVAL_MS = 5 * 60 * 1000; // 5 minutos
+let   _pingTimer       = null;
+
+function startUsagePing() {
+  if (_pingTimer) return; // ya activo, no duplicar
+  _sendPing();            // ping inmediato al entrar
+  _pingTimer = setInterval(_sendPing, PING_INTERVAL_MS);
+}
+
+function stopUsagePing() {
+  if (_pingTimer) { clearInterval(_pingTimer); _pingTimer = null; }
+}
+
+async function _sendPing() {
+  if (!deviceId) return; // no registrado aún, esperar
+  try {
+    await gasPost({
+      action:   'trackUsage',
+      deviceId: deviceId,
+      minutes:  5,          // minutos transcurridos desde el ping anterior
+    });
+  } catch(_) {
+    // Fallo silencioso — el ping es opcional, no bloquea la app
+  }
+}
+
+// Iniciar pings cuando la página es visible, detener cuando no lo es
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'visible') {
+    startUsagePing();
+  } else {
+    stopUsagePing();
+  }
+});
+// Arrancar si la página ya es visible al cargar
+if (document.visibilityState === 'visible') startUsagePing();
 
 // ── Service Worker + Forzar actualización ────────────────────────
 if ('serviceWorker' in navigator) {
