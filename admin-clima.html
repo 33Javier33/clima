@@ -83,6 +83,9 @@ body{background:var(--ink);color:var(--text);font-family:'DM Mono',monospace;min
 .bb{background:rgba(224,85,85,0.15);color:var(--red);}
 .be{background:rgba(150,150,150,0.12);color:var(--dim);}
 .bd{background:rgba(126,184,212,0.1);color:var(--cold);}
+/* Telemetría de uso */
+.bu{background:rgba(126,184,212,0.08);color:var(--dim);}
+.bo{background:rgba(76,175,80,0.08);color:#66bb6a;}
 .uc{font-size:0.7rem;color:var(--dim);transition:transform 0.3s;}
 .user-card.expanded .uc{transform:rotate(180deg);}
 .user-detail{max-height:0;overflow:hidden;transition:max-height 0.4s ease;}
@@ -188,14 +191,24 @@ var globalConfig = {};
 var trialUnit  = 'dias';
 
 var MODULE_NAMES = {
-  'clima_basico':      'Clima basico (temp, condicion)',
-  'pronostico_horas':  'Pronostico por horas',
-  'pronostico_dias':   'Pronostico 6 dias',
-  'seccion_explorar':  'Explorar ciudad',
-  'temas_visuales':    'Cambiar temas de color',
-  'info_ciudad':       'Info Wikipedia ciudad',
-  'datos_detalle':     'Datos detalle (UV, presion...)',
-  'foto_ciudad':       'Foto de la ciudad'
+  // ── Siempre activo ──
+  'clima_basico':      '🌡 Clima basico (temp, condicion, humedad)',
+  // ── Pronosticos ──
+  'pronostico_horas':  '🕐 Pronostico por horas',
+  'pronostico_dias':   '📅 Pronostico 6 dias',
+  // ── Contenido ──
+  'foto_ciudad':       '📷 Foto de la ciudad',
+  'info_ciudad':       'ℹ Info Wikipedia ciudad',
+  'seccion_explorar':  '🗺 Explorar ciudad (rest, hoteles...)',
+  'temas_visuales':    '🎨 Cambiar temas de color',
+  // ── Datos detalle ──
+  'datos_detalle':     '📊 Datos detalle (grupo completo)',
+  'datos_uv':          '☀ Indice UV',
+  'datos_viento':      '💨 Viento (velocidad y direccion)',
+  'datos_presion':     '🌐 Presion atmosferica',
+  'datos_nubosidad':   '☁ Nubosidad',
+  'datos_visibilidad': '👁 Visibilidad',
+  'datos_amanecer':    '🌅 Amanecer y atardecer',
 };
 
 var MODULES = Object.keys(MODULE_NAMES);
@@ -366,6 +379,37 @@ function buildUserCard(u) {
         ? '<span class="badge bp">Premium</span>'
         : '<span class="badge bt">Trial</span><span class="badge bd">' + timeLeft + ' restante</span>';
 
+  // ── Telemetría de uso ──────────────────────────────────────
+  // totalMinutes y lastPing vienen de getUsers() → columnas 9 y 10
+  var totalMin  = u.totalMinutes || 0;
+  var lastPing  = u.lastPing     || null;
+
+  var usageLabel = (function() {
+    if (totalMin < 60) return totalMin + ' min';
+    var h = Math.floor(totalMin / 60);
+    var m = totalMin % 60;
+    return h + 'h ' + (m > 0 ? m + 'min' : '');
+  })();
+
+  var lastLabel = (function() {
+    if (!lastPing) return 'Nunca';
+    var diff = Math.floor((now - new Date(lastPing)) / 60000); // minutos
+    if (diff < 2)   return 'Ahora';
+    if (diff < 60)  return 'Hace ' + diff + ' min';
+    var h = Math.floor(diff / 60);
+    if (h < 24)     return 'Hace ' + h + 'h';
+    return 'Hace ' + Math.floor(h / 24) + 'd';
+  })();
+
+  // Online si el último ping fue hace menos de 7 minutos
+  var isOnline = lastPing && (now - new Date(lastPing)) < 7 * 60 * 1000;
+
+  var telemetryBadges = '<span class="badge bu">&#128336; ' + usageLabel + ' uso total</span>'
+    + (isOnline
+        ? '<span class="badge bo">&#9679; En linea</span>'
+        : '<span class="badge bu">&#9679; ' + lastLabel + '</span>');
+  // ── fin telemetría ─────────────────────────────────────────
+
   var mods = MODULES.map(function(m) {
     var active = u.modules && u.modules[m];
     var chk    = active ? 'checked' : '';
@@ -386,7 +430,7 @@ function buildUserCard(u) {
     + '<div class="user-info">'
     + '<div class="user-name">' + u.nombre + '</div>'
     + '<div class="user-email">' + u.email + ' &middot; ' + u.whatsapp + '</div>'
-    + '<div class="user-badges">' + badge + '</div>'
+    + '<div class="user-badges">' + badge + ' ' + telemetryBadges + '</div>'
     + '</div>'
     + '<span class="uc">&#9660;</span>'
     + '</div>'
@@ -400,9 +444,9 @@ function buildUserCard(u) {
     + '</label></div>'
     + '<div class="mod-section-title">Modulos disponibles para este usuario</div>'
     + '<div class="plans-row">'
-    + '<button class="plan-btn" data-uid="' + u.userId + '" data-plan="basico">Plan Basico</button>'
-    + '<button class="plan-btn" data-uid="' + u.userId + '" data-plan="estandar">Plan Estandar</button>'
-    + '<button class="plan-btn" data-uid="' + u.userId + '" data-plan="premium">Plan Premium</button>'
+    + '<button class="plan-btn" data-uid="' + u.userId + '" data-plan="basico" title="Solo clima actual">Plan Basico</button>'
+    + '<button class="plan-btn" data-uid="' + u.userId + '" data-plan="estandar" title="Clima + horas + dias + viento + foto">Plan Estandar</button>'
+    + '<button class="plan-btn" data-uid="' + u.userId + '" data-plan="premium" title="Todo sin restricciones">Plan Premium ★</button>'
     + '</div>'
     + '<div class="user-mods-grid">' + mods + '</div>'
     + '</div></div></div>';
