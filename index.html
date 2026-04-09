@@ -116,6 +116,55 @@
     transition: background 0.5s ease, color 0.5s ease;
   }
 
+  /* ── SISTEMA DE BLOQUEO (MEJORADO: FONDO SÓLIDO) ── */
+  .mod-locked {
+    position: relative;
+    pointer-events: none !important;
+    user-select: none;
+  }
+  .mod-locked::after {
+    content: '🔒 Plan superior requerido';
+    position: absolute; inset: 0;
+    background: var(--ink) !important; /* FONDO SÓLIDO PARA NO VER NADA */
+    border-radius: inherit;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem; letter-spacing: 0.1em;
+    color: var(--dim); text-transform: uppercase;
+    border: 1px solid rgba(126,184,212,0.1);
+    pointer-events: all !important;
+    cursor: not-allowed;
+    z-index: 100;
+  }
+  /* OCULTAR COMPLETAMENTE EL CONTENIDO */
+  .mod-locked > * {
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+
+  .mod-locked-section {
+    position: relative;
+    pointer-events: none !important;
+  }
+  .mod-locked-section::before {
+    content: '🔒 No disponible en tu plan actual';
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 110;
+    background: var(--ink) !important; /* FONDO SÓLIDO PARA SECCIONES */
+    border: 1px solid rgba(126,184,212,0.12);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem; color: var(--dim);
+    letter-spacing: 0.1em; text-transform: uppercase;
+    white-space: nowrap;
+    pointer-events: all !important;
+  }
+  .mod-locked-section > * { 
+    opacity: 0 !important; 
+    visibility: hidden !important;
+  }
+
   /* Fondo atmosférico */
   .bg-layer {
     position: fixed; inset: 0; z-index: 0;
@@ -1046,48 +1095,6 @@
   }
   .btn-info:hover { color: var(--cold); }
 
-  /* Módulos bloqueados por plan ── (REGLA DE ORO: MANTENER CSS) */
-  .mod-locked {
-    position: relative;
-    pointer-events: none !important;
-    user-select: none;
-  }
-  .mod-locked::after {
-    content: '🔒 Plan superior requerido';
-    position: absolute; inset: 0;
-    background: rgba(13,17,23,0.82);
-    backdrop-filter: blur(3px);
-    border-radius: inherit;
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.6rem; letter-spacing: 0.1em;
-    color: var(--dim); text-transform: uppercase;
-    border: 1px solid rgba(126,184,212,0.1);
-    pointer-events: all !important;
-    cursor: not-allowed;
-    z-index: 100;
-  }
-  .mod-locked-section {
-    position: relative;
-    pointer-events: none !important;
-  }
-  .mod-locked-section::before {
-    content: '🔒 No disponible en tu plan';
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 110;
-    background: rgba(13,17,23,0.88);
-    backdrop-filter: blur(4px);
-    border: 1px solid rgba(126,184,212,0.12);
-    border-radius: 10px;
-    padding: 8px 18px;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.6rem; color: var(--dim);
-    letter-spacing: 0.1em; text-transform: uppercase;
-    white-space: nowrap;
-    pointer-events: all !important;
-  }
-  .mod-locked-section > * { opacity: 0.15; filter: blur(2px); }
   .gap-section { margin-bottom: 20px; }
 
   /* ── Sistema Trial/Premium ── */
@@ -2919,7 +2926,6 @@ async function initLicense() {
     licenseStatus  = res.status;
     licenseModules = res.modules || {};
 
-    // PERSISTENCIA: Aplicar módulos inmediatamente tras recibir respuesta
     applyModules();
 
     if (res.status === 'not_found') {
@@ -2968,20 +2974,25 @@ async function registerSilent(deviceId) {
 function _showTrialBanner(daysLeft, hoursLeft) {
   const existing = document.getElementById('trialBanner');
   if (existing) existing.remove();
-  let timeText = (daysLeft <= 1 && hoursLeft !== undefined) ? (hoursLeft + ' hora' + (hoursLeft !== 1 ? 's' : '')) : ((daysLeft || '?') + ' día' + (daysLeft !== 1 ? 's' : ''));
+
+  let timeText = (daysLeft <= 1 && hoursLeft !== undefined) 
+    ? (hoursLeft + ' hora' + (hoursLeft !== 1 ? 's' : '')) 
+    : ((daysLeft || '?') + ' día' + (daysLeft !== 1 ? 's' : ''));
+
   const banner = document.createElement('div');
   banner.id        = 'trialBanner';
   banner.className = 'trial-banner';
   banner.innerHTML = '⏳ <span>Versión de prueba: <b>' + timeText + '</b> restante. Toca para suscribirte.</span>';
   banner.onclick   = function() { showRegistrationForm(false); };
+
   const header = document.querySelector('.header');
   if (header) header.insertAdjacentElement('afterend', banner);
 }
 
-// ── 5. FORMULARIO DE SUSCRIPCIÓN (Email + Teléfono) ──────
 function showRegistrationForm(expired, hoursLeft, daysLeft) {
   expired = expired || false;
   const panel = document.getElementById('trialPanel');
+
   panel.innerHTML = ''
     + '<div class="panel-handle"></div>'
     + '<div class="trial-badge">' + (expired ? '⏰ Prueba finalizada' : '🚀 Continuar con Clima App') + '</div>'
@@ -3014,21 +3025,30 @@ function selectPlan(plan) {
 async function submitRegistration() {
   const email = document.getElementById('tEmail')  ? document.getElementById('tEmail').value.trim()  : '';
   const phone = document.getElementById('tPhone')  ? document.getElementById('tPhone').value.trim()  : '';
+
   if (!email || !phone) return alert('Completa los datos.');
   const btn = document.getElementById('tSubmit');
   btn.disabled = true; btn.textContent = 'Enviando...';
 
   try {
-    const res = await gasPost({ action:'linkContact', deviceId:deviceId, email:email, phone:phone, plan:selectedPlan });
-    if (!res.ok) throw new Error();
-    document.getElementById('trialPanel').innerHTML = '<div class="t-success">✅ Solicitud enviada. Te contactaremos pronto.</div>';
+    const res = await gasPost({
+      action:   'linkContact',
+      deviceId: deviceId,
+      email:    email,
+      phone:    phone,
+      plan:     selectedPlan,
+    });
+
+    if (res.ok) {
+      document.getElementById('trialPanel').innerHTML = '<div class="t-success">✅ Solicitud enviada.</div>';
+    }
   } catch(e) {
-    btn.disabled = false; btn.textContent = 'Solicitar acceso'; alert('Error al enviar.');
+    btn.disabled = false; btn.textContent = 'Solicitar acceso'; alert('Error.');
   }
 }
 
 function showBlockedScreen() {
-  document.getElementById('trialPanel').innerHTML = '<h3>Acceso suspendido</h3><p>Contacta soporte.</p>';
+  document.getElementById('trialPanel').innerHTML = '<h3>Acceso suspendido</h3>';
   document.getElementById('trialOverlay').classList.add('show');
 }
 
@@ -3036,9 +3056,8 @@ function closeTrialOverlay() {
   document.getElementById('trialOverlay').classList.remove('show');
 }
 
-// ── 7. REGLA DE ORO: LÓGICA DE BLOQUEO DE MÓDULOS ──────────────────────
+// ── REGLA DE ORO: LÓGICA DE APLICACIÓN DE MÓDULOS ──────────────────────
 function applyModules() {
-  // Guardamos en caché local para persistencia offline
   localStorage.setItem('climaLicenseCache', JSON.stringify({
     status: licenseStatus, modules: licenseModules, cachedAt: Date.now()
   }));
@@ -3065,14 +3084,13 @@ function applyModules() {
     const cls = isSection ? 'mod-locked-section' : 'mod-locked';
     if (locked) {
       el.classList.add(cls);
-      el.style.pointerEvents = 'none'; // Seguridad extra UI
+      el.style.pointerEvents = 'none';
     } else {
       el.classList.remove('mod-locked', 'mod-locked-section');
       el.style.pointerEvents = 'auto';
     }
   }
 
-  // Si es premium desbloquear todo
   if (licenseStatus === 'premium') {
     Object.values(MODULE_ELEMENTS).forEach(id => setLocked(id, false, false));
     return;
@@ -3084,19 +3102,18 @@ function applyModules() {
   setLocked('placesSection',      !licenseModules['seccion_explorar'], true);
   setLocked('cityPhotoCard',      !licenseModules['foto_ciudad'],      true);
 
-  // Botones individuales (Settings/Info)
   const themeBtn = document.getElementById('settingsBtn');
   if (themeBtn) {
     themeBtn.style.opacity = licenseModules['temas_visuales'] ? '' : '0.35';
     themeBtn.style.pointerEvents = licenseModules['temas_visuales'] ? '' : 'none';
   }
+
   const infoBtn = document.getElementById('infoBtn');
   if (infoBtn) {
     infoBtn.style.opacity = licenseModules['info_ciudad'] ? '' : '0.35';
     infoBtn.style.pointerEvents = licenseModules['info_ciudad'] ? '' : 'none';
   }
 
-  // Cuadrícula de datos (UV, Viento, etc.)
   if (licenseModules['datos_detalle'] === false) {
     setLocked('secDatosDetalle', true, true);
   } else {
@@ -3109,7 +3126,6 @@ function applyModules() {
     setLocked('modAmanecer',    licenseModules['datos_amanecer']     === false, false);
   }
 
-  // Caso temas visuales bloqueado: Reset a default
   if (licenseModules['temas_visuales'] === false) {
     document.documentElement.setAttribute('data-theme', '');
     localStorage.setItem('climaTema', '');
@@ -3126,7 +3142,7 @@ async function gasPost(data) {
   return res.json();
 }
 
-// Telemetría ping
+// Telemetría 5 min
 const PING_INTERVAL_MS = 5 * 60 * 1000;
 let   _pingTimer       = null;
 function startUsagePing() { if (_pingTimer) return; _sendPing(); _pingTimer = setInterval(_sendPing, PING_INTERVAL_MS); }
@@ -3146,7 +3162,6 @@ if ('serviceWorker' in navigator) {
     });
   });
 }
-function activarActualizacion() { if (window.swReg && window.swReg.waiting) window.swReg.waiting.postMessage('SKIP_WAITING'); }
 </script>
 </body>
 </html>
