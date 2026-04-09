@@ -1036,6 +1036,8 @@
     line-height: 1;
   }
   .btn-help:hover { color: var(--cold); border-color: var(--cold); }
+
+  .btn-info {
     background: none; border: none;
     font-size: 0.85rem; cursor: pointer;
     color: var(--dim); padding: 0 0 0 6px;
@@ -1044,10 +1046,10 @@
   }
   .btn-info:hover { color: var(--cold); }
 
-  /* ── Módulos bloqueados por plan ── */
+  /* Módulos bloqueados por plan ── (REGLA DE ORO: MANTENER CSS) */
   .mod-locked {
     position: relative;
-    pointer-events: none;
+    pointer-events: none !important;
     user-select: none;
   }
   .mod-locked::after {
@@ -1061,18 +1063,19 @@
     font-size: 0.6rem; letter-spacing: 0.1em;
     color: var(--dim); text-transform: uppercase;
     border: 1px solid rgba(126,184,212,0.1);
-    pointer-events: all;
+    pointer-events: all !important;
     cursor: not-allowed;
+    z-index: 100;
   }
   .mod-locked-section {
     position: relative;
-    pointer-events: none;
+    pointer-events: none !important;
   }
   .mod-locked-section::before {
     content: '🔒 No disponible en tu plan';
     position: absolute; top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 10;
+    z-index: 110;
     background: rgba(13,17,23,0.88);
     backdrop-filter: blur(4px);
     border: 1px solid rgba(126,184,212,0.12);
@@ -1082,6 +1085,7 @@
     font-size: 0.6rem; color: var(--dim);
     letter-spacing: 0.1em; text-transform: uppercase;
     white-space: nowrap;
+    pointer-events: all !important;
   }
   .mod-locked-section > * { opacity: 0.15; filter: blur(2px); }
   .gap-section { margin-bottom: 20px; }
@@ -2463,6 +2467,10 @@ async function loadWeather() {
   try {
     const data = await fetchWeather();
     content.innerHTML = buildHTML(data);
+    
+    // REGLA DE ORO: Aplicar bloqueos de módulos inmediatamente tras renderizar
+    applyModules();
+    
     renderFavStrip();
     // Para GPS la foto usa el nombre de la ciudad base (no el barrio)
     const photoName = currentCity.name.includes(',')
@@ -2793,7 +2801,6 @@ setTimeout(initLicense, 1500);
 
 // ══════════════════════════════════════════════════════════════
 // SISTEMA TRIAL SILENCIOSO — CarlosPN Interactive®
-// Flujo: fingerprint → registro automático → verificación server-side
 // ══════════════════════════════════════════════════════════════
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbwrNQ1OUfhy7bWmdz7cmlGQi8CRskm2I8xC5K2pVOgmq2lEso0vfciZrM0x0npnJo-_/exec';
 
@@ -2809,21 +2816,16 @@ let selectedPlan   = 'estandar';
 let deviceId       = null;   // fingerprint del dispositivo
 
 // ── 1. GENERACIÓN DE FINGERPRINT PERSISTENTE ─────────────────
-// Combina múltiples fuentes para maximizar persistencia.
-// Sobrevive cierre de app/navegador vía localStorage + IndexedDB.
 async function generateFingerprint() {
-  // Intentar recuperar ID ya generado (localStorage primero)
   const stored = localStorage.getItem('climaDeviceId');
   if (stored) return stored;
 
-  // Intentar recuperar desde IndexedDB (más persistente que localStorage)
   const idbId = await getFromIDB('climaDeviceId');
   if (idbId) {
-    localStorage.setItem('climaDeviceId', idbId); // resincronizar
+    localStorage.setItem('climaDeviceId', idbId);
     return idbId;
   }
 
-  // Generar nuevo ID basado en características del dispositivo
   const components = [
     navigator.userAgent || '',
     navigator.language  || '',
@@ -2832,9 +2834,7 @@ async function generateFingerprint() {
     new Date().getTimezoneOffset(),
     navigator.hardwareConcurrency || '',
     navigator.deviceMemory        || '',
-    // Canvas fingerprint
     await canvasFingerprint(),
-    // Número aleatorio único (sal)
     Math.random().toString(36).slice(2) + Date.now().toString(36),
   ];
 
@@ -2842,7 +2842,6 @@ async function generateFingerprint() {
   const hash = await digestSHA256(raw);
   const id   = hash.slice(0, 24);
 
-  // Persistir en ambos storages
   localStorage.setItem('climaDeviceId', id);
   await saveToIDB('climaDeviceId', id);
 
@@ -2866,11 +2865,8 @@ async function digestSHA256(str) {
     const hash = await crypto.subtle.digest('SHA-256', buf);
     return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
   } catch(_) {
-    // Fallback si crypto.subtle no está disponible (http://)
     let h = 0;
-    for (let i = 0; i < str.length; i++) {
-      h = Math.imul(31, h) + str.charCodeAt(i) | 0;
-    }
+    for (let i = 0; i < str.length; i++) { h = Math.imul(31, h) + str.charCodeAt(i) | 0; }
     return Math.abs(h).toString(16).padStart(8,'0') + Date.now().toString(16);
   }
 }
@@ -2910,16 +2906,12 @@ function saveToIDB(key, value) {
 
 // ── 2. INICIALIZACIÓN SILENCIOSA ──────────────────────────────
 async function initLicense() {
-  // Obtener o generar fingerprint del dispositivo
   deviceId = await generateFingerprint();
 
   try {
-    // Verificar estado en el servidor — no se puede manipular cambiando
-    // la hora del teléfono porque la fecha de inicio está en el servidor.
     const res = await gasPost({ action: 'checkLicense', userId: deviceId });
 
     if (!res.ok) {
-      // No encontrado → registrar silenciosamente (primera vez)
       await registerSilent(deviceId);
       return;
     }
@@ -2927,11 +2919,8 @@ async function initLicense() {
     licenseStatus  = res.status;
     licenseModules = res.modules || {};
 
-    // Cachear para uso offline
-    localStorage.setItem('climaLicenseCache', JSON.stringify({
-      status: licenseStatus, modules: licenseModules,
-      cachedAt: Date.now()
-    }));
+    // PERSISTENCIA: Aplicar módulos inmediatamente tras recibir respuesta
+    applyModules();
 
     if (res.status === 'not_found') {
       await registerSilent(deviceId);
@@ -2940,120 +2929,77 @@ async function initLicense() {
     } else if (res.status === 'blocked') {
       showBlockedScreen();
     } else if (res.status === 'trial') {
-      // App completamente funcional — mostrar banner discreto
       _showTrialBanner(res.daysLeft, res.hoursLeft);
-      applyModules();
-    } else if (res.status === 'premium') {
-      // Acceso completo sin banner
-      applyModules();
     }
 
   } catch(_) {
-    // Sin conexión — usar caché local
     const cached = localStorage.getItem('climaLicenseCache');
     if (cached) {
       try {
         const c = JSON.parse(cached);
         licenseStatus  = c.status;
         licenseModules = c.modules || {};
-        // Si el caché es de hace más de 24h y dice trial, mostrar banner de aviso offline
-        const hoursOld = (Date.now() - (c.cachedAt || 0)) / 3600000;
-        if (c.status === 'trial' && hoursOld < 48) {
-          applyModules();
-        } else if (c.status === 'premium') {
-          applyModules();
-        }
-        // Si el caché dice expired y hay conexión perdida, no bloqueamos — beneficio de la duda
+        applyModules();
       } catch(_) {}
     }
-    // Sin caché ni conexión: dejar la app funcionar (primera apertura offline)
   }
 }
 
-// ── 3. REGISTRO SILENCIOSO (anónimo, sin datos del usuario) ───
 async function registerSilent(deviceId) {
   try {
     const res = await gasPost({
       action:   'registerSilent',
       deviceId: deviceId,
-      ua:       navigator.userAgent.slice(0, 120),   // solo para info del admin
+      ua:       navigator.userAgent.slice(0, 120),
       lang:     navigator.language || 'es',
     });
 
     if (res.ok) {
       licenseStatus  = 'trial';
       licenseModules = res.modules || {};
-      localStorage.setItem('climaLicenseCache', JSON.stringify({
-        status: 'trial', modules: licenseModules, cachedAt: Date.now()
-      }));
-      _showTrialBanner(res.daysLeft, res.hoursLeft);
       applyModules();
+      _showTrialBanner(res.daysLeft, res.hoursLeft);
     }
   } catch(_) {
-    // Registro falló (sin conexión) — dejar app funcionar
-    applyModules();
+      applyModules();
   }
 }
 
-// ── 4. BANNER DISCRETO DE TRIAL ───────────────────────────────
 function _showTrialBanner(daysLeft, hoursLeft) {
   const existing = document.getElementById('trialBanner');
   if (existing) existing.remove();
-
-  // Mostrar en horas si quedan menos de 2 días
-  let timeText;
-  if (daysLeft <= 1 && hoursLeft !== undefined) {
-    timeText = hoursLeft + ' hora' + (hoursLeft !== 1 ? 's' : '');
-  } else {
-    timeText = (daysLeft || '?') + ' día' + (daysLeft !== 1 ? 's' : '');
-  }
-
+  let timeText = (daysLeft <= 1 && hoursLeft !== undefined) ? (hoursLeft + ' hora' + (hoursLeft !== 1 ? 's' : '')) : ((daysLeft || '?') + ' día' + (daysLeft !== 1 ? 's' : ''));
   const banner = document.createElement('div');
   banner.id        = 'trialBanner';
   banner.className = 'trial-banner';
-  banner.innerHTML = '⏳ <span>Versión de prueba: <b>' + timeText + '</b> restante' + (daysLeft !== 1 ? 's' : '') + '. Toca para suscribirte.</span>';
+  banner.innerHTML = '⏳ <span>Versión de prueba: <b>' + timeText + '</b> restante. Toca para suscribirte.</span>';
   banner.onclick   = function() { showRegistrationForm(false); };
-
   const header = document.querySelector('.header');
   if (header) header.insertAdjacentElement('afterend', banner);
 }
 
-// ── 5. FORMULARIO DE SUSCRIPCIÓN (solo email + teléfono) ──────
-// Los datos personales se capturan SOLO en esta fase de pago,
-// vinculándose al deviceId ya existente en la BD.
+// ── 5. FORMULARIO DE SUSCRIPCIÓN (Email + Teléfono) ──────
 function showRegistrationForm(expired, hoursLeft, daysLeft) {
   expired = expired || false;
   const panel = document.getElementById('trialPanel');
-
-  let timeMsg = '';
-  if (expired) {
-    timeMsg = 'Tu período de prueba gratuita ha terminado.';
-  }
-
   panel.innerHTML = ''
     + '<div class="panel-handle"></div>'
     + '<div class="trial-badge">' + (expired ? '⏰ Prueba finalizada' : '🚀 Continuar con Clima App') + '</div>'
     + '<h2>' + (expired ? 'Elige tu plan' : 'Suscríbete') + '</h2>'
-    + '<p class="t-sub">' + (expired ? timeMsg + ' Selecciona un plan para seguir usando la app.' : 'Selecciona el plan que necesitas. Te contactaremos para activar tu acceso.') + '</p>'
-
     + '<div class="plan-cards">'
     + Object.entries(PLAN_LABELS).map(function(entry) {
         const key = entry[0]; const p = entry[1];
         return '<div class="plan-card' + (key === selectedPlan ? ' selected' : '') + '" data-plan="' + key + '" onclick="selectPlan(\'' + key + '\')">'
           + '<div class="plan-name">' + p.name + '</div>'
           + '<div class="plan-features">' + p.features + '</div>'
-          + '<div class="plan-price">' + p.price + '</div>'
           + '</div>';
       }).join('')
     + '</div>'
-
-    // Solo email y teléfono — no nombre/apellido (registro era anónimo)
     + '<div class="trial-form">'
     + '<input class="t-input" id="tEmail"  type="email" placeholder="Correo electrónico"/>'
-    + '<input class="t-input" id="tPhone"  type="tel"   placeholder="WhatsApp o teléfono (ej: +56912345678)"/>'
+    + '<input class="t-input" id="tPhone"  type="tel"   placeholder="WhatsApp o teléfono"/>'
     + '</div>'
-    + '<button class="t-submit" id="tSubmit" onclick="submitRegistration()">Solicitar acceso</button>'
-    + '<p class="t-privacy" style="margin-top:12px">🔒 Solo usamos estos datos para activar tu cuenta.</p>';
+    + '<button class="t-submit" id="tSubmit" onclick="submitRegistration()">Solicitar acceso</button>';
 
   document.getElementById('trialOverlay').classList.add('show');
 }
@@ -3065,89 +3011,46 @@ function selectPlan(plan) {
   });
 }
 
-// ── 6. ENVÍO DEL FORMULARIO DE SUSCRIPCIÓN ───────────────────
-// Vincula el email/teléfono al deviceId ya registrado en la BD.
 async function submitRegistration() {
   const email = document.getElementById('tEmail')  ? document.getElementById('tEmail').value.trim()  : '';
   const phone = document.getElementById('tPhone')  ? document.getElementById('tPhone').value.trim()  : '';
-
-  if (!email || !phone) {
-    alert('Completa el correo y el teléfono para continuar.');
-    return;
-  }
-
+  if (!email || !phone) return alert('Completa los datos.');
   const btn = document.getElementById('tSubmit');
-  btn.disabled    = true;
-  btn.textContent = 'Enviando...';
+  btn.disabled = true; btn.textContent = 'Enviando...';
 
   try {
-    const res = await gasPost({
-      action:   'linkContact',   // vincula contacto al deviceId existente
-      deviceId: deviceId,
-      email:    email,
-      phone:    phone,
-      plan:     selectedPlan,
-    });
-
-    if (!res.ok) throw new Error(res.error || 'Error del servidor');
-
-    // Guardar email localmente para futuras verificaciones
-    localStorage.setItem('climaEmail', email);
-    localStorage.setItem('climaLicenseCache', JSON.stringify({
-      status: 'trial', modules: res.modules || licenseModules, cachedAt: Date.now()
-    }));
-
-    document.getElementById('trialPanel').innerHTML = ''
-      + '<div class="panel-handle"></div>'
-      + '<div class="t-success">'
-      + '<div class="s-icon">✅</div>'
-      + '<h3>Solicitud enviada</h3>'
-      + '<p>Recibimos tu solicitud para el plan <b>' + PLAN_LABELS[selectedPlan].name + '</b>.<br><br>'
-      + 'Te contactaremos a <b>' + email + '</b> para confirmar el pago y activar tu acceso.<br><br>'
-      + 'Mientras tanto puedes seguir usando la app.</p>'
-      + '<button class="t-submit" style="margin-top:20px" onclick="closeTrialOverlay()">Continuar</button>'
-      + '</div>';
-
+    const res = await gasPost({ action:'linkContact', deviceId:deviceId, email:email, phone:phone, plan:selectedPlan });
+    if (!res.ok) throw new Error();
+    document.getElementById('trialPanel').innerHTML = '<div class="t-success">✅ Solicitud enviada. Te contactaremos pronto.</div>';
   } catch(e) {
-    btn.disabled    = false;
-    btn.textContent = 'Solicitar acceso';
-    alert('Error al enviar. Verifica tu conexión e inténtalo de nuevo.');
+    btn.disabled = false; btn.textContent = 'Solicitar acceso'; alert('Error al enviar.');
   }
 }
 
 function showBlockedScreen() {
-  document.getElementById('trialPanel').innerHTML = ''
-    + '<div class="panel-handle"></div>'
-    + '<div class="t-success">'
-    + '<div class="s-icon">🔒</div>'
-    + '<h3>Acceso suspendido</h3>'
-    + '<p>Tu cuenta ha sido suspendida temporalmente.<br>Contacta al soporte para restablecer tu acceso.</p>'
-    + '</div>';
+  document.getElementById('trialPanel').innerHTML = '<h3>Acceso suspendido</h3><p>Contacta soporte.</p>';
   document.getElementById('trialOverlay').classList.add('show');
 }
 
 function closeTrialOverlay() {
   document.getElementById('trialOverlay').classList.remove('show');
-  licenseStatus = 'trial';
-  applyModules();
 }
 
-// ── 7. APLICAR RESTRICCIONES DE MÓDULOS ──────────────────────
+// ── 7. REGLA DE ORO: LÓGICA DE BLOQUEO DE MÓDULOS ──────────────────────
 function applyModules() {
+  // Guardamos en caché local para persistencia offline
   localStorage.setItem('climaLicenseCache', JSON.stringify({
     status: licenseStatus, modules: licenseModules, cachedAt: Date.now()
   }));
 
-  // Mapa: clave del módulo → ID del elemento en el DOM
   const MODULE_ELEMENTS = {
     pronostico_horas:  'secPronosticoHoras',
     pronostico_dias:   'secPronosticoDias',
     seccion_explorar:  'placesSection',
-    temas_visuales:    'themeSwitcher',
-    info_ciudad:       'infoBtn',          // botón ℹ️ en header
+    temas_visuales:    'settingsBtn',
+    info_ciudad:       'infoBtn',
     foto_ciudad:       'cityPhotoCard',
-    datos_detalle:     'secDatosDetalle',  // grid completo UV/viento/presión…
-    // Tarjetas individuales dentro de datos_detalle:
+    datos_detalle:     'secDatosDetalle',
     datos_uv:          'modUV',
     datos_viento:      'modViento',
     datos_presion:     'modPresion',
@@ -3156,54 +3059,48 @@ function applyModules() {
     datos_amanecer:    'modAmanecer',
   };
 
-  // Helper: aplicar o quitar bloqueo a un elemento
   function setLocked(elId, locked, isSection) {
     const el = document.getElementById(elId);
     if (!el) return;
     const cls = isSection ? 'mod-locked-section' : 'mod-locked';
     if (locked) {
       el.classList.add(cls);
-      el.setAttribute('title', 'No disponible en tu plan actual');
+      el.style.pointerEvents = 'none'; // Seguridad extra UI
     } else {
       el.classList.remove('mod-locked', 'mod-locked-section');
-      el.removeAttribute('title');
+      el.style.pointerEvents = 'auto';
     }
   }
 
-  // Si premium o sin módulos definidos → desbloquear todo
-  if (licenseStatus === 'premium' || Object.keys(licenseModules).length === 0) {
+  // Si es premium desbloquear todo
+  if (licenseStatus === 'premium') {
     Object.values(MODULE_ELEMENTS).forEach(id => setLocked(id, false, false));
     return;
   }
 
-  // Aplicar estado de cada módulo
-  // Secciones grandes (con overlay de sección)
+  // Secciones grandes
   setLocked('secPronosticoHoras', !licenseModules['pronostico_horas'], true);
   setLocked('secPronosticoDias',  !licenseModules['pronostico_dias'],  true);
   setLocked('placesSection',      !licenseModules['seccion_explorar'], true);
   setLocked('cityPhotoCard',      !licenseModules['foto_ciudad'],      true);
 
-  // Botón de temas — si está bloqueado, ocultar el botón del panel
+  // Botones individuales (Settings/Info)
   const themeBtn = document.getElementById('settingsBtn');
   if (themeBtn) {
     themeBtn.style.opacity = licenseModules['temas_visuales'] ? '' : '0.35';
     themeBtn.style.pointerEvents = licenseModules['temas_visuales'] ? '' : 'none';
   }
-
-  // Botón info ciudad
   const infoBtn = document.getElementById('infoBtn');
   if (infoBtn) {
     infoBtn.style.opacity = licenseModules['info_ciudad'] ? '' : '0.35';
     infoBtn.style.pointerEvents = licenseModules['info_ciudad'] ? '' : 'none';
   }
 
-  // Tarjetas individuales de datos detalle
-  // Si datos_detalle está desactivado → bloquear todo el grid
+  // Cuadrícula de datos (UV, Viento, etc.)
   if (licenseModules['datos_detalle'] === false) {
     setLocked('secDatosDetalle', true, true);
   } else {
     setLocked('secDatosDetalle', false, false);
-    // Permitir bloqueo individual de cada tarjeta
     setLocked('modUV',          licenseModules['datos_uv']          === false, false);
     setLocked('modViento',      licenseModules['datos_viento']       === false, false);
     setLocked('modPresion',     licenseModules['datos_presion']      === false, false);
@@ -3211,9 +3108,14 @@ function applyModules() {
     setLocked('modVisibilidad', licenseModules['datos_visibilidad']  === false, false);
     setLocked('modAmanecer',    licenseModules['datos_amanecer']     === false, false);
   }
+
+  // Caso temas visuales bloqueado: Reset a default
+  if (licenseModules['temas_visuales'] === false) {
+    document.documentElement.setAttribute('data-theme', '');
+    localStorage.setItem('climaTema', '');
+  }
 }
 
-// ── GAS fetch ─────────────────────────────────────────────────
 async function gasPost(data) {
   const res = await fetch(GAS_URL, {
     method: 'POST',
@@ -3224,85 +3126,27 @@ async function gasPost(data) {
   return res.json();
 }
 
-// ══════════════════════════════════════════════════════════════
-// TELEMETRÍA DE USO — ping silencioso cada 5 minutos
-// Solo se envía si el deviceId ya está disponible.
-// No bloquea ni interfiere con ninguna otra función.
-// ══════════════════════════════════════════════════════════════
-const PING_INTERVAL_MS = 5 * 60 * 1000; // 5 minutos
+// Telemetría ping
+const PING_INTERVAL_MS = 5 * 60 * 1000;
 let   _pingTimer       = null;
-
-function startUsagePing() {
-  if (_pingTimer) return; // ya activo, no duplicar
-  _sendPing();            // ping inmediato al entrar
-  _pingTimer = setInterval(_sendPing, PING_INTERVAL_MS);
-}
-
-function stopUsagePing() {
-  if (_pingTimer) { clearInterval(_pingTimer); _pingTimer = null; }
-}
-
-async function _sendPing() {
-  if (!deviceId) return; // no registrado aún, esperar
-  try {
-    await gasPost({
-      action:   'trackUsage',
-      deviceId: deviceId,
-      minutes:  5,          // minutos transcurridos desde el ping anterior
-    });
-  } catch(_) {
-    // Fallo silencioso — el ping es opcional, no bloquea la app
-  }
-}
-
-// Iniciar pings cuando la página es visible, detener cuando no lo es
-document.addEventListener('visibilitychange', function() {
-  if (document.visibilityState === 'visible') {
-    startUsagePing();
-  } else {
-    stopUsagePing();
-  }
-});
-// Arrancar si la página ya es visible al cargar
+function startUsagePing() { if (_pingTimer) return; _sendPing(); _pingTimer = setInterval(_sendPing, PING_INTERVAL_MS); }
+function stopUsagePing()  { if (_pingTimer) { clearInterval(_pingTimer); _pingTimer = null; } }
+async function _sendPing() { if (!deviceId) return; try { await gasPost({ action:'trackUsage', deviceId:deviceId, minutes:5 }); } catch(_) {} }
+document.addEventListener('visibilitychange', function() { if (document.visibilityState === 'visible') startUsagePing(); else stopUsagePing(); });
 if (document.visibilityState === 'visible') startUsagePing();
 
-// ── Service Worker + Forzar actualización ────────────────────────
+// PWA
 if ('serviceWorker' in navigator) {
-  let swReg = null;
-
-  function mostrarBanner() {
-    document.getElementById('update-banner').classList.add('visible');
-  }
-
-  window.activarActualizacion = function() {
-    if (swReg && swReg.waiting) {
-      swReg.waiting.postMessage('SKIP_WAITING');
-    }
-  };
-
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    window.location.reload();
-  });
-
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').then(reg => {
-      swReg = reg;
-
-      // Ya hay uno esperando (actualización lista)
-      if (reg.waiting) { mostrarBanner(); return; }
-
-      // Detectar cuando instala una nueva versión
       reg.addEventListener('updatefound', () => {
         const newWorker = reg.installing;
-        newWorker.addEventListener('statechange', () => {
-          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            mostrarBanner();
-          }
-        });
+        newWorker.addEventListener('statechange', () => { if (newWorker.state === 'installed' && navigator.serviceWorker.controller) document.getElementById('update-banner').classList.add('visible'); });
       });
-    }).catch(err => console.warn('[SW] Error:', err));
+    });
   });
 }
+function activarActualizacion() { if (window.swReg && window.swReg.waiting) window.swReg.waiting.postMessage('SKIP_WAITING'); }
 </script>
 </body>
 </html>
