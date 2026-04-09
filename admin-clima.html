@@ -6,9 +6,11 @@
 <title>Admin · Clima App</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
 <style>
-:root{--ink:#0d1117;--g:rgba(255,255,255,0.05);--g2:rgba(255,255,255,0.08);--cold:#7eb8d4;--ice:#b8dce8;--text:#ccd9e6;--dim:#7a92a8;--green:#4caf50;--red:#e05555;--orange:#ff9800;}
+:root{--ink:#0d1117;--g:rgba(255,255,255,0.05);--g2:rgba(255,255,255,0.09);--cold:#7eb8d4;--ice:#b8dce8;--text:#ccd9e6;--dim:#7a92a8;--green:#4caf50;--red:#e05555;--orange:#ff9800;}
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--ink);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;}
+
+/* Login */
 .login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
 .login-card{background:var(--g);border:1px solid rgba(126,184,212,0.15);border-radius:20px;padding:32px 28px;width:100%;max-width:360px;text-align:center;}
 .login-card h1{font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--ice);margin-bottom:6px;}
@@ -16,139 +18,228 @@ body{background:var(--ink);color:var(--text);font-family:'DM Mono',monospace;min
 .login-input{width:100%;background:var(--g2);border:1px solid rgba(126,184,212,0.15);border-radius:10px;padding:12px 16px;font-family:'DM Mono',monospace;font-size:0.85rem;color:var(--ice);outline:none;margin-bottom:12px;}
 .login-input:focus{border-color:var(--cold);}
 .login-btn{width:100%;background:rgba(126,184,212,0.15);border:1px solid rgba(126,184,212,0.3);color:var(--ice);font-family:'DM Mono',monospace;font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;padding:12px;border-radius:10px;cursor:pointer;transition:background 0.2s;}
-.login-btn:hover{background:rgba(126,184,212,0.25);}
 .login-error{color:var(--red);font-size:0.65rem;margin-top:8px;display:none;}
-.admin-app{display:none;min-height:100vh;}
-.topbar{background:rgba(13,17,23,0.95);backdrop-filter:blur(12px);border-bottom:1px solid rgba(126,184,212,0.1);padding:16px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;}
-.topbar h1{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--ice);flex:1;}
-.topbar-badge{font-size:0.55rem;background:rgba(74,144,184,0.2);color:var(--cold);border-radius:99px;padding:3px 10px;letter-spacing:0.1em;text-transform:uppercase;}
+
+/* App */
+.admin-app{display:none;}
+.topbar{background:rgba(13,17,23,0.96);backdrop-filter:blur(12px);border-bottom:1px solid rgba(126,184,212,0.1);padding:14px 20px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;}
+.topbar h1{font-family:'Playfair Display',serif;font-size:1rem;color:var(--ice);flex:1;}
+.topbar-badge{font-size:0.5rem;background:rgba(74,144,184,0.2);color:var(--cold);border-radius:99px;padding:3px 10px;letter-spacing:0.1em;text-transform:uppercase;}
 .logout-btn{background:none;border:1px solid rgba(126,184,212,0.15);color:var(--dim);font-family:'DM Mono',monospace;font-size:0.6rem;padding:6px 12px;border-radius:8px;cursor:pointer;}
-.main{padding:20px;max-width:900px;margin:0 auto;}
-.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
-.stat-box{background:var(--g);border:1px solid rgba(126,184,212,0.08);border-radius:14px;padding:16px;text-align:center;}
-.stat-box .sv{font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--ice);}
-.stat-box .sl{font-size:0.55rem;color:var(--dim);letter-spacing:0.12em;text-transform:uppercase;margin-top:4px;}
-.toolbar{display:flex;gap:8px;margin-bottom:16px;}
+.main{padding:16px;max-width:900px;margin:0 auto;}
+
+/* Stats */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+.stat-box{background:var(--g);border:1px solid rgba(126,184,212,0.08);border-radius:12px;padding:14px;text-align:center;}
+.sv{font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--ice);}
+.sl{font-size:0.52rem;color:var(--dim);letter-spacing:0.1em;text-transform:uppercase;margin-top:2px;}
+
+/* Sección */
+.section-card{background:var(--g);border:1px solid rgba(126,184,212,0.1);border-radius:16px;padding:18px;margin-bottom:14px;}
+.section-title{font-size:0.58rem;letter-spacing:0.2em;color:var(--dim);text-transform:uppercase;margin-bottom:14px;}
+
+/* Config trial */
+.trial-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+.trial-label{font-size:0.68rem;color:var(--text);min-width:120px;}
+.num-input{background:var(--g2);border:1px solid rgba(126,184,212,0.15);border-radius:8px;padding:8px 12px;font-family:'DM Mono',monospace;font-size:0.9rem;color:var(--ice);outline:none;width:80px;text-align:center;}
+.unit-toggle{display:flex;background:var(--g2);border:1px solid rgba(126,184,212,0.12);border-radius:8px;overflow:hidden;}
+.unit-btn{padding:8px 16px;font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--dim);background:none;border:none;cursor:pointer;transition:all 0.2s;}
+.unit-btn.active{background:rgba(126,184,212,0.18);color:var(--ice);}
+.save-btn{background:rgba(76,175,80,0.15);border:1px solid rgba(76,175,80,0.3);color:var(--green);font-family:'DM Mono',monospace;font-size:0.65rem;padding:8px 18px;border-radius:8px;cursor:pointer;letter-spacing:0.1em;transition:background 0.2s;}
+.save-btn:hover{background:rgba(76,175,80,0.25);}
+
+/* Módulos trial defaults */
+.mods-defaults{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;}
+.mod-def-row{background:var(--g2);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;}
+.mod-def-name{font-size:0.62rem;color:var(--text);flex:1;}
+
+/* Toggle switch */
+.sw{position:relative;width:38px;height:21px;cursor:pointer;flex-shrink:0;}
+.sw input{opacity:0;width:0;height:0;position:absolute;}
+.sw-track{position:absolute;inset:0;background:rgba(255,255,255,0.08);border-radius:99px;transition:background 0.2s;}
+.sw-thumb{position:absolute;top:3px;left:3px;width:15px;height:15px;background:#555;border-radius:50%;transition:transform 0.2s,background 0.2s;}
+.sw input:checked ~ .sw-track{background:rgba(76,175,80,0.3);}
+.sw input:checked ~ .sw-thumb{transform:translateX(17px);background:var(--green);}
+.sw-red input:checked ~ .sw-track{background:rgba(224,85,85,0.4);}
+.sw-red input:checked ~ .sw-thumb{background:var(--red);}
+
+/* Toolbar */
+.toolbar{display:flex;gap:8px;margin-bottom:14px;}
 .tb-input{flex:1;background:var(--g2);border:1px solid rgba(126,184,212,0.15);border-radius:10px;padding:9px 14px;font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--ice);outline:none;}
 .tb-btn{background:var(--g2);border:1px solid rgba(126,184,212,0.15);color:var(--cold);font-family:'DM Mono',monospace;font-size:0.65rem;padding:9px 14px;border-radius:10px;cursor:pointer;}
-.user-card{background:var(--g);border:1px solid rgba(126,184,212,0.08);border-radius:16px;padding:16px;margin-bottom:12px;}
-.user-card.blocked{border-color:rgba(224,85,85,0.25);background:rgba(224,85,85,0.04);}
-.user-header{display:flex;align-items:center;gap:12px;margin-bottom:0;cursor:pointer;}
-.user-avatar{width:38px;height:38px;border-radius:50%;background:rgba(126,184,212,0.15);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+
+/* User card */
+.user-card{background:var(--g);border:1px solid rgba(126,184,212,0.08);border-radius:14px;padding:14px;margin-bottom:10px;}
+.user-card.blocked{border-color:rgba(224,85,85,0.2);background:rgba(224,85,85,0.03);}
+.user-header{display:flex;align-items:center;gap:10px;cursor:pointer;}
+.user-avatar{width:36px;height:36px;border-radius:50%;background:rgba(126,184,212,0.12);display:flex;align-items:center;justify-content:center;font-size:0.95rem;flex-shrink:0;}
 .user-info{flex:1;min-width:0;}
-.user-name{font-size:0.85rem;color:var(--ice);}
-.user-email{font-size:0.6rem;color:var(--dim);margin-top:2px;}
-.user-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
-.badge{font-size:0.5rem;padding:2px 8px;border-radius:99px;letter-spacing:0.08em;text-transform:uppercase;}
-.badge-trial{background:rgba(255,152,0,0.15);color:var(--orange);}
-.badge-premium{background:rgba(76,175,80,0.15);color:var(--green);}
-.badge-blocked{background:rgba(224,85,85,0.15);color:var(--red);}
-.badge-expired{background:rgba(150,150,150,0.15);color:var(--dim);}
-.badge-days{background:rgba(126,184,212,0.1);color:var(--cold);}
-.user-chevron{font-size:0.7rem;color:var(--dim);transition:transform 0.3s;}
-.user-card.expanded .user-chevron{transform:rotate(180deg);}
+.user-name{font-size:0.82rem;color:var(--ice);}
+.user-email{font-size:0.58rem;color:var(--dim);margin-top:1px;}
+.user-badges{display:flex;gap:5px;flex-wrap:wrap;margin-top:3px;}
+.badge{font-size:0.48rem;padding:2px 7px;border-radius:99px;letter-spacing:0.08em;text-transform:uppercase;}
+.bt{background:rgba(255,152,0,0.15);color:var(--orange);}
+.bp{background:rgba(76,175,80,0.15);color:var(--green);}
+.bb{background:rgba(224,85,85,0.15);color:var(--red);}
+.be{background:rgba(150,150,150,0.12);color:var(--dim);}
+.bd{background:rgba(126,184,212,0.1);color:var(--cold);}
+.uc{font-size:0.7rem;color:var(--dim);transition:transform 0.3s;}
+.user-card.expanded .uc{transform:rotate(180deg);}
 .user-detail{max-height:0;overflow:hidden;transition:max-height 0.4s ease;}
-.user-card.expanded .user-detail{max-height:600px;}
-.user-detail-inner{border-top:1px solid rgba(255,255,255,0.06);padding-top:14px;margin-top:12px;}
-.block-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.user-card.expanded .user-detail{max-height:800px;}
+.user-detail-inner{border-top:1px solid rgba(255,255,255,0.05);padding-top:13px;margin-top:12px;}
+
+/* Block row */
+.block-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 12px;background:rgba(224,85,85,0.05);border:1px solid rgba(224,85,85,0.12);border-radius:10px;}
 .block-label{font-size:0.65rem;color:var(--dim);flex:1;}
-.toggle-switch{position:relative;width:44px;height:24px;cursor:pointer;flex-shrink:0;}
-.toggle-switch input{opacity:0;width:0;height:0;position:absolute;}
-.toggle-track{position:absolute;inset:0;background:rgba(255,255,255,0.1);border-radius:99px;transition:background 0.2s;}
-.toggle-thumb{position:absolute;top:3px;left:3px;width:18px;height:18px;background:#aaa;border-radius:50%;transition:transform 0.2s,background 0.2s;}
-.toggle-switch input:checked ~ .toggle-track{background:rgba(224,85,85,0.4);}
-.toggle-switch input:checked ~ .toggle-thumb{transform:translateX(20px);background:var(--red);}
-.modules-title{font-size:0.58rem;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:10px;}
-.modules-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
-.module-row{background:var(--g2);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;}
-.module-name{font-size:0.65rem;color:var(--text);flex:1;}
-.mod-toggle{position:relative;width:36px;height:20px;cursor:pointer;flex-shrink:0;}
-.mod-toggle input{opacity:0;width:0;height:0;position:absolute;}
-.mod-track{position:absolute;inset:0;background:rgba(255,255,255,0.08);border-radius:99px;transition:background 0.2s;}
-.mod-thumb{position:absolute;top:3px;left:3px;width:14px;height:14px;background:#555;border-radius:50%;transition:transform 0.2s,background 0.2s;}
-.mod-toggle input:checked ~ .mod-track{background:rgba(76,175,80,0.3);}
-.mod-toggle input:checked ~ .mod-thumb{transform:translateX(16px);background:var(--green);}
-.plans-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
-.plan-btn{font-size:0.6rem;padding:6px 14px;border-radius:99px;border:1px solid rgba(126,184,212,0.2);background:none;color:var(--dim);cursor:pointer;font-family:'DM Mono',monospace;transition:all 0.2s;}
-.plan-btn:hover{background:rgba(126,184,212,0.1);color:var(--ice);}
+
+/* User modules */
+.mod-section-title{font-size:0.55rem;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin:10px 0 8px;}
+.plans-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.plan-btn{font-size:0.58rem;padding:5px 12px;border-radius:99px;border:1px solid rgba(126,184,212,0.18);background:none;color:var(--dim);cursor:pointer;font-family:'DM Mono',monospace;transition:all 0.2s;}
+.plan-btn:hover{background:rgba(126,184,212,0.1);color:var(--ice);border-color:var(--cold);}
+.user-mods-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.user-mod-row{background:var(--g2);border-radius:9px;padding:9px 11px;display:flex;align-items:center;gap:8px;}
+.user-mod-name{font-size:0.62rem;color:var(--text);flex:1;}
+
+/* Loading / empty / toast */
 .loading{text-align:center;padding:40px;font-size:0.7rem;color:var(--dim);}
-.empty{text-align:center;padding:40px;font-size:0.75rem;color:var(--dim);}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a2d40;border:1px solid rgba(126,184,212,0.3);border-radius:12px;padding:10px 20px;font-size:0.7rem;color:var(--ice);z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.3s;white-space:nowrap;}
+.empty{text-align:center;padding:40px;font-size:0.72rem;color:var(--dim);}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a2d40;border:1px solid rgba(126,184,212,0.3);border-radius:12px;padding:9px 20px;font-size:0.68rem;color:var(--ice);z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.3s;white-space:nowrap;}
 .toast.show{opacity:1;}
 </style>
 </head>
 <body>
 
+<!-- Login -->
 <div class="login-screen" id="loginScreen">
   <div class="login-card">
     <h1>Clima App</h1>
     <p>Panel de Administrador</p>
-    <input class="login-input" type="password" id="passInput" placeholder="Contrasena de acceso"/>
+    <input class="login-input" type="password" id="passInput" placeholder="Contrasena"/>
     <button class="login-btn" id="loginBtn">Ingresar</button>
     <div class="login-error" id="loginError">Contrasena incorrecta</div>
   </div>
 </div>
 
+<!-- Admin App -->
 <div class="admin-app" id="adminApp">
   <div class="topbar">
-    <h1>Panel Admin</h1>
+    <h1>Panel Admin · Clima App</h1>
     <span class="topbar-badge">CarlosPN Interactive</span>
     <button class="logout-btn" id="logoutBtn">Salir</button>
   </div>
+
   <div class="main">
+
+    <!-- Stats -->
     <div class="stats-row">
       <div class="stat-box"><div class="sv" id="statTotal">-</div><div class="sl">Usuarios</div></div>
-      <div class="stat-box"><div class="sv" id="statTrial">-</div><div class="sl">En trial</div></div>
+      <div class="stat-box"><div class="sv" id="statTrial">-</div><div class="sl">Trial</div></div>
       <div class="stat-box"><div class="sv" id="statPremium">-</div><div class="sl">Premium</div></div>
     </div>
-    <div class="toolbar">
-      <input class="tb-input" id="searchInput" type="text" placeholder="Buscar usuario..."/>
-      <button class="tb-btn" id="refreshBtn">Actualizar</button>
+
+    <!-- Configuracion global -->
+    <div class="section-card">
+      <div class="section-title">Configuracion global del Trial</div>
+
+      <div class="trial-row">
+        <span class="trial-label">Duracion del trial:</span>
+        <input class="num-input" type="number" id="trialValor" value="7" min="1" max="999"/>
+        <div class="unit-toggle">
+          <button class="unit-btn active" id="btnDias" data-unit="dias">Dias</button>
+          <button class="unit-btn" id="btnHoras" data-unit="horas">Horas</button>
+        </div>
+        <button class="save-btn" id="saveTrialDur">Guardar</button>
+      </div>
+      <div style="font-size:0.6rem;color:var(--dim);margin-bottom:16px;">
+        Afecta solo a nuevos registros. Los usuarios existentes conservan su fecha actual.
+      </div>
+
+      <div class="section-title" style="margin-top:4px;">Modulos activos durante el trial (nuevos usuarios)</div>
+      <div class="mods-defaults" id="trialModsGrid">
+        <!-- Se llena dinamicamente -->
+      </div>
+      <div style="margin-top:12px;">
+        <button class="save-btn" id="saveTrialMods">Guardar modulos trial</button>
+      </div>
     </div>
-    <div id="userList"><div class="loading">Cargando...</div></div>
+
+    <!-- Lista de usuarios -->
+    <div class="section-card" style="padding-bottom:8px;">
+      <div class="section-title">Usuarios registrados</div>
+      <div class="toolbar">
+        <input class="tb-input" id="searchInput" type="text" placeholder="Buscar por nombre o email..."/>
+        <button class="tb-btn" id="refreshBtn">Actualizar</button>
+      </div>
+      <div id="userList"><div class="loading">Cargando...</div></div>
+    </div>
+
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbxSdxWfA23PFCh5lI-lIT5BV9fAhyieUw75QiWHCfYnofHf6cdl_IzuUv5TnWIaLAU4/exec';
+var GAS_URL    = 'https://script.google.com/macros/s/AKfycbwrNQ1OUfhy7bWmdz7cmlGQi8CRskm2I8xC5K2pVOgmq2lEso0vfciZrM0x0npnJo-_/exec';
+var adminPass  = '';
+var allUsers   = [];
+var globalConfig = {};
+var trialUnit  = 'dias';
 
-var adminPass   = '';
-var allUsers    = [];
-var contactInfo = null;
-
-var MODULE_LABELS = {
-  'clima_basico':     'Clima basico',
-  'pronostico_7dias': 'Pronostico 7 dias',
-  'seccion_explorar': 'Explorar ciudad',
-  'temas_premium':    'Temas premium',
-  'info_ciudad':      'Info ciudad',
-  'lugares_turismo':  'Turismo / Lugares'
+var MODULE_NAMES = {
+  'clima_basico':      'Clima basico (temp, condicion)',
+  'pronostico_horas':  'Pronostico por horas',
+  'pronostico_dias':   'Pronostico 6 dias',
+  'seccion_explorar':  'Explorar ciudad',
+  'temas_visuales':    'Cambiar temas de color',
+  'info_ciudad':       'Info Wikipedia ciudad',
+  'datos_detalle':     'Datos detalle (UV, presion...)',
+  'foto_ciudad':       'Foto de la ciudad'
 };
 
+var MODULES = Object.keys(MODULE_NAMES);
+
+// ── INIT ─────────────────────────────────────────────────────
 function init() {
   document.getElementById('loginBtn').addEventListener('click', doLogin);
   document.getElementById('logoutBtn').addEventListener('click', doLogout);
   document.getElementById('refreshBtn').addEventListener('click', loadUsers);
-  document.getElementById('searchInput').addEventListener('input', filterUsers);
+  document.getElementById('saveTrialDur').addEventListener('click', saveTrialDuration);
+  document.getElementById('saveTrialMods').addEventListener('click', saveTrialMods);
   document.getElementById('passInput').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') doLogin();
   });
+  document.getElementById('searchInput').addEventListener('input', filterUsers);
+
+  // Unit toggle
+  document.getElementById('btnDias').addEventListener('click', function() { setUnit('dias'); });
+  document.getElementById('btnHoras').addEventListener('click', function() { setUnit('horas'); });
+
+  // Delegacion
+  document.addEventListener('click', onGlobalClick);
+  document.addEventListener('change', onGlobalChange);
 }
 
+function setUnit(u) {
+  trialUnit = u;
+  document.getElementById('btnDias').classList.toggle('active', u === 'dias');
+  document.getElementById('btnHoras').classList.toggle('active', u === 'horas');
+}
+
+// ── LOGIN ─────────────────────────────────────────────────────
 function doLogin() {
   var pass = document.getElementById('passInput').value.trim();
   if (!pass) return;
   document.getElementById('loginBtn').textContent = 'Verificando...';
   gasPost({ action: 'getUsers', adminPass: pass })
     .then(function(res) {
-      if (!res.ok) throw new Error('No autorizado');
+      if (!res.ok) throw new Error('no auth');
       adminPass = pass;
       document.getElementById('loginScreen').style.display = 'none';
-      document.getElementById('adminApp').style.display = 'block';
+      document.getElementById('adminApp').style.display    = 'block';
+      if (res.config) applyGlobalConfig(res.config);
       renderUsers(res.users);
-      loadContactInfo();
     })
     .catch(function() {
       document.getElementById('loginError').style.display = 'block';
@@ -158,32 +249,89 @@ function doLogin() {
 
 function doLogout() {
   adminPass = '';
-  allUsers  = [];
   document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('adminApp').style.display   = 'none';
+  document.getElementById('adminApp').style.display    = 'none';
   document.getElementById('passInput').value = '';
   document.getElementById('loginError').style.display = 'none';
   document.getElementById('loginBtn').textContent = 'Ingresar';
 }
 
+// ── CONFIG GLOBAL ─────────────────────────────────────────────
+function applyGlobalConfig(cfg) {
+  globalConfig = cfg;
+  // Trial duration
+  document.getElementById('trialValor').value = cfg['trial_valor'] || '7';
+  setUnit(cfg['trial_unidad'] || 'dias');
+  // Render módulos trial
+  renderTrialMods(cfg);
+}
+
+function renderTrialMods(cfg) {
+  var grid = document.getElementById('trialModsGrid');
+  grid.innerHTML = MODULES.map(function(m) {
+    var key    = 'trial_mod_' + m;
+    var active = cfg[key] === 'true';
+    var chk    = active ? 'checked' : '';
+    return '<div class="mod-def-row">'
+      + '<span class="mod-def-name">' + MODULE_NAMES[m] + '</span>'
+      + '<label class="sw">'
+      + '<input type="checkbox" ' + chk + ' data-cfgmod="' + m + '"/>'
+      + '<div class="sw-track"></div>'
+      + '<div class="sw-thumb"></div>'
+      + '</label></div>';
+  }).join('');
+}
+
+function saveTrialDuration() {
+  var val = document.getElementById('trialValor').value;
+  if (!val || isNaN(val) || val < 1) { showToast('Ingresa un numero valido', true); return; }
+  var cfg = { trial_valor: val, trial_unidad: trialUnit };
+  document.getElementById('saveTrialDur').textContent = 'Guardando...';
+  gasPost({ action: 'updateConfig', adminPass: adminPass, config: cfg })
+    .then(function(res) {
+      document.getElementById('saveTrialDur').textContent = 'Guardar';
+      if (!res.ok) throw new Error(res.error);
+      globalConfig['trial_valor']  = val;
+      globalConfig['trial_unidad'] = trialUnit;
+      showToast('Trial: ' + val + ' ' + trialUnit + ' guardado');
+    })
+    .catch(function(e) {
+      document.getElementById('saveTrialDur').textContent = 'Guardar';
+      showToast('Error: ' + e.message, true);
+    });
+}
+
+function saveTrialMods() {
+  var cfg = {};
+  document.querySelectorAll('[data-cfgmod]').forEach(function(cb) {
+    cfg['trial_mod_' + cb.dataset.cfgmod] = cb.checked ? 'true' : 'false';
+  });
+  document.getElementById('saveTrialMods').textContent = 'Guardando...';
+  gasPost({ action: 'updateConfig', adminPass: adminPass, config: cfg })
+    .then(function(res) {
+      document.getElementById('saveTrialMods').textContent = 'Guardar modulos trial';
+      if (!res.ok) throw new Error(res.error);
+      Object.assign(globalConfig, cfg);
+      showToast('Modulos trial guardados');
+    })
+    .catch(function(e) {
+      document.getElementById('saveTrialMods').textContent = 'Guardar modulos trial';
+      showToast('Error: ' + e.message, true);
+    });
+}
+
+// ── USUARIOS ──────────────────────────────────────────────────
 function loadUsers() {
   document.getElementById('userList').innerHTML = '<div class="loading">Actualizando...</div>';
   gasPost({ action: 'getUsers', adminPass: adminPass })
     .then(function(res) {
       if (!res.ok) throw new Error(res.error);
+      if (res.config) applyGlobalConfig(res.config);
       renderUsers(res.users);
     })
     .catch(function(e) {
       document.getElementById('userList').innerHTML = '<div class="empty">Error: ' + e.message + '</div>';
     });
-}
-
-function loadContactInfo() {
-  gasPost({ action: 'getContactInfo', adminPass: adminPass })
-    .then(function(res) {
-      if (res.ok) contactInfo = res;
-    })
-    .catch(function() {});
 }
 
 function renderUsers(users) {
@@ -201,107 +349,96 @@ function displayUsers(users) {
 }
 
 function buildUserCard(u) {
-  var now     = new Date();
-  var trial   = new Date(u.trialEnd);
-  var expired = u.estado === 'trial' && now > trial;
-  var days    = Math.max(0, Math.ceil((trial - now) / 86400000));
-  var blocked = u.acceso === 'bloqueado';
+  var now      = new Date();
+  var trialEnd = new Date(u.trialEnd);
+  var expired  = u.estado === 'trial' && now > trialEnd;
+  var blocked  = u.acceso === 'bloqueado';
+  var msLeft   = Math.max(0, trialEnd - now);
+  var daysLeft = Math.ceil(msLeft / 86400000);
+  var hrsLeft  = Math.ceil(msLeft / 3600000);
+  var timeLeft = daysLeft >= 1 ? daysLeft + 'd' : hrsLeft + 'h';
 
   var badge = blocked
-    ? '<span class="badge badge-blocked">Bloqueado</span>'
+    ? '<span class="badge bb">Bloqueado</span>'
     : expired
-      ? '<span class="badge badge-expired">Trial expirado</span>'
+      ? '<span class="badge be">Trial expirado</span>'
       : u.estado === 'premium'
-        ? '<span class="badge badge-premium">Premium</span>'
-        : '<span class="badge badge-trial">Trial</span><span class="badge badge-days">' + days + 'd</span>';
+        ? '<span class="badge bp">Premium</span>'
+        : '<span class="badge bt">Trial</span><span class="badge bd">' + timeLeft + ' restante</span>';
 
-  var mods = Object.keys(MODULE_LABELS).map(function(key) {
-    var active = u.modules && u.modules[key];
-    var chk = active ? 'checked' : '';
-    return '<div class="module-row">'
-      + '<span class="module-name">' + MODULE_LABELS[key] + '</span>'
-      + '<label class="mod-toggle">'
-      + '<input type="checkbox" ' + chk + ' data-uid="' + u.userId + '" data-mod="' + key + '" class="mod-cb"/>'
-      + '<div class="mod-track"></div>'
-      + '<div class="mod-thumb"></div>'
+  var mods = MODULES.map(function(m) {
+    var active = u.modules && u.modules[m];
+    var chk    = active ? 'checked' : '';
+    return '<div class="user-mod-row">'
+      + '<span class="user-mod-name">' + MODULE_NAMES[m] + '</span>'
+      + '<label class="sw">'
+      + '<input type="checkbox" ' + chk + ' class="umod-cb" data-uid="' + u.userId + '" data-mod="' + m + '"/>'
+      + '<div class="sw-track"></div>'
+      + '<div class="sw-thumb"></div>'
       + '</label></div>';
   }).join('');
 
-  var contact = contactInfo
-    ? '<div style="background:rgba(126,184,212,0.06);border:1px solid rgba(126,184,212,0.15);border-radius:12px;padding:12px;margin-bottom:12px;font-size:0.7rem;">'
-      + '<div style="color:var(--dim);font-size:0.55rem;margin-bottom:6px;">CONTACTO ADMIN (privado)</div>'
-      + '<div>Email: ' + contactInfo.email + '</div>'
-      + '<div>WhatsApp: ' + contactInfo.whatsapp + '</div>'
-      + '</div>'
-    : '';
-
-  var blockChk = blocked ? 'checked' : '';
+  var blkChk = blocked ? 'checked' : '';
 
   return '<div class="user-card' + (blocked ? ' blocked' : '') + '" id="card-' + u.userId + '">'
     + '<div class="user-header" data-uid="' + u.userId + '">'
     + '<div class="user-avatar">&#128100;</div>'
     + '<div class="user-info">'
     + '<div class="user-name">' + u.nombre + '</div>'
-    + '<div class="user-email">' + u.email + '</div>'
+    + '<div class="user-email">' + u.email + ' &middot; ' + u.whatsapp + '</div>'
     + '<div class="user-badges">' + badge + '</div>'
     + '</div>'
-    + '<div class="user-chevron">&#9660;</div>'
+    + '<span class="uc">&#9660;</span>'
     + '</div>'
     + '<div class="user-detail"><div class="user-detail-inner">'
-    + contact
-    + '<div class="block-row"><span class="block-label">Bloquear acceso completo</span>'
-    + '<label class="toggle-switch">'
-    + '<input type="checkbox" ' + blockChk + ' class="block-cb" data-uid="' + u.userId + '"/>'
-    + '<div class="toggle-track"></div>'
-    + '<div class="toggle-thumb"></div>'
+    + '<div class="block-row">'
+    + '<span class="block-label">Bloquear acceso completo a la app</span>'
+    + '<label class="sw sw-red">'
+    + '<input type="checkbox" ' + blkChk + ' class="blk-cb" data-uid="' + u.userId + '"/>'
+    + '<div class="sw-track"></div>'
+    + '<div class="sw-thumb"></div>'
     + '</label></div>'
-    + '<div class="modules-title">Modulos activos</div>'
+    + '<div class="mod-section-title">Modulos disponibles para este usuario</div>'
     + '<div class="plans-row">'
-    + '<button class="plan-btn" data-uid="' + u.userId + '" data-plan="basico">Basico</button>'
-    + '<button class="plan-btn" data-uid="' + u.userId + '" data-plan="estandar">Estandar</button>'
-    + '<button class="plan-btn" data-uid="' + u.userId + '" data-plan="premium">Premium</button>'
+    + '<button class="plan-btn" data-uid="' + u.userId + '" data-plan="basico">Plan Basico</button>'
+    + '<button class="plan-btn" data-uid="' + u.userId + '" data-plan="estandar">Plan Estandar</button>'
+    + '<button class="plan-btn" data-uid="' + u.userId + '" data-plan="premium">Plan Premium</button>'
     + '</div>'
-    + '<div class="modules-grid">' + mods + '</div>'
+    + '<div class="user-mods-grid">' + mods + '</div>'
     + '</div></div></div>';
 }
 
 function filterUsers() {
   var q = document.getElementById('searchInput').value.toLowerCase();
-  var f = q
-    ? allUsers.filter(function(u){ return u.nombre.toLowerCase().includes(q) || u.email.toLowerCase().includes(q); })
-    : allUsers;
-  displayUsers(f);
+  displayUsers(q
+    ? allUsers.filter(function(u){ return (u.nombre+u.email).toLowerCase().includes(q); })
+    : allUsers);
 }
 
-// Delegacion de eventos (un solo listener para todo)
-document.addEventListener('click', function(e) {
-  // Toggle card
+// ── DELEGACION DE EVENTOS ─────────────────────────────────────
+function onGlobalClick(e) {
   var header = e.target.closest('.user-header');
   if (header) {
-    var uid  = header.dataset.uid;
-    var card = document.getElementById('card-' + uid);
+    var card = document.getElementById('card-' + header.dataset.uid);
     if (card) card.classList.toggle('expanded');
   }
-  // Plan buttons
   var planBtn = e.target.closest('.plan-btn');
   if (planBtn) {
     var uid  = planBtn.dataset.uid;
     var plan = planBtn.dataset.plan;
-    if (confirm('Aplicar plan ' + plan + ' al usuario?')) {
-      gasPost({ action: 'updateModule', adminPass: adminPass, userId: uid, plan: plan })
-        .then(function(res) {
-          if (!res.ok) throw new Error(res.error);
-          loadUsers();
-          showToast('Plan ' + plan + ' aplicado');
-        })
-        .catch(function(e) { showToast('Error: ' + e.message, true); });
-    }
+    if (!confirm('Aplicar ' + plan + ' al usuario?')) return;
+    gasPost({ action: 'updateModule', adminPass: adminPass, userId: uid, plan: plan })
+      .then(function(res) {
+        if (!res.ok) throw new Error(res.error);
+        loadUsers();
+        showToast('Plan ' + plan + ' aplicado');
+      })
+      .catch(function(e) { showToast('Error: ' + e.message, true); });
   }
-});
+}
 
-document.addEventListener('change', function(e) {
-  // Block toggle
-  if (e.target.classList.contains('block-cb')) {
+function onGlobalChange(e) {
+  if (e.target.classList.contains('blk-cb')) {
     var uid   = e.target.dataset.uid;
     var block = e.target.checked;
     gasPost({ action: 'blockUser', adminPass: adminPass, userId: uid, block: block })
@@ -311,22 +448,22 @@ document.addEventListener('change', function(e) {
         if (card) card.classList.toggle('blocked', block);
         showToast(block ? 'Usuario bloqueado' : 'Usuario desbloqueado');
       })
-      .catch(function(e) { showToast('Error: ' + e.message, true); });
+      .catch(function(e) { showToast('Error: ' + e.message, true); e.target.checked = !block; });
   }
-  // Module toggle
-  if (e.target.classList.contains('mod-cb')) {
+  if (e.target.classList.contains('umod-cb')) {
     var uid = e.target.dataset.uid;
     var mod = e.target.dataset.mod;
     var val = e.target.checked;
     gasPost({ action: 'updateModule', adminPass: adminPass, userId: uid, module: mod, value: val })
       .then(function(res) {
         if (!res.ok) throw new Error(res.error);
-        showToast(MODULE_LABELS[mod] + ' ' + (val ? 'activado' : 'desactivado'));
+        showToast(MODULE_NAMES[mod] + ': ' + (val ? 'activado' : 'desactivado'));
       })
-      .catch(function(e) { showToast('Error: ' + e.message, true); });
+      .catch(function(e) { showToast('Error: ' + e.message, true); e.target.checked = !val; });
   }
-});
+}
 
+// ── UTILS ─────────────────────────────────────────────────────
 function gasPost(data) {
   return fetch(GAS_URL, {
     method: 'POST',
@@ -341,10 +478,9 @@ function showToast(msg, error) {
   el.textContent = msg;
   el.style.borderColor = error ? 'rgba(224,85,85,0.4)' : 'rgba(126,184,212,0.3)';
   el.classList.add('show');
-  setTimeout(function() { el.classList.remove('show'); }, 2800);
+  setTimeout(function() { el.classList.remove('show'); }, 3000);
 }
 
-// Arrancar
 init();
 </script>
 </body>
