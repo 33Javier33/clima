@@ -2372,6 +2372,8 @@ function saveToIDB(key, value) { return new Promise(function(resolve) { try { co
 
 async function initLicense() {
   deviceId = await generateFingerprint();
+  // Verificar OTP pendiente ANTES del servidor — impide que F5 salte la validación
+  try { var p = JSON.parse(localStorage.getItem('climaPendingOtp') || 'null'); if (p && p.email && p.phone) { showOtpForm(p.email, p.phone); pollSyncStatus(); return; } } catch(_) {}
   try {
     const res = await gasPost({ action: 'checkLicense', userId: deviceId });
     if (!res.ok) { await registerSilent(deviceId); return; }
@@ -2417,13 +2419,14 @@ async function submitRegistration() {
   if (valOverlay) { valOverlay.querySelector('.val-text').innerHTML = 'Generando y enviando código de seguridad...<br>Por favor espera.'; valOverlay.classList.add('show'); }
   try {
     const res = await gasPost({ action: 'requestOTP', deviceId: deviceId, email: email, phone: phone, plan: selectedPlan });
-    if (res.ok) { if (valOverlay) valOverlay.classList.remove('show'); showOtpForm(email, phone); } else { if (valOverlay) valOverlay.classList.remove('show'); btn.disabled = false; btn.textContent = 'Solicitar acceso'; alert('Error al enviar el código: ' + (res.message || 'Verifica tus datos e intenta de nuevo.')); }
+    if (res.ok) { if (valOverlay) valOverlay.classList.remove('show'); localStorage.setItem('climaPendingOtp', JSON.stringify({ email: email, phone: phone })); showOtpForm(email, phone); } else { if (valOverlay) valOverlay.classList.remove('show'); btn.disabled = false; btn.textContent = 'Solicitar acceso'; alert('Error al enviar el código: ' + (res.message || 'Verifica tus datos e intenta de nuevo.')); }
   } catch(e) { if (valOverlay) valOverlay.classList.remove('show'); btn.disabled = false; btn.textContent = 'Solicitar acceso'; alert('Error de conexión. No se pudo enviar el código de verificación.'); }
 }
 
 function showOtpForm(email, phone) {
   const panel = document.getElementById('trialPanel');
   panel.innerHTML = '<div class="panel-handle"></div><div class="trial-badge">🔒 Verificación de seguridad</div><h2>Ingresa tu código</h2><div class="t-sub">Hemos enviado un código de 6 dígitos a <b>' + email + '</b> y al WhatsApp <b>' + phone + '</b>. Revisa tus bandejas.</div><div class="trial-form"><input class="otp-input" id="tOtpCode" type="text" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code"/></div><button class="t-submit" id="tVerifyBtn" onclick="submitOTP(\'' + email + '\', \'' + phone + '\')">Verificar Identidad</button><button class="t-back" onclick="showRegistrationForm(false)">Volver / Cambiar datos</button>';
+  document.getElementById('trialOverlay').classList.add('show');
 }
 
 async function submitOTP(email, phone) {
@@ -2436,6 +2439,7 @@ async function submitOTP(email, phone) {
     const res = await gasPost({ action: 'verifyOTP', deviceId: deviceId, email: email, phone: phone, otp: otp, plan: selectedPlan });
     if (res.ok) {
       if (valOverlay) valOverlay.classList.remove('show'); document.getElementById('trialPanel').innerHTML = '<div class="t-success"><div class="s-icon">✅</div><h3>Identidad verificada</h3><p>Acceso concedido exitosamente. Ya puedes disfrutar de la aplicación.</p></div>';
+      localStorage.removeItem('climaPendingOtp');
       licenseStatus = res.status || 'trial'; licenseModules = res.modules || {}; applyModules();
       setTimeout(() => { closeTrialOverlay(); }, 3000);
     } else {
@@ -2472,24 +2476,23 @@ setInterval(pollSyncStatus, 45000);
 function applyModules() {
   localStorage.setItem('climaLicenseCache', JSON.stringify({ status: licenseStatus, modules: licenseModules, cachedAt: Date.now() }));
   const MODULE_ELEMENTS = { pronostico_horas: 'secPronosticoHoras', pronostico_dias: 'secPronosticoDias', seccion_explorar: 'placesSection', temas_visuales: 'settingsBtn', info_ciudad: 'infoBtn', foto_ciudad: 'cityPhotoCard', datos_detalle: 'secDatosDetalle', datos_uv: 'modUV', datos_viento: 'modViento', datos_presion: 'modPresion', datos_nubosidad: 'modNubosidad', datos_visibilidad: 'modVisibilidad', datos_amanecer: 'modAmanecer' };
-  const MODULE_LABELS  = { pronostico_horas: 'Pronóstico por horas', pronostico_dias: 'Pronóstico 6 días', seccion_explorar: 'Explorar ciudad', temas_visuales: 'Cambiar temas', info_ciudad: 'Info de la ciudad', foto_ciudad: 'Foto de la ciudad', datos_detalle: 'Datos del tiempo', datos_uv: 'Índice UV', datos_viento: 'Viento', datos_presion: 'Presión atmosférica', datos_nubosidad: 'Nubosidad', datos_visibilidad: 'Visibilidad', datos_amanecer: 'Amanecer y atardecer' };
-  function setLocked(elId, locked, isSection, featureKey) {
+  const MODULE_LABELS   = { pronostico_horas: 'Pronostico por horas', pronostico_dias: 'Pronostico 6 dias', seccion_explorar: 'Explorar ciudad', temas_visuales: 'Cambiar temas', info_ciudad: 'Info ciudad', foto_ciudad: 'Foto ciudad', datos_detalle: 'Datos del tiempo', datos_uv: 'Indice UV', datos_viento: 'Viento', datos_presion: 'Presion', datos_nubosidad: 'Nubosidad', datos_visibilidad: 'Visibilidad', datos_amanecer: 'Amanecer' };
+  function setLocked(elId, locked, isSection, modKey) {
     const el = document.getElementById(elId); if (!el) return;
     const cls = isSection ? 'mod-locked-section' : 'mod-locked';
     if (locked) {
-      const label = featureKey ? '🔒 ' + (MODULE_LABELS[featureKey] || featureKey) + ' · No disponible en tu plan' : '🔒 No disponible en tu plan';
-      el.setAttribute('data-lock-label', label);
+      el.setAttribute('data-lock-label', '\uD83D\uDD12 ' + (MODULE_LABELS[modKey] || 'Funcion') + ' - No disponible en tu plan');
       el.classList.add(cls); el.style.pointerEvents = 'none';
     } else {
       el.removeAttribute('data-lock-label');
       el.classList.remove('mod-locked', 'mod-locked-section'); el.style.pointerEvents = 'auto';
     }
   }
-  if (licenseStatus === 'premium') { Object.values(MODULE_ELEMENTS).forEach(id => setLocked(id, false, false)); return; }
-  setLocked('secPronosticoHoras', !licenseModules['pronostico_horas'], true, 'pronostico_horas'); setLocked('secPronosticoDias', !licenseModules['pronostico_dias'], true, 'pronostico_dias'); setLocked('placesSection', !licenseModules['seccion_explorar'], true, 'seccion_explorar'); setLocked('cityPhotoCard', !licenseModules['foto_ciudad'], true, 'foto_ciudad');
+  if (licenseStatus === 'premium') { Object.values(MODULE_ELEMENTS).forEach(id => setLocked(id, false, false, null)); return; }
+  setLocked('secPronosticoHoras', !licenseModules['pronostico_horas'], true,  'pronostico_horas'); setLocked('secPronosticoDias', !licenseModules['pronostico_dias'], true, 'pronostico_dias'); setLocked('placesSection', !licenseModules['seccion_explorar'], true, 'seccion_explorar'); setLocked('cityPhotoCard', !licenseModules['foto_ciudad'], true, 'foto_ciudad');
   const themeBtn = document.getElementById('settingsBtn'); if (themeBtn) { themeBtn.style.opacity = licenseModules['temas_visuales'] ? '' : '0.35'; themeBtn.style.pointerEvents = licenseModules['temas_visuales'] ? '' : 'none'; }
   const infoBtn = document.getElementById('infoBtn'); if (infoBtn) { infoBtn.style.opacity = licenseModules['info_ciudad'] ? '' : '0.35'; infoBtn.style.pointerEvents = licenseModules['info_ciudad'] ? '' : 'none'; }
-  if (licenseModules['datos_detalle'] === false) { setLocked('secDatosDetalle', true, true, 'datos_detalle'); } else { setLocked('secDatosDetalle', false, false); setLocked('modUV', licenseModules['datos_uv'] === false, false, 'datos_uv'); setLocked('modViento', licenseModules['datos_viento'] === false, false, 'datos_viento'); setLocked('modPresion', licenseModules['datos_presion'] === false, false, 'datos_presion'); setLocked('modNubosidad', licenseModules['datos_nubosidad'] === false, false, 'datos_nubosidad'); setLocked('modVisibilidad', licenseModules['datos_visibilidad'] === false, false, 'datos_visibilidad'); setLocked('modAmanecer', licenseModules['datos_amanecer'] === false, false, 'datos_amanecer'); }
+  if (licenseModules['datos_detalle'] === false) { setLocked('secDatosDetalle', true, true, 'datos_detalle'); } else { setLocked('secDatosDetalle', false, false, null); setLocked('modUV', licenseModules['datos_uv'] === false, false, 'datos_uv'); setLocked('modViento', licenseModules['datos_viento'] === false, false, 'datos_viento'); setLocked('modPresion', licenseModules['datos_presion'] === false, false, 'datos_presion'); setLocked('modNubosidad', licenseModules['datos_nubosidad'] === false, false, 'datos_nubosidad'); setLocked('modVisibilidad', licenseModules['datos_visibilidad'] === false, false, 'datos_visibilidad'); setLocked('modAmanecer', licenseModules['datos_amanecer'] === false, false, 'datos_amanecer'); }
   if (licenseModules['temas_visuales'] === false) { document.documentElement.setAttribute('data-theme', ''); localStorage.setItem('climaTema', ''); }
 }
 
