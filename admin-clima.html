@@ -69,7 +69,7 @@ body{background:var(--ink);color:var(--text);font-family:'DM Mono',monospace;min
 .tb-btn{background:var(--g2);border:1px solid rgba(126,184,212,0.15);color:var(--cold);font-family:'DM Mono',monospace;font-size:0.65rem;padding:9px 14px;border-radius:10px;cursor:pointer;}
 
 /* User card */
-.user-card{background:var(--g);border:1px solid rgba(126,184,212,0.08);border-radius:14px;padding:14px;margin-bottom:10px;}
+.user-card{background:var(--g);border:1px solid rgba(126,184,212,0.08);border-radius:14px;padding:14px;margin-bottom:10px;position:relative;}
 .user-card.blocked{border-color:rgba(224,85,85,0.2);background:rgba(224,85,85,0.03);}
 .user-header{display:flex;align-items:center;gap:10px;cursor:pointer;}
 .user-avatar{width:36px;height:36px;border-radius:50%;background:rgba(126,184,212,0.12);display:flex;align-items:center;justify-content:center;font-size:0.95rem;flex-shrink:0;}
@@ -83,6 +83,7 @@ body{background:var(--ink);color:var(--text);font-family:'DM Mono',monospace;min
 .bb{background:rgba(224,85,85,0.15);color:var(--red);}
 .be{background:rgba(150,150,150,0.12);color:var(--dim);}
 .bd{background:rgba(126,184,212,0.1);color:var(--cold);}
+.bpend{background:rgba(255,235,59,0.15);color:#ffeb3b;} /* Nueva etiqueta Pendiente */
 /* Telemetría de uso */
 .bu{background:rgba(126,184,212,0.08);color:var(--dim);}
 .bo{background:rgba(76,175,80,0.08);color:#66bb6a;}
@@ -191,17 +192,13 @@ var globalConfig = {};
 var trialUnit  = 'dias';
 
 var MODULE_NAMES = {
-  // ── Siempre activo ──
   'clima_basico':      '🌡 Clima basico (temp, condicion, humedad)',
-  // ── Pronosticos ──
   'pronostico_horas':  '🕐 Pronostico por horas',
-  'pronostico_dias':   '📅 Pronostico 6 dias',
-  // ── Contenido ──
+  'pronostico_dias':   '📅 Pronóstico 6 días',
   'foto_ciudad':       '📷 Foto de la ciudad',
   'info_ciudad':       'ℹ Info Wikipedia ciudad',
   'seccion_explorar':  '🗺 Explorar ciudad (rest, hoteles...)',
   'temas_visuales':    '🎨 Cambiar temas de color',
-  // ── Datos detalle ──
   'datos_detalle':     '📊 Datos detalle (grupo completo)',
   'datos_uv':          '☀ Indice UV',
   'datos_viento':      '💨 Viento (velocidad y direccion)',
@@ -366,6 +363,7 @@ function buildUserCard(u) {
   var trialEnd = new Date(u.trialEnd);
   var expired  = u.estado === 'trial' && now > trialEnd;
   var blocked  = u.acceso === 'bloqueado';
+  var pending  = u.acceso === 'pendiente'; // Agregado validacion OTP
   var msLeft   = Math.max(0, trialEnd - now);
   var daysLeft = Math.ceil(msLeft / 86400000);
   var hrsLeft  = Math.ceil(msLeft / 3600000);
@@ -373,14 +371,15 @@ function buildUserCard(u) {
 
   var badge = blocked
     ? '<span class="badge bb">Bloqueado</span>'
-    : expired
-      ? '<span class="badge be">Trial expirado</span>'
-      : u.estado === 'premium'
-        ? '<span class="badge bp">Premium</span>'
-        : '<span class="badge bt">Trial</span><span class="badge bd">' + timeLeft + ' restante</span>';
+    : pending
+      ? '<span class="badge bpend">Validación OTP Pdte.</span>'
+      : expired
+        ? '<span class="badge be">Trial expirado</span>'
+        : u.estado === 'premium'
+          ? '<span class="badge bp">Premium</span>'
+          : '<span class="badge bt">Trial</span><span class="badge bd">' + timeLeft + ' restante</span>';
 
   // ── Telemetría de uso ──────────────────────────────────────
-  // totalMinutes y lastPing vienen de getUsers() → columnas 9 y 10
   var totalMin  = u.totalMinutes || 0;
   var lastPing  = u.lastPing     || null;
 
@@ -401,7 +400,6 @@ function buildUserCard(u) {
     return 'Hace ' + Math.floor(h / 24) + 'd';
   })();
 
-  // Online si el último ping fue hace menos de 7 minutos
   var isOnline = lastPing && (now - new Date(lastPing)) < 7 * 60 * 1000;
 
   var telemetryBadges = '<span class="badge bu">&#128336; ' + usageLabel + ' uso total</span>'
@@ -442,6 +440,12 @@ function buildUserCard(u) {
     + '<div class="sw-track"></div>'
     + '<div class="sw-thumb"></div>'
     + '</label></div>'
+    
+    // Boton ELIMINAR AÑADIDO AQUI
+    + '<div style="text-align:right; margin-bottom:14px;">'
+    + '<button class="del-btn" data-uid="' + u.userId + '" style="background:none; border:1px solid var(--red); color:var(--red); font-size:0.6rem; padding:6px 12px; border-radius:6px; cursor:pointer; font-family:\'DM Mono\',monospace; transition:all 0.2s;">&#10006; Eliminar Usuario Definitivamente</button>'
+    + '</div>'
+
     + '<div class="mod-section-title">Modulos disponibles para este usuario</div>'
     + '<div class="plans-row">'
     + '<button class="plan-btn" data-uid="' + u.userId + '" data-plan="basico" title="Solo clima actual">Plan Basico</button>'
@@ -459,25 +463,85 @@ function filterUsers() {
     : allUsers);
 }
 
-// ── DELEGACION DE EVENTOS ─────────────────────────────────────
+// ── DELEGACION DE EVENTOS (LOGICA REVISADA) ───────────────────
 function onGlobalClick(e) {
   var header = e.target.closest('.user-header');
   if (header) {
     var card = document.getElementById('card-' + header.dataset.uid);
     if (card) card.classList.toggle('expanded');
   }
+
+  // --- LOGICA DE CAMBIO DE PLAN ---
   var planBtn = e.target.closest('.plan-btn');
   if (planBtn) {
     var uid  = planBtn.dataset.uid;
     var plan = planBtn.dataset.plan;
-    if (!confirm('Aplicar ' + plan + ' al usuario?')) return;
-    gasPost({ action: 'updateModule', adminPass: adminPass, userId: uid, plan: plan })
+
+    // Generamos la plantilla de módulos según el plan
+    var planConfig = {};
+    if (plan === 'basico') {
+      MODULES.forEach(function(m){ planConfig[m] = false; });
+      planConfig['clima_basico'] = true; // Solo el clima base
+    } else if (plan === 'estandar') {
+      MODULES.forEach(function(m){ planConfig[m] = false; });
+      ['clima_basico','pronostico_horas','pronostico_dias','foto_ciudad','datos_viento','datos_detalle'].forEach(function(m){
+        planConfig[m] = true;
+      });
+    } else if (plan === 'premium') {
+      MODULES.forEach(function(m){ planConfig[m] = true; });
+    }
+
+    if (!confirm('Aplicar ' + plan.toUpperCase() + ' al usuario? Esto sobrescribirá sus permisos actuales.')) return;
+
+    gasPost({ 
+      action: 'updateModule', 
+      adminPass: adminPass, 
+      userId: uid, 
+      planName: plan,      // Etiqueta del plan
+      modules: planConfig  // Objeto con todos los booleanos para la base de datos
+    })
+    .then(function(res) {
+      if (!res.ok) throw new Error(res.error);
+      showToast('Plan ' + plan + ' aplicado con éxito');
+      loadUsers(); // Recarga para sincronizar los switches visualmente
+    })
+    .catch(function(e) { showToast('Error: ' + e.message, true); });
+  }
+
+  // --- LOGICA BOTON ELIMINAR AÑADIDA ---
+  var delBtn = e.target.closest('.del-btn');
+  if (delBtn) {
+    var uidDel = delBtn.dataset.uid;
+    if (!confirm('¿ESTAS SEGURO? Esta acción borrará al usuario de la Base de Datos y no se puede deshacer.')) return;
+    
+    delBtn.textContent = 'Eliminando...';
+    delBtn.disabled = true;
+    delBtn.style.opacity = '0.5';
+
+    gasPost({ action: 'deleteUser', adminPass: adminPass, userId: uidDel })
       .then(function(res) {
         if (!res.ok) throw new Error(res.error);
-        loadUsers();
-        showToast('Plan ' + plan + ' aplicado');
+        showToast('Usuario eliminado exitosamente');
+        
+        // Actualizar UI dinamicamente
+        var cardToRemove = document.getElementById('card-' + uidDel);
+        if (cardToRemove) cardToRemove.remove();
+        
+        allUsers = allUsers.filter(function(u) { return u.userId !== uidDel; });
+        document.getElementById('statTotal').textContent   = allUsers.length;
+        document.getElementById('statTrial').textContent   = allUsers.filter(function(u){ return u.estado === 'trial'; }).length;
+        document.getElementById('statPremium').textContent = allUsers.filter(function(u){ return u.estado === 'premium'; }).length;
+        
+        if (allUsers.length === 0) {
+           document.getElementById('userList').innerHTML = '<div class="empty">Sin usuarios registrados.</div>';
+        }
       })
-      .catch(function(e) { showToast('Error: ' + e.message, true); });
+      .catch(function(e) {
+        showToast('Error al eliminar: ' + e.message, true);
+        delBtn.textContent = '✖ Eliminar Usuario Definitivamente';
+        delBtn.disabled = false;
+        delBtn.style.opacity = '1';
+      });
   }
 }
 
