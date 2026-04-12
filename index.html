@@ -104,14 +104,21 @@
     --font-label:'Space Grotesk',sans-serif;
   }
 
+  /* FIX 7: Corrección estructural para evitar scroll fantasma */
   * { margin:0; padding:0; box-sizing:border-box; }
+  
+  html, body {
+    overflow-x: hidden;
+    width: 100%;
+    margin: 0; 
+    padding: 0;
+  }
 
   body {
     background: var(--ink);
     color: var(--text);
     font-family: 'DM Mono', monospace;
     min-height: 100vh;
-    overflow-x: hidden;
     position: relative;
     transition: background 0.5s ease, color 0.5s ease;
   }
@@ -197,7 +204,8 @@
     position: relative; z-index: 2;
     max-width: 480px;
     margin: 0 auto;
-    padding: 32px 20px 48px;
+    /* FIX 7: Reducido el padding inferior excesivo */
+    padding: 32px 20px 24px;
     min-height: 100vh;
   }
 
@@ -746,6 +754,7 @@
   }
   .modal-overlay.open { opacity: 1; pointer-events: all; }
 
+  /* FIX 7: Visibilidad oculta al cerrar previene el scroll fantasma de translateY(100%) en móviles */
   .settings-panel {
     position: fixed;
     bottom: 0; left: 0; right: 0;
@@ -755,11 +764,18 @@
     border-radius: 20px 20px 0 0;
     padding: 12px 20px 40px;
     transform: translateY(100%);
-    transition: transform 0.35s cubic-bezier(0.32,0.72,0,1);
+    visibility: hidden; 
+    transition: transform 0.35s cubic-bezier(0.32,0.72,0,1), visibility 0s linear 0.35s, opacity 0.35s;
+    opacity: 0;
     max-width: 480px;
     margin: 0 auto;
   }
-  .settings-panel.open { transform: translateY(0); }
+  .settings-panel.open { 
+    transform: translateY(0); 
+    visibility: visible;
+    opacity: 1;
+    transition: transform 0.35s cubic-bezier(0.32,0.72,0,1), visibility 0s linear 0s, opacity 0.35s;
+  }
 
   .panel-handle {
     width: 36px; height: 4px;
@@ -870,6 +886,7 @@
   }
   .fav-chip-del:hover { color: #e07070; }
 
+  /* FIX 7: Visibilidad oculta al cerrar previene el scroll fantasma de translateY(100%) en móviles */
   .info-panel {
     position: fixed;
     bottom: 0; left: 0; right: 0;
@@ -879,13 +896,20 @@
     border-radius: 20px 20px 0 0;
     padding: 12px 20px 40px;
     transform: translateY(100%);
-    transition: transform 0.35s cubic-bezier(0.32,0.72,0,1);
+    visibility: hidden;
+    transition: transform 0.35s cubic-bezier(0.32,0.72,0,1), visibility 0s linear 0.35s, opacity 0.35s;
+    opacity: 0;
     max-width: 480px;
     margin: 0 auto;
     max-height: 80vh;
     overflow-y: auto;
   }
-  .info-panel.open { transform: translateY(0); }
+  .info-panel.open { 
+    transform: translateY(0); 
+    visibility: visible;
+    opacity: 1;
+    transition: transform 0.35s cubic-bezier(0.32,0.72,0,1), visibility 0s linear 0s, opacity 0.35s;
+  }
   .info-panel::-webkit-scrollbar { display: none; }
 
   .ci-loading {
@@ -2327,7 +2351,7 @@ try {
 loadWeather();
 setTimeout(initLicense, 1500);
 
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbwrNQ1OUfhy7bWmdz7cmlGQi8CRskm2I8xC5K2pVOgmq2lEso0vfciZrM0x0npnJo-_/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwAYuaxjxOqURvYu3aVu0AWQUoKmSRY2vX1XfQdtGOsXQjDtZrfX3S1tApRJjdEneho/exec';
 const PLAN_LABELS = { basico: { name: '🌡 Básico', price: 'Contactar', features: 'Clima actual · Próximas horas' }, estandar: { name: '📅 Estándar', price: 'Contactar', features: 'Básico + Pronóstico 7 días · Info ciudad · Temas' }, premium: { name: '⭐ Premium', price: 'Contactar', features: 'Todo incluido · Sin restricciones' } };
 
 let licenseStatus = 'unknown'; let licenseModules = {}; let selectedPlan = 'estandar'; let deviceId = null;
@@ -2465,457 +2489,6 @@ async function gasPost(data) { const res = await fetch(GAS_URL, { method: 'POST'
 const PING_INTERVAL_MS = 5 * 60 * 1000; let _pingTimer = null; function startUsagePing() { if (_pingTimer) return; _sendPing(); _pingTimer = setInterval(_sendPing, PING_INTERVAL_MS); } function stopUsagePing() { if (_pingTimer) { clearInterval(_pingTimer); _pingTimer = null; } } async function _sendPing() { if (!deviceId) return; try { await gasPost({ action:'trackUsage', deviceId:deviceId, minutes:5 }); } catch(_) {} } document.addEventListener('visibilitychange', function() { if (document.visibilityState === 'visible') startUsagePing(); else stopUsagePing(); }); if (document.visibilityState === 'visible') startUsagePing();
 
 if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').then(reg => { reg.addEventListener('updatefound', () => { const newWorker = reg.installing; newWorker.addEventListener('statechange', () => { if (newWorker.state === 'installed' && navigator.serviceWorker.controller) document.getElementById('update-banner').classList.add('visible'); }); }); }); }); }
-</script>
-</body>
-</html>
-```
-
-***
-
-### 2. Panel de Administrador (`admin.html`)
-Este archivo contiene el botón para eliminar usuarios que activa el timestamp de polling para forzar el bloqueo en el cliente.
-
-```html
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Admin · Clima App</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
-<style>
-:root{--ink:#0d1117;--g:rgba(255,255,255,0.05);--g2:rgba(255,255,255,0.09);--cold:#7eb8d4;--ice:#b8dce8;--text:#ccd9e6;--dim:#7a92a8;--green:#4caf50;--red:#e05555;--orange:#ff9800;}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--ink);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;}
-
-/* Login */
-.login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
-.login-card{background:var(--g);border:1px solid rgba(126,184,212,0.15);border-radius:20px;padding:32px 28px;width:100%;max-width:360px;text-align:center;}
-.login-card h1{font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--ice);margin-bottom:6px;}
-.login-card p{font-size:0.65rem;color:var(--dim);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:28px;}
-.login-input{width:100%;background:var(--g2);border:1px solid rgba(126,184,212,0.15);border-radius:10px;padding:12px 16px;font-family:'DM Mono',monospace;font-size:0.85rem;color:var(--ice);outline:none;margin-bottom:12px;}
-.login-input:focus{border-color:var(--cold);}
-.login-btn{width:100%;background:rgba(126,184,212,0.15);border:1px solid rgba(126,184,212,0.3);color:var(--ice);font-family:'DM Mono',monospace;font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;padding:12px;border-radius:10px;cursor:pointer;transition:background 0.2s;}
-.login-error{color:var(--red);font-size:0.65rem;margin-top:8px;display:none;}
-
-/* App */
-.admin-app{display:none;}
-.topbar{background:rgba(13,17,23,0.96);backdrop-filter:blur(12px);border-bottom:1px solid rgba(126,184,212,0.1);padding:14px 20px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;}
-.topbar h1{font-family:'Playfair Display',serif;font-size:1rem;color:var(--ice);flex:1;}
-.topbar-badge{font-size:0.5rem;background:rgba(74,144,184,0.2);color:var(--cold);border-radius:99px;padding:3px 10px;letter-spacing:0.1em;text-transform:uppercase;}
-.logout-btn{background:none;border:1px solid rgba(126,184,212,0.15);color:var(--dim);font-family:'DM Mono',monospace;font-size:0.6rem;padding:6px 12px;border-radius:8px;cursor:pointer;}
-.main{padding:16px;max-width:900px;margin:0 auto;}
-
-/* Stats */
-.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
-.stat-box{background:var(--g);border:1px solid rgba(126,184,212,0.08);border-radius:12px;padding:14px;text-align:center;}
-.sv{font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--ice);}
-.sl{font-size:0.52rem;color:var(--dim);letter-spacing:0.1em;text-transform:uppercase;margin-top:2px;}
-
-/* Sección */
-.section-card{background:var(--g);border:1px solid rgba(126,184,212,0.1);border-radius:16px;padding:18px;margin-bottom:14px;}
-.section-title{font-size:0.58rem;letter-spacing:0.2em;color:var(--dim);text-transform:uppercase;margin-bottom:14px;}
-
-/* Config trial */
-.trial-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
-.trial-label{font-size:0.68rem;color:var(--text);min-width:120px;}
-.num-input{background:var(--g2);border:1px solid rgba(126,184,212,0.15);border-radius:8px;padding:8px 12px;font-family:'DM Mono',monospace;font-size:0.9rem;color:var(--ice);outline:none;width:80px;text-align:center;}
-.unit-toggle{display:flex;background:var(--g2);border:1px solid rgba(126,184,212,0.12);border-radius:8px;overflow:hidden;}
-.unit-btn{padding:8px 16px;font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--dim);background:none;border:none;cursor:pointer;transition:all 0.2s;}
-.unit-btn.active{background:rgba(126,184,212,0.18);color:var(--ice);}
-.save-btn{background:rgba(76,175,80,0.15);border:1px solid rgba(76,175,80,0.3);color:var(--green);font-family:'DM Mono',monospace;font-size:0.65rem;padding:8px 18px;border-radius:8px;cursor:pointer;letter-spacing:0.1em;transition:background 0.2s;}
-.save-btn:hover{background:rgba(76,175,80,0.25);}
-
-/* Módulos trial defaults */
-.mods-defaults{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;}
-.mod-def-row{background:var(--g2);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;}
-.mod-def-name{font-size:0.62rem;color:var(--text);flex:1;}
-
-/* Toggle switch */
-.sw{position:relative;width:38px;height:21px;cursor:pointer;flex-shrink:0;}
-.sw input{opacity:0;width:0;height:0;position:absolute;}
-.sw-track{position:absolute;inset:0;background:rgba(255,255,255,0.08);border-radius:99px;transition:background 0.2s;}
-.sw-thumb{position:absolute;top:3px;left:3px;width:15px;height:15px;background:#555;border-radius:50%;transition:transform 0.2s,background 0.2s;}
-.sw input:checked ~ .sw-track{background:rgba(76,175,80,0.3);}
-.sw input:checked ~ .sw-thumb{transform:translateX(17px);background:var(--green);}
-.sw-red input:checked ~ .sw-track{background:rgba(224,85,85,0.4);}
-.sw-red input:checked ~ .sw-thumb{background:var(--red);}
-
-/* Toolbar */
-.toolbar{display:flex;gap:8px;margin-bottom:14px;}
-.tb-input{flex:1;background:var(--g2);border:1px solid rgba(126,184,212,0.15);border-radius:10px;padding:9px 14px;font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--ice);outline:none;}
-.tb-btn{background:var(--g2);border:1px solid rgba(126,184,212,0.15);color:var(--cold);font-family:'DM Mono',monospace;font-size:0.65rem;padding:9px 14px;border-radius:10px;cursor:pointer;}
-
-/* User card */
-.user-card{background:var(--g);border:1px solid rgba(126,184,212,0.08);border-radius:14px;padding:14px;margin-bottom:10px;position:relative;}
-.user-card.blocked{border-color:rgba(224,85,85,0.2);background:rgba(224,85,85,0.03);}
-.user-header{display:flex;align-items:center;gap:10px;cursor:pointer;}
-.user-avatar{width:36px;height:36px;border-radius:50%;background:rgba(126,184,212,0.12);display:flex;align-items:center;justify-content:center;font-size:0.95rem;flex-shrink:0;}
-.user-info{flex:1;min-width:0;}
-.user-name{font-size:0.82rem;color:var(--ice);}
-.user-email{font-size:0.58rem;color:var(--dim);margin-top:1px;}
-.user-badges{display:flex;gap:5px;flex-wrap:wrap;margin-top:3px;}
-.badge{font-size:0.48rem;padding:2px 7px;border-radius:99px;letter-spacing:0.08em;text-transform:uppercase;}
-.bt{background:rgba(255,152,0,0.15);color:var(--orange);}
-.bp{background:rgba(76,175,80,0.15);color:var(--green);}
-.bb{background:rgba(224,85,85,0.15);color:var(--red);}
-.be{background:rgba(150,150,150,0.12);color:var(--dim);}
-.bd{background:rgba(126,184,212,0.1);color:var(--cold);}
-.bpend{background:rgba(255,235,59,0.15);color:#ffeb3b;} 
-.bu{background:rgba(126,184,212,0.08);color:var(--dim);}
-.bo{background:rgba(76,175,80,0.08);color:#66bb6a;}
-.uc{font-size:0.7rem;color:var(--dim);transition:transform 0.3s;}
-.user-card.expanded .uc{transform:rotate(180deg);}
-.user-detail{max-height:0;overflow:hidden;transition:max-height 0.4s ease;}
-.user-card.expanded .user-detail{max-height:800px;}
-.user-detail-inner{border-top:1px solid rgba(255,255,255,0.05);padding-top:13px;margin-top:12px;}
-
-/* Block row */
-.block-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 12px;background:rgba(224,85,85,0.05);border:1px solid rgba(224,85,85,0.12);border-radius:10px;}
-.block-label{font-size:0.65rem;color:var(--dim);flex:1;}
-
-/* User modules */
-.mod-section-title{font-size:0.55rem;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin:10px 0 8px;}
-.plans-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
-.plan-btn{font-size:0.58rem;padding:5px 12px;border-radius:99px;border:1px solid rgba(126,184,212,0.18);background:none;color:var(--dim);cursor:pointer;font-family:'DM Mono',monospace;transition:all 0.2s;}
-.plan-btn:hover{background:rgba(126,184,212,0.1);color:var(--ice);border-color:var(--cold);}
-.user-mods-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
-.user-mod-row{background:var(--g2);border-radius:9px;padding:9px 11px;display:flex;align-items:center;gap:8px;}
-.user-mod-name{font-size:0.62rem;color:var(--text);flex:1;}
-
-/* Loading / empty / toast */
-.loading{text-align:center;padding:40px;font-size:0.7rem;color:var(--dim);}
-.empty{text-align:center;padding:40px;font-size:0.72rem;color:var(--dim);}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a2d40;border:1px solid rgba(126,184,212,0.3);border-radius:12px;padding:9px 20px;font-size:0.68rem;color:var(--ice);z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.3s;white-space:nowrap;}
-.toast.show{opacity:1;}
-</style>
-</head>
-<body>
-
-<!-- Login -->
-<div class="login-screen" id="loginScreen">
-  <div class="login-card">
-    <h1>Clima App</h1>
-    <p>Panel de Administrador</p>
-    <input class="login-input" type="password" id="passInput" placeholder="Contrasena"/>
-    <button class="login-btn" id="loginBtn">Ingresar</button>
-    <div class="login-error" id="loginError">Contrasena incorrecta</div>
-  </div>
-</div>
-
-<!-- Admin App -->
-<div class="admin-app" id="adminApp">
-  <div class="topbar">
-    <h1>Panel Admin · Clima App</h1>
-    <span class="topbar-badge">CarlosPN Interactive</span>
-    <button class="logout-btn" id="logoutBtn">Salir</button>
-  </div>
-
-  <div class="main">
-
-    <!-- Stats -->
-    <div class="stats-row">
-      <div class="stat-box"><div class="sv" id="statTotal">-</div><div class="sl">Usuarios</div></div>
-      <div class="stat-box"><div class="sv" id="statTrial">-</div><div class="sl">Trial</div></div>
-      <div class="stat-box"><div class="sv" id="statPremium">-</div><div class="sl">Premium</div></div>
-    </div>
-
-    <!-- Configuracion global -->
-    <div class="section-card">
-      <div class="section-title">Configuracion global del Trial</div>
-
-      <div class="trial-row">
-        <span class="trial-label">Duracion del trial:</span>
-        <input class="num-input" type="number" id="trialValor" value="7" min="1" max="999"/>
-        <div class="unit-toggle">
-          <button class="unit-btn active" id="btnDias" data-unit="dias">Dias</button>
-          <button class="unit-btn" id="btnHoras" data-unit="horas">Horas</button>
-        </div>
-        <button class="save-btn" id="saveTrialDur">Guardar</button>
-      </div>
-      <div style="font-size:0.6rem;color:var(--dim);margin-bottom:16px;">
-        Afecta solo a nuevos registros. Los usuarios existentes conservan su fecha actual.
-      </div>
-
-      <div class="section-title" style="margin-top:4px;">Modulos activos durante el trial (nuevos usuarios)</div>
-      <div class="mods-defaults" id="trialModsGrid">
-        <!-- Se llena dinamicamente -->
-      </div>
-      <div style="margin-top:12px;">
-        <button class="save-btn" id="saveTrialMods">Guardar modulos trial</button>
-      </div>
-    </div>
-
-    <!-- Lista de usuarios -->
-    <div class="section-card" style="padding-bottom:8px;">
-      <div class="section-title">Usuarios registrados</div>
-      <div class="toolbar">
-        <input class="tb-input" id="searchInput" type="text" placeholder="Buscar por nombre o email..."/>
-        <button class="tb-btn" id="refreshBtn">Actualizar</button>
-      </div>
-      <div id="userList"><div class="loading">Cargando...</div></div>
-    </div>
-
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<script>
-var GAS_URL    = 'https://script.google.com/macros/s/AKfycbwAYuaxjxOqURvYu3aVu0AWQUoKmSRY2vX1XfQdtGOsXQjDtZrfX3S1tApRJjdEneho/exec';
-var adminPass  = '';
-var allUsers   = [];
-var globalConfig = {};
-var trialUnit  = 'dias';
-
-var MODULE_NAMES = {
-  'clima_basico':      '🌡 Clima basico (temp, condicion, humedad)',
-  'pronostico_horas':  '🕐 Pronostico por horas',
-  'pronostico_dias':   '📅 Pronóstico 6 días',
-  'foto_ciudad':       '📷 Foto de la ciudad',
-  'info_ciudad':       'ℹ Info Wikipedia ciudad',
-  'seccion_explorar':  '🗺 Explorar ciudad (rest, hoteles...)',
-  'temas_visuales':    '🎨 Cambiar temas de color',
-  'datos_detalle':     '📊 Datos detalle (grupo completo)',
-  'datos_uv':          '☀ Indice UV',
-  'datos_viento':      '💨 Viento (velocidad y direccion)',
-  'datos_presion':     '🌐 Presion atmosferica',
-  'datos_nubosidad':   '☁ Nubosidad',
-  'datos_visibilidad': '👁 Visibilidad',
-  'datos_amanecer':    '🌅 Amanecer y atardecer',
-};
-
-var MODULES = Object.keys(MODULE_NAMES);
-
-function init() {
-  document.getElementById('loginBtn').addEventListener('click', doLogin);
-  document.getElementById('logoutBtn').addEventListener('click', doLogout);
-  document.getElementById('refreshBtn').addEventListener('click', loadUsers);
-  document.getElementById('saveTrialDur').addEventListener('click', saveTrialDuration);
-  document.getElementById('saveTrialMods').addEventListener('click', saveTrialMods);
-  document.getElementById('passInput').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
-  document.getElementById('searchInput').addEventListener('input', filterUsers);
-
-  document.getElementById('btnDias').addEventListener('click', function() { setUnit('dias'); });
-  document.getElementById('btnHoras').addEventListener('click', function() { setUnit('horas'); });
-
-  document.addEventListener('click', onGlobalClick);
-  document.addEventListener('change', onGlobalChange);
-}
-
-function setUnit(u) {
-  trialUnit = u;
-  document.getElementById('btnDias').classList.toggle('active', u === 'dias');
-  document.getElementById('btnHoras').classList.toggle('active', u === 'horas');
-}
-
-function doLogin() {
-  var pass = document.getElementById('passInput').value.trim();
-  if (!pass) return;
-  document.getElementById('loginBtn').textContent = 'Verificando...';
-  gasPost({ action: 'getUsers', adminPass: pass })
-    .then(function(res) {
-      if (!res.ok) throw new Error('no auth');
-      adminPass = pass;
-      document.getElementById('loginScreen').style.display = 'none';
-      document.getElementById('adminApp').style.display    = 'block';
-      if (res.config) applyGlobalConfig(res.config);
-      renderUsers(res.users);
-    })
-    .catch(function() {
-      document.getElementById('loginError').style.display = 'block';
-      document.getElementById('loginBtn').textContent = 'Ingresar';
-    });
-}
-
-function doLogout() {
-  adminPass = '';
-  document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('adminApp').style.display    = 'none';
-  document.getElementById('passInput').value = '';
-  document.getElementById('loginError').style.display = 'none';
-  document.getElementById('loginBtn').textContent = 'Ingresar';
-}
-
-function applyGlobalConfig(cfg) {
-  globalConfig = cfg;
-  document.getElementById('trialValor').value = cfg['trial_valor'] || '7';
-  setUnit(cfg['trial_unidad'] || 'dias');
-  renderTrialMods(cfg);
-}
-
-function renderTrialMods(cfg) {
-  var grid = document.getElementById('trialModsGrid');
-  grid.innerHTML = MODULES.map(function(m) {
-    var key    = 'trial_mod_' + m;
-    var active = cfg[key] === 'true';
-    var chk    = active ? 'checked' : '';
-    return '<div class="mod-def-row"><span class="mod-def-name">' + MODULE_NAMES[m] + '</span><label class="sw"><input type="checkbox" ' + chk + ' data-cfgmod="' + m + '"/><div class="sw-track"></div><div class="sw-thumb"></div></label></div>';
-  }).join('');
-}
-
-function saveTrialDuration() {
-  var val = document.getElementById('trialValor').value;
-  if (!val || isNaN(val) || val < 1) { showToast('Ingresa un numero valido', true); return; }
-  var cfg = { trial_valor: val, trial_unidad: trialUnit };
-  document.getElementById('saveTrialDur').textContent = 'Guardando...';
-  gasPost({ action: 'updateConfig', adminPass: adminPass, config: cfg })
-    .then(function(res) {
-      document.getElementById('saveTrialDur').textContent = 'Guardar';
-      if (!res.ok) throw new Error(res.error);
-      globalConfig['trial_valor']  = val; globalConfig['trial_unidad'] = trialUnit;
-      showToast('Trial: ' + val + ' ' + trialUnit + ' guardado');
-    })
-    .catch(function(e) { document.getElementById('saveTrialDur').textContent = 'Guardar'; showToast('Error: ' + e.message, true); });
-}
-
-function saveTrialMods() {
-  var cfg = {};
-  document.querySelectorAll('[data-cfgmod]').forEach(function(cb) { cfg['trial_mod_' + cb.dataset.cfgmod] = cb.checked ? 'true' : 'false'; });
-  document.getElementById('saveTrialMods').textContent = 'Guardando...';
-  gasPost({ action: 'updateConfig', adminPass: adminPass, config: cfg })
-    .then(function(res) {
-      document.getElementById('saveTrialMods').textContent = 'Guardar modulos trial';
-      if (!res.ok) throw new Error(res.error);
-      Object.assign(globalConfig, cfg); showToast('Modulos trial guardados');
-    })
-    .catch(function(e) { document.getElementById('saveTrialMods').textContent = 'Guardar modulos trial'; showToast('Error: ' + e.message, true); });
-}
-
-function loadUsers() {
-  document.getElementById('userList').innerHTML = '<div class="loading">Actualizando...</div>';
-  gasPost({ action: 'getUsers', adminPass: adminPass })
-    .then(function(res) {
-      if (!res.ok) throw new Error(res.error);
-      if (res.config) applyGlobalConfig(res.config);
-      renderUsers(res.users);
-    })
-    .catch(function(e) { document.getElementById('userList').innerHTML = '<div class="empty">Error: ' + e.message + '</div>'; });
-}
-
-function renderUsers(users) {
-  allUsers = users || [];
-  document.getElementById('statTotal').textContent   = allUsers.length;
-  document.getElementById('statTrial').textContent   = allUsers.filter(function(u){ return u.estado === 'trial'; }).length;
-  document.getElementById('statPremium').textContent = allUsers.filter(function(u){ return u.estado === 'premium'; }).length;
-  displayUsers(allUsers);
-}
-
-function displayUsers(users) {
-  var list = document.getElementById('userList');
-  if (!users.length) { list.innerHTML = '<div class="empty">Sin usuarios registrados.</div>'; return; }
-  list.innerHTML = users.map(buildUserCard).join('');
-}
-
-function buildUserCard(u) {
-  var now      = new Date();
-  var trialEnd = new Date(u.trialEnd);
-  var expired  = u.estado === 'trial' && now > trialEnd;
-  var blocked  = u.acceso === 'bloqueado';
-  var pending  = u.acceso === 'pendiente'; 
-  var msLeft   = Math.max(0, trialEnd - now);
-  var daysLeft = Math.ceil(msLeft / 86400000);
-  var hrsLeft  = Math.ceil(msLeft / 3600000);
-  var timeLeft = daysLeft >= 1 ? daysLeft + 'd' : hrsLeft + 'h';
-
-  var badge = blocked ? '<span class="badge bb">Bloqueado</span>' : pending ? '<span class="badge bpend">Validación OTP Pdte.</span>' : expired ? '<span class="badge be">Trial expirado</span>' : u.estado === 'premium' ? '<span class="badge bp">Premium</span>' : '<span class="badge bt">Trial</span><span class="badge bd">' + timeLeft + ' restante</span>';
-
-  var totalMin  = u.totalMinutes || 0;
-  var lastPing  = u.lastPing     || null;
-
-  var usageLabel = (function() { if (totalMin < 60) return totalMin + ' min'; var h = Math.floor(totalMin / 60); var m = totalMin % 60; return h + 'h ' + (m > 0 ? m + 'min' : ''); })();
-  var lastLabel = (function() { if (!lastPing) return 'Nunca'; var diff = Math.floor((now - new Date(lastPing)) / 60000); if (diff < 2) return 'Ahora'; if (diff < 60) return 'Hace ' + diff + ' min'; var h = Math.floor(diff / 60); if (h < 24) return 'Hace ' + h + 'h'; return 'Hace ' + Math.floor(h / 24) + 'd'; })();
-  var isOnline = lastPing && (now - new Date(lastPing)) < 7 * 60 * 1000;
-
-  var telemetryBadges = '<span class="badge bu">&#128336; ' + usageLabel + ' uso total</span>' + (isOnline ? '<span class="badge bo">&#9679; En linea</span>' : '<span class="badge bu">&#9679; ' + lastLabel + '</span>');
-
-  var mods = MODULES.map(function(m) {
-    var active = u.modules && u.modules[m]; var chk = active ? 'checked' : '';
-    return '<div class="user-mod-row"><span class="user-mod-name">' + MODULE_NAMES[m] + '</span><label class="sw"><input type="checkbox" ' + chk + ' class="umod-cb" data-uid="' + u.userId + '" data-mod="' + m + '"/><div class="sw-track"></div><div class="sw-thumb"></div></label></div>';
-  }).join('');
-
-  var blkChk = blocked ? 'checked' : '';
-
-  return '<div class="user-card' + (blocked ? ' blocked' : '') + '" id="card-' + u.userId + '">'
-    + '<div class="user-header" data-uid="' + u.userId + '"><div class="user-avatar">&#128100;</div><div class="user-info"><div class="user-name">' + u.nombre + '</div><div class="user-email">' + u.email + ' &middot; ' + u.whatsapp + '</div><div class="user-badges">' + badge + ' ' + telemetryBadges + '</div></div><span class="uc">&#9660;</span></div>'
-    + '<div class="user-detail"><div class="user-detail-inner">'
-    + '<div class="block-row"><span class="block-label">Bloquear acceso completo a la app</span><label class="sw sw-red"><input type="checkbox" ' + blkChk + ' class="blk-cb" data-uid="' + u.userId + '"/><div class="sw-track"></div><div class="sw-thumb"></div></label></div>'
-    + '<div style="text-align:right; margin-bottom:14px;"><button class="del-btn" data-uid="' + u.userId + '" style="background:none; border:1px solid var(--red); color:var(--red); font-size:0.6rem; padding:6px 12px; border-radius:6px; cursor:pointer; font-family:\'DM Mono\',monospace; transition:all 0.2s;">&#10006; Eliminar Usuario Definitivamente</button></div>'
-    + '<div class="mod-section-title">Modulos disponibles para este usuario</div>'
-    + '<div class="plans-row"><button class="plan-btn" data-uid="' + u.userId + '" data-plan="basico" title="Solo clima actual">Plan Basico</button><button class="plan-btn" data-uid="' + u.userId + '" data-plan="estandar" title="Clima + horas + dias + viento + foto">Plan Estandar</button><button class="plan-btn" data-uid="' + u.userId + '" data-plan="premium" title="Todo sin restricciones">Plan Premium ★</button></div>'
-    + '<div class="user-mods-grid">' + mods + '</div></div></div></div>';
-}
-
-function filterUsers() {
-  var q = document.getElementById('searchInput').value.toLowerCase();
-  displayUsers(q ? allUsers.filter(function(u){ return (u.nombre+u.email).toLowerCase().includes(q); }) : allUsers);
-}
-
-function onGlobalClick(e) {
-  var header = e.target.closest('.user-header');
-  if (header) { var card = document.getElementById('card-' + header.dataset.uid); if (card) card.classList.toggle('expanded'); }
-
-  var planBtn = e.target.closest('.plan-btn');
-  if (planBtn) {
-    var uid  = planBtn.dataset.uid; var plan = planBtn.dataset.plan;
-    var planConfig = {};
-    if (plan === 'basico') { MODULES.forEach(function(m){ planConfig[m] = false; }); planConfig['clima_basico'] = true; }
-    else if (plan === 'estandar') { MODULES.forEach(function(m){ planConfig[m] = false; }); ['clima_basico','pronostico_horas','pronostico_dias','foto_ciudad','datos_viento','datos_detalle'].forEach(function(m){ planConfig[m] = true; }); }
-    else if (plan === 'premium') { MODULES.forEach(function(m){ planConfig[m] = true; }); }
-    if (!confirm('Aplicar ' + plan.toUpperCase() + ' al usuario? Esto sobrescribirá sus permisos actuales.')) return;
-
-    gasPost({ action: 'updateModule', adminPass: adminPass, userId: uid, planName: plan, modules: planConfig })
-    .then(function(res) {
-      if (!res.ok) throw new Error(res.error);
-      showToast('Plan ' + plan + ' aplicado con éxito'); loadUsers();
-    }).catch(function(e) { showToast('Error: ' + e.message, true); });
-  }
-
-  var delBtn = e.target.closest('.del-btn');
-  if (delBtn) {
-    var uidDel = delBtn.dataset.uid;
-    if (!confirm('¿ESTAS SEGURO? Esta acción borrará al usuario de la Base de Datos y no se puede deshacer.')) return;
-    delBtn.textContent = 'Eliminando...'; delBtn.disabled = true; delBtn.style.opacity = '0.5';
-
-    gasPost({ action: 'deleteUser', adminPass: adminPass, userId: uidDel })
-      .then(function(res) {
-        if (!res.ok) throw new Error(res.error);
-        showToast('Usuario eliminado exitosamente');
-        var cardToRemove = document.getElementById('card-' + uidDel); if (cardToRemove) cardToRemove.remove();
-        allUsers = allUsers.filter(function(u) { return u.userId !== uidDel; });
-        document.getElementById('statTotal').textContent = allUsers.length; document.getElementById('statTrial').textContent = allUsers.filter(function(u){ return u.estado === 'trial'; }).length; document.getElementById('statPremium').textContent = allUsers.filter(function(u){ return u.estado === 'premium'; }).length;
-        if (allUsers.length === 0) { document.getElementById('userList').innerHTML = '<div class="empty">Sin usuarios registrados.</div>'; }
-      })
-      .catch(function(e) {
-        showToast('Error al eliminar: ' + e.message, true);
-        delBtn.textContent = '✖ Eliminar Usuario Definitivamente'; delBtn.disabled = false; delBtn.style.opacity = '1';
-      });
-  }
-}
-
-function onGlobalChange(e) {
-  if (e.target.classList.contains('blk-cb')) {
-    var uid = e.target.dataset.uid; var block = e.target.checked;
-    gasPost({ action: 'blockUser', adminPass: adminPass, userId: uid, block: block })
-      .then(function(res) {
-        if (!res.ok) throw new Error(res.error);
-        var card = document.getElementById('card-' + uid); if (card) card.classList.toggle('blocked', block);
-        showToast(block ? 'Usuario bloqueado' : 'Usuario desbloqueado');
-      }).catch(function(e) { showToast('Error: ' + e.message, true); e.target.checked = !block; });
-  }
-  if (e.target.classList.contains('umod-cb')) {
-    var uid = e.target.dataset.uid; var mod = e.target.dataset.mod; var val = e.target.checked;
-    gasPost({ action: 'updateModule', adminPass: adminPass, userId: uid, module: mod, value: val })
-      .then(function(res) {
-        if (!res.ok) throw new Error(res.error); showToast(MODULE_NAMES[mod] + ': ' + (val ? 'activado' : 'desactivado'));
-      }).catch(function(e) { showToast('Error: ' + e.message, true); e.target.checked = !val; });
-  }
-}
-
-function gasPost(data) { return fetch(GAS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(data), redirect: 'follow' }).then(function(r) { return r.json(); }); }
-function showToast(msg, error) { var el = document.getElementById('toast'); el.textContent = msg; el.style.borderColor = error ? 'rgba(224,85,85,0.4)' : 'rgba(126,184,212,0.3)'; el.classList.add('show'); setTimeout(function() { el.classList.remove('show'); }, 3000); }
-
-init();
 </script>
 </body>
 </html>
