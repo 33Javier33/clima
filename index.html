@@ -1142,7 +1142,7 @@
     background:rgba(126,184,212,0.15); border:1px solid rgba(126,184,212,0.3);
     color:var(--ice); font-family:'DM Mono',monospace; font-size:0.72rem;
     letter-spacing:0.12em; text-transform:uppercase; padding:13px;
-    border-radius:12px; cursor:pointer; transition:background 0.2s; margin-top:4px;
+    border-radius:12px; cursor:pointer; transition:background 0.2s; margin-top:4px; width:100%;
   }
   .t-submit:hover { background:rgba(126,184,212,0.25); }
   .t-submit:disabled { opacity:0.5; cursor:not-allowed; }
@@ -1157,6 +1157,23 @@
   .t-success .s-icon { font-size:2.5rem; margin-bottom:12px; }
   .t-success h3 { font-family:'Playfair Display',serif; color:var(--ice); margin-bottom:8px; }
   .t-success p { font-size:0.68rem; color:var(--dim); line-height:1.6; }
+
+  /* FIX 4: Estilos para Input de OTP */
+  .otp-input {
+    background: var(--glass2); border: 1px solid rgba(126,184,212,0.3);
+    border-radius: 10px; padding: 14px; font-size: 1.5rem;
+    font-family: 'DM Mono', monospace; color: var(--ice);
+    text-align: center; letter-spacing: 0.5em; width: 100%;
+    outline: none; margin-bottom: 12px;
+  }
+  .otp-input:focus { border-color: var(--cold); }
+  .t-back {
+    background: none; border: none; color: var(--dim);
+    font-family: 'DM Mono', monospace; font-size: 0.65rem;
+    cursor: pointer; margin-top: 12px; transition: color 0.2s;
+    text-decoration: underline; width: 100%; display: block; text-align: center;
+  }
+  .t-back:hover { color: var(--cold); }
 
   /* ── Overlay de Validación ── */
   .validation-overlay {
@@ -1372,7 +1389,7 @@
 <div class="validation-overlay" id="validationOverlay">
   <div class="val-spinner">⏳</div>
   <div class="val-title">Validación en curso</div>
-  <div class="val-text">Por favor, no cierres la aplicación.<br>Esperando confirmación de Mail y WhatsApp...</div>
+  <div class="val-text">Por favor, no cierres la aplicación.<br>Esperando confirmación...</div>
 </div>
 
 <!-- Banner de actualización PWA -->
@@ -1580,12 +1597,13 @@
 <script>
 // Estado de ciudad actual
 // Restaurar ciudad guardada o usar Puerto Varas por defecto
+// FIX: Coordenadas ajustadas al centro exacto de la ciudad (Plaza de Armas) para evitar que el modelo interpole con el clima del lago.
 let currentCity = (() => {
   try {
     const saved = localStorage.getItem('climaCity');
     if (saved) return JSON.parse(saved);
   } catch(_) {}
-  return { lat: -41.3197, lon: -72.9830, name: 'Puerto Varas', region: 'Región de Los Lagos · Chile' };
+  return { lat: -41.3195, lon: -72.9824, name: 'Puerto Varas', region: 'Región de Los Lagos · Chile' };
 })();
 let useFahrenheit = false;
 let windUnit = 'kmh';   // kmh | ms | mph | kn
@@ -1594,8 +1612,11 @@ let showRainAnim = true;
 let autoRefreshMin = 0;
 let autoRefreshTimer = null;
 
+// FIX 3: Refuerzo de parseo y redondeo estricto para la temperatura
 function toTemp(c) {
-  return useFahrenheit ? Math.round(c * 9/5 + 32) : Math.round(c);
+  if (c == null) return '--';
+  const val = parseFloat(c);
+  return useFahrenheit ? Math.round(val * 9/5 + 32) : Math.round(val);
 }
 function tempUnit() { return useFahrenheit ? '°F' : '°C'; }
 
@@ -1687,11 +1708,12 @@ function initRain(weatherCode, precipitation) {
 
 async function fetchWeather() {
   const { lat, lon } = currentCity;
+  // FIX 3: Se añade "&models=best_match" a la URL para que la API extraiga el clima del modelo regional más preciso, reduciendo diferencias con Google.
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
     `&current=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,wind_speed_10m,wind_direction_10m,weather_code,uv_index,surface_pressure,cloud_cover,visibility` +
     `&hourly=temperature_2m,precipitation_probability,weather_code,precipitation,wind_speed_10m,relative_humidity_2m` +
     `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,sunrise,sunset,uv_index_max,wind_speed_10m_max` +
-    `&timezone=America%2FSantiago&forecast_days=7&_t=${Date.now()}`; // FIX 1: Previene caché estática obligando a refrescar data
+    `&timezone=America%2FSantiago&models=best_match&forecast_days=7&_t=${Date.now()}`; // FIX 1: Previene caché estática obligando a refrescar data
 
   const res = await fetch(url, { cache: 'no-store' }); // FIX 1: Deshabilita caché en navegador
   if (!res.ok) throw new Error('Error al consultar Open-Meteo');
@@ -3076,7 +3098,7 @@ function selectPlan(plan) {
   });
 }
 
-// FIX 2: Bloqueo de App tras selección de Plan y condición de desbloqueo estricto.
+// FIX 4: Paso 1 del sistema OTP (Solicita el código y muestra nueva pantalla)
 async function submitRegistration() {
   const email = document.getElementById('tEmail')  ? document.getElementById('tEmail').value.trim()  : '';
   const phone = document.getElementById('tPhone')  ? document.getElementById('tPhone').value.trim()  : '';
@@ -3085,15 +3107,19 @@ async function submitRegistration() {
   
   const btn = document.getElementById('tSubmit');
   btn.disabled = true; 
-  btn.textContent = 'Procesando...';
+  btn.textContent = 'Enviando código...';
 
-  // Activa la capa de bloqueo de Validacion
+  // Overlay informando el envío
   const valOverlay = document.getElementById('validationOverlay');
-  if (valOverlay) valOverlay.classList.add('show');
+  if (valOverlay) {
+    valOverlay.querySelector('.val-text').innerHTML = 'Generando y enviando código de seguridad...<br>Por favor espera.';
+    valOverlay.classList.add('show');
+  }
 
   try {
+    // Pide al servidor que genere y dispare el código vía API
     const res = await gasPost({
-      action:   'linkContact',
+      action:   'requestOTP',
       deviceId: deviceId,
       email:    email,
       phone:    phone,
@@ -3101,25 +3127,89 @@ async function submitRegistration() {
     });
 
     if (res.ok) {
-      // Exito: Notificaciones enviadas. Retira el bloqueo.
       if (valOverlay) valOverlay.classList.remove('show');
-      document.getElementById('trialPanel').innerHTML = '<div class="t-success"><div class="s-icon">✅</div><h3>Validación completada</h3><p>Notificaciones enviadas con éxito. Ya puedes acceder a la aplicación.</p></div>';
-      
-      setTimeout(() => {
-        closeTrialOverlay();
-      }, 3500);
+      showOtpForm(email, phone);
     } else {
-      // Fallo: Retira el bloqueo permitiendo reintento
       if (valOverlay) valOverlay.classList.remove('show');
       btn.disabled = false;
       btn.textContent = 'Solicitar acceso';
-      alert('Error en la validación: ' + (res.message || 'Intenta de nuevo.'));
+      alert('Error al enviar el código: ' + (res.message || 'Verifica tus datos e intenta de nuevo.'));
     }
   } catch(e) {
     if (valOverlay) valOverlay.classList.remove('show');
     btn.disabled = false;
     btn.textContent = 'Solicitar acceso';
-    alert('Error de conexión. No se pudo completar la validación de notificaciones.');
+    alert('Error de conexión. No se pudo enviar el código de verificación.');
+  }
+}
+
+// FIX 4: Formulario intermedio Infranqueable de validación de Identidad
+function showOtpForm(email, phone) {
+  const panel = document.getElementById('trialPanel');
+  panel.innerHTML = ''
+    + '<div class="panel-handle"></div>'
+    + '<div class="trial-badge">🔒 Verificación de seguridad</div>'
+    + '<h2>Ingresa tu código</h2>'
+    + '<div class="t-sub">Hemos enviado un código de 6 dígitos a <b>' + email + '</b> y al WhatsApp <b>' + phone + '</b>. Revisa tus bandejas.</div>'
+    + '<div class="trial-form">'
+    + '<input class="otp-input" id="tOtpCode" type="text" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code"/>'
+    + '</div>'
+    + '<button class="t-submit" id="tVerifyBtn" onclick="submitOTP(\'' + email + '\', \'' + phone + '\')">Verificar Identidad</button>'
+    + '<button class="t-back" onclick="showRegistrationForm(false)">Volver / Cambiar datos</button>';
+}
+
+// FIX 4: Paso 2 del sistema OTP (Comprueba la validez con el servidor ANTES de dar acceso)
+async function submitOTP(email, phone) {
+  const otpInput = document.getElementById('tOtpCode');
+  const otp = otpInput ? otpInput.value.trim() : '';
+
+  if (otp.length < 4) return alert('Ingresa un código válido.');
+
+  const btn = document.getElementById('tVerifyBtn');
+  btn.disabled = true;
+  btn.textContent = 'Verificando...';
+
+  const valOverlay = document.getElementById('validationOverlay');
+  if (valOverlay) {
+    valOverlay.querySelector('.val-text').innerHTML = 'Validando código de seguridad...<br>No cierres la aplicación.';
+    valOverlay.classList.add('show');
+  }
+
+  try {
+    const res = await gasPost({
+      action:   'verifyOTP',
+      deviceId: deviceId,
+      email:    email,
+      phone:    phone,
+      otp:      otp,
+      plan:     selectedPlan
+    });
+
+    if (res.ok) {
+      // Exito real: El servidor registró al usuario y abrió la bóveda
+      if (valOverlay) valOverlay.classList.remove('show');
+      document.getElementById('trialPanel').innerHTML = '<div class="t-success"><div class="s-icon">✅</div><h3>Identidad verificada</h3><p>Acceso concedido exitosamente. Ya puedes disfrutar de la aplicación.</p></div>';
+
+      licenseStatus = res.status || 'trial';
+      licenseModules = res.modules || {};
+      applyModules(); // Aquí ocurre la magia del desbloqueo real.
+
+      setTimeout(() => {
+        closeTrialOverlay();
+      }, 3000);
+    } else {
+      if (valOverlay) valOverlay.classList.remove('show');
+      btn.disabled = false;
+      btn.textContent = 'Verificar Identidad';
+      alert('Código incorrecto o expirado. Intenta nuevamente.');
+      otpInput.value = '';
+      otpInput.focus();
+    }
+  } catch(e) {
+    if (valOverlay) valOverlay.classList.remove('show');
+    btn.disabled = false;
+    btn.textContent = 'Verificar Identidad';
+    alert('Error de conexión al verificar el código.');
   }
 }
 
