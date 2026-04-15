@@ -69,7 +69,7 @@ body{background:var(--ink);color:var(--text);font-family:'DM Mono',monospace;min
 .tb-btn{background:var(--g2);border:1px solid rgba(126,184,212,0.15);color:var(--cold);font-family:'DM Mono',monospace;font-size:0.65rem;padding:9px 14px;border-radius:10px;cursor:pointer;}
 
 /* User card */
-.user-card{background:var(--g);border:1px solid rgba(126,184,212,0.08);border-radius:14px;padding:14px;margin-bottom:10px;position:relative;}
+.user-card{background:var(--g);border:1px solid rgba(126,184,212,0.08);border-radius:14px;padding:14px;margin-bottom:10px;}
 .user-card.blocked{border-color:rgba(224,85,85,0.2);background:rgba(224,85,85,0.03);}
 .user-header{display:flex;align-items:center;gap:10px;cursor:pointer;}
 .user-avatar{width:36px;height:36px;border-radius:50%;background:rgba(126,184,212,0.12);display:flex;align-items:center;justify-content:center;font-size:0.95rem;flex-shrink:0;}
@@ -83,14 +83,12 @@ body{background:var(--ink);color:var(--text);font-family:'DM Mono',monospace;min
 .bb{background:rgba(224,85,85,0.15);color:var(--red);}
 .be{background:rgba(150,150,150,0.12);color:var(--dim);}
 .bd{background:rgba(126,184,212,0.1);color:var(--cold);}
-.bpend{background:rgba(255,235,59,0.15);color:#ffeb3b;} /* Nueva etiqueta Pendiente */
-/* Telemetría de uso */
 .bu{background:rgba(126,184,212,0.08);color:var(--dim);}
 .bo{background:rgba(76,175,80,0.08);color:#66bb6a;}
 .uc{font-size:0.7rem;color:var(--dim);transition:transform 0.3s;}
 .user-card.expanded .uc{transform:rotate(180deg);}
 .user-detail{max-height:0;overflow:hidden;transition:max-height 0.4s ease;}
-.user-card.expanded .user-detail{max-height:800px;}
+.user-card.expanded .user-detail{max-height:1400px;}
 .user-detail-inner{border-top:1px solid rgba(255,255,255,0.05);padding-top:13px;margin-top:12px;}
 
 /* Block row */
@@ -111,9 +109,56 @@ body{background:var(--ink);color:var(--text);font-family:'DM Mono',monospace;min
 .empty{text-align:center;padding:40px;font-size:0.72rem;color:var(--dim);}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a2d40;border:1px solid rgba(126,184,212,0.3);border-radius:12px;padding:9px 20px;font-size:0.68rem;color:var(--ice);z-index:9999;opacity:0;pointer-events:none;transition:opacity 0.3s;white-space:nowrap;}
 .toast.show{opacity:1;}
+
+/* Delete user button */
+.del-user-btn{background:none;border:1px solid rgba(224,85,85,0.2);color:rgba(224,85,85,0.7);font-family:'DM Mono',monospace;font-size:0.58rem;padding:6px 14px;border-radius:8px;cursor:pointer;transition:all 0.2s;letter-spacing:0.05em;}
+.del-user-btn:hover{background:rgba(224,85,85,0.12);color:var(--red);border-color:rgba(224,85,85,0.4);}
+
+/* ── HISTORIAL / ARCHIVO ─────────────────────────────────────── */
+.history-section{margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.06);}
+.history-title{font-size:0.55rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--dim);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.history-title::before{content:'';display:inline-block;width:4px;height:4px;background:var(--cold);border-radius:50%;}
+.history-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.history-meta-item{background:var(--g2);border-radius:8px;padding:8px 10px;}
+.history-meta-label{font-size:0.48rem;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:3px;}
+.history-meta-value{font-size:0.62rem;color:var(--ice);}
+.history-meta-value .badge{margin-left:4px;vertical-align:middle;}
+
+/* Plan history */
+.plan-history{margin-bottom:12px;}
+.plan-history-title{font-size:0.5rem;color:var(--dim);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;}
+.plan-history-list{display:flex;flex-direction:column;gap:4px;}
+.plan-history-item{display:flex;align-items:center;gap:8px;font-size:0.58rem;padding:5px 8px;background:var(--g2);border-radius:6px;}
+.plan-history-icon{width:18px;height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:0.65rem;}
+.plan-history-icon.trial{background:rgba(255,152,0,0.15);color:var(--orange);}
+.plan-history-icon.basico{background:rgba(126,184,212,0.15);color:var(--cold);}
+.plan-history-icon.estandar{background:rgba(100,181,246,0.15);color:#64b5f6;}
+.plan-history-icon.premium{background:rgba(76,175,80,0.15);color:var(--green);}
+.plan-history-icon.expired{background:rgba(150,150,150,0.12);color:var(--dim);}
+.plan-history-name{flex:1;color:var(--text);}
+.plan-history-date{color:var(--dim);font-size:0.52rem;}
+
+/* Activity log */
+.activity-log-title{font-size:0.5rem;color:var(--dim);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;}
+.activity-log-list{max-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:3px;}
+.activity-log-list::-webkit-scrollbar{width:4px;}
+.activity-log-list::-webkit-scrollbar-track{background:transparent;}
+.activity-log-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px;}
+.activity-item{display:flex;align-items:flex-start;gap:7px;font-size:0.55rem;padding:5px 8px;background:var(--g2);border-radius:6px;}
+.activity-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.activity-dot.login{background:var(--green);}
+.activity-dot.module{background:var(--cold);}
+.activity-dot.plan{background:var(--orange);}
+.activity-dot.block{background:var(--red);}
+.activity-dot.info{background:var(--dim);}
+.activity-text{flex:1;color:var(--text);line-height:1.3;}
+.activity-time{color:var(--dim);font-size:0.5rem;white-space:nowrap;}
 </style>
 </head>
 <body>
+
+<!-- Alert banner -->
+<div id="alertBanner" style="display:none;position:sticky;top:0;z-index:200;background:rgba(76,175,80,0.12);border-bottom:1px solid rgba(76,175,80,0.3);padding:10px 16px;text-align:center;font-size:0.68rem;color:#66bb6a;letter-spacing:0.05em;"></div>
 
 <!-- Login -->
 <div class="login-screen" id="loginScreen">
@@ -162,7 +207,7 @@ body{background:var(--ink);color:var(--text);font-family:'DM Mono',monospace;min
 
       <div class="section-title" style="margin-top:4px;">Modulos activos durante el trial (nuevos usuarios)</div>
       <div class="mods-defaults" id="trialModsGrid">
-        <!-- Se llena dinamicamente -->
+        <!-- Se llena en init() y se actualiza cuando llega la config del servidor -->
       </div>
       <div style="margin-top:12px;">
         <button class="save-btn" id="saveTrialMods">Guardar modulos trial</button>
@@ -185,16 +230,17 @@ body{background:var(--ink);color:var(--text);font-family:'DM Mono',monospace;min
 <div class="toast" id="toast"></div>
 
 <script>
-var GAS_URL    = 'https://script.google.com/macros/s/AKfycbwAYuaxjxOqURvYu3aVu0AWQUoKmSRY2vX1XfQdtGOsXQjDtZrfX3S1tApRJjdEneho/exec';
-var adminPass  = '';
-var allUsers   = [];
+var GAS_URL      = 'https://script.google.com/macros/s/AKfycbxSdxWfA23PFCh5lI-lIT5BV9fAhyieUw75QiWHCfYnofHf6cdl_IzuUv5TnWIaLAU4/exec';
+var adminPass    = '';
+var allUsers     = [];
 var globalConfig = {};
-var trialUnit  = 'dias';
+var trialUnit    = 'dias';
+var _autoRefreshTimer = null;
 
 var MODULE_NAMES = {
   'clima_basico':      '🌡 Clima basico (temp, condicion, humedad)',
   'pronostico_horas':  '🕐 Pronostico por horas',
-  'pronostico_dias':   '📅 Pronóstico 6 días',
+  'pronostico_dias':   '📅 Pronostico 6 dias',
   'foto_ciudad':       '📷 Foto de la ciudad',
   'info_ciudad':       'ℹ Info Wikipedia ciudad',
   'seccion_explorar':  '🗺 Explorar ciudad (rest, hoteles...)',
@@ -221,14 +267,55 @@ function init() {
     if (e.key === 'Enter') doLogin();
   });
   document.getElementById('searchInput').addEventListener('input', filterUsers);
-
-  // Unit toggle
   document.getElementById('btnDias').addEventListener('click', function() { setUnit('dias'); });
   document.getElementById('btnHoras').addEventListener('click', function() { setUnit('horas'); });
-
-  // Delegacion
   document.addEventListener('click', onGlobalClick);
   document.addEventListener('change', onGlobalChange);
+
+  // Renderizar el grid de módulos trial de inmediato (todos desactivados por defecto).
+  renderTrialMods({});
+}
+
+// ── CAMBIOS / ALERTAS ─────────────────────────────────────────
+function detectChanges(oldList, newList) {
+  var oldMap = {};
+  oldList.forEach(function(u) { oldMap[u.userId] = u; });
+  var newUsers = 0;
+  var subscriptions = 0;
+  newList.forEach(function(u) {
+    var old = oldMap[u.userId];
+    if (!old) {
+      newUsers++;
+    } else if (old.estado !== 'premium' && u.estado === 'premium') {
+      subscriptions++;
+    }
+  });
+  return { total: newUsers + subscriptions, newUsers: newUsers, subscriptions: subscriptions };
+}
+
+// Compara si los datos de un usuario cambiaron (estado, modulo, acceso, trialEnd)
+function userDataChanged(a, b) {
+  return a.estado !== b.estado
+    || a.acceso !== b.acceso
+    || a.trialEnd !== b.trialEnd
+    || a.totalMinutes !== b.totalMinutes
+    || a.lastPing !== b.lastPing
+    || JSON.stringify(a.modules) !== JSON.stringify(b.modules);
+}
+
+function showAlert(msg) {
+  var el = document.getElementById('alertBanner');
+  el.textContent = msg;
+  el.style.display = 'block';
+  // Auto-ocultar tras 6 segundos
+  if (el._timeout) clearTimeout(el._timeout);
+  el._timeout = setTimeout(function() { hideAlert(); }, 6000);
+}
+
+function hideAlert() {
+  var el = document.getElementById('alertBanner');
+  if (el._timeout) clearTimeout(el._timeout);
+  el.style.display = 'none';
 }
 
 function setUnit(u) {
@@ -248,8 +335,43 @@ function doLogin() {
       adminPass = pass;
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('adminApp').style.display    = 'block';
+      // applyGlobalConfig actualiza los toggles del grid ya renderizado
       if (res.config) applyGlobalConfig(res.config);
       renderUsers(res.users);
+      _autoRefreshTimer = setInterval(function() {
+        if (!adminPass) return;
+        gasPost({ action: 'getUsers', adminPass: adminPass }).then(function(r) {
+          if (!r.ok) return;
+          if (r.config) applyGlobalConfig(r.config);
+          if (r.users) {
+            var oldMap = {};
+            allUsers.forEach(function(u) { oldMap[u.userId] = u; });
+            var newUsers = 0;
+            var subscriptions = 0;
+            var dataChanges = 0;
+            r.users.forEach(function(u) {
+              var old = oldMap[u.userId];
+              if (!old) {
+                newUsers++;
+              } else if (old.estado !== 'premium' && u.estado === 'premium') {
+                subscriptions++;
+              } else if (userDataChanged(old, u)) {
+                dataChanges++;
+              }
+            });
+            var totalChanges = newUsers + subscriptions + dataChanges;
+            if (totalChanges > 0) {
+              allUsers = r.users;
+              renderUsers(allUsers);
+              var msgs = [];
+              if (newUsers > 0) msgs.push(newUsers + ' nuevo(s) usuario(s)');
+              if (subscriptions > 0) msgs.push(subscriptions + ' suscripcion(es) a Premium');
+              if (dataChanges > 0) msgs.push(dataChanges + ' actualizacion(s) de datos');
+              showAlert(msgs.join(' · ') + ' detected');
+            }
+          }
+        }).catch(function() {});
+      }, 30000);
     })
     .catch(function() {
       document.getElementById('loginError').style.display = 'block';
@@ -259,37 +381,53 @@ function doLogin() {
 
 function doLogout() {
   adminPass = '';
+  if (_autoRefreshTimer) { clearInterval(_autoRefreshTimer); _autoRefreshTimer = null; }
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('adminApp').style.display    = 'none';
   document.getElementById('passInput').value = '';
   document.getElementById('loginError').style.display = 'none';
   document.getElementById('loginBtn').textContent = 'Ingresar';
+  renderTrialMods({});
+  hideAlert();
 }
 
 // ── CONFIG GLOBAL ─────────────────────────────────────────────
 function applyGlobalConfig(cfg) {
   globalConfig = cfg;
-  // Trial duration
   document.getElementById('trialValor').value = cfg['trial_valor'] || '7';
   setUnit(cfg['trial_unidad'] || 'dias');
-  // Render módulos trial
-  renderTrialMods(cfg);
+  // FIX 2: en vez de re-renderizar todo el HTML, actualizar solo el estado
+  // de cada checkbox ya existente en el grid. Así evitamos parpadeo y
+  // preservamos cualquier cambio no guardado que el admin haya hecho.
+  updateTrialModsState(cfg);
 }
 
+// Renderiza el grid completo (solo al inicio o al hacer logout).
 function renderTrialMods(cfg) {
   var grid = document.getElementById('trialModsGrid');
   grid.innerHTML = MODULES.map(function(m) {
     var key    = 'trial_mod_' + m;
-    var active = cfg[key] === 'true';
-    var chk    = active ? 'checked' : '';
+    // FIX 3: acepta tanto string 'true' como booleano true del servidor
+    var active = cfg[key] === 'true' || cfg[key] === true;
     return '<div class="mod-def-row">'
       + '<span class="mod-def-name">' + MODULE_NAMES[m] + '</span>'
       + '<label class="sw">'
-      + '<input type="checkbox" ' + chk + ' data-cfgmod="' + m + '"/>'
+      + '<input type="checkbox" ' + (active ? 'checked' : '') + ' data-cfgmod="' + m + '"/>'
       + '<div class="sw-track"></div>'
       + '<div class="sw-thumb"></div>'
       + '</label></div>';
   }).join('');
+}
+
+// Actualiza solo el estado checked de los checkboxes existentes sin re-renderizar.
+function updateTrialModsState(cfg) {
+  MODULES.forEach(function(m) {
+    var key    = 'trial_mod_' + m;
+    // FIX 3: acepta tanto string 'true' como booleano true del servidor
+    var active = cfg[key] === 'true' || cfg[key] === true;
+    var cb = document.querySelector('[data-cfgmod="' + m + '"]');
+    if (cb) cb.checked = active;
+  });
 }
 
 function saveTrialDuration() {
@@ -363,7 +501,6 @@ function buildUserCard(u) {
   var trialEnd = new Date(u.trialEnd);
   var expired  = u.estado === 'trial' && now > trialEnd;
   var blocked  = u.acceso === 'bloqueado';
-  var pending  = u.acceso === 'pendiente'; // Agregado validacion OTP
   var msLeft   = Math.max(0, trialEnd - now);
   var daysLeft = Math.ceil(msLeft / 86400000);
   var hrsLeft  = Math.ceil(msLeft / 3600000);
@@ -371,17 +508,14 @@ function buildUserCard(u) {
 
   var badge = blocked
     ? '<span class="badge bb">Bloqueado</span>'
-    : pending
-      ? '<span class="badge bpend">Validación OTP Pdte.</span>'
-      : expired
-        ? '<span class="badge be">Trial expirado</span>'
-        : u.estado === 'premium'
-          ? '<span class="badge bp">Premium</span>'
-          : '<span class="badge bt">Trial</span><span class="badge bd">' + timeLeft + ' restante</span>';
+    : expired
+      ? '<span class="badge be">Trial expirado</span>'
+      : u.estado === 'premium'
+        ? '<span class="badge bp">Premium</span>'
+        : '<span class="badge bt">Trial</span><span class="badge bd">' + timeLeft + ' restante</span>';
 
-  // ── Telemetría de uso ──────────────────────────────────────
-  var totalMin  = u.totalMinutes || 0;
-  var lastPing  = u.lastPing     || null;
+  var totalMin = u.totalMinutes || 0;
+  var lastPing = u.lastPing     || null;
 
   var usageLabel = (function() {
     if (totalMin < 60) return totalMin + ' min';
@@ -392,35 +526,111 @@ function buildUserCard(u) {
 
   var lastLabel = (function() {
     if (!lastPing) return 'Nunca';
-    var diff = Math.floor((now - new Date(lastPing)) / 60000); // minutos
-    if (diff < 2)   return 'Ahora';
-    if (diff < 60)  return 'Hace ' + diff + ' min';
+    var diff = Math.floor((now - new Date(lastPing)) / 60000);
+    if (diff < 2)  return 'Ahora';
+    if (diff < 60) return 'Hace ' + diff + ' min';
     var h = Math.floor(diff / 60);
-    if (h < 24)     return 'Hace ' + h + 'h';
+    if (h < 24)    return 'Hace ' + h + 'h';
     return 'Hace ' + Math.floor(h / 24) + 'd';
   })();
 
   var isOnline = lastPing && (now - new Date(lastPing)) < 7 * 60 * 1000;
 
-  var telemetryBadges = '<span class="badge bu">&#128336; ' + usageLabel + ' uso total</span>'
-    + (isOnline
-        ? '<span class="badge bo">&#9679; En linea</span>'
-        : '<span class="badge bu">&#9679; ' + lastLabel + '</span>');
-  // ── fin telemetría ─────────────────────────────────────────
+  var telemetryBadges = '';
+  if (totalMin > 0 || lastPing) {
+    telemetryBadges = '<span class="badge bu">&#128336; ' + usageLabel + ' uso total</span>'
+      + (isOnline
+          ? '<span class="badge bo">&#9679; En linea</span>'
+          : '<span class="badge bu">&#9679; ' + lastLabel + '</span>');
+  };
 
   var mods = MODULES.map(function(m) {
-    var active = u.modules && u.modules[m];
-    var chk    = active ? 'checked' : '';
+    // FIX 3: acepta tanto booleano como string del servidor
+    var active = u.modules && (u.modules[m] === true || u.modules[m] === 'true');
     return '<div class="user-mod-row">'
       + '<span class="user-mod-name">' + MODULE_NAMES[m] + '</span>'
       + '<label class="sw">'
-      + '<input type="checkbox" ' + chk + ' class="umod-cb" data-uid="' + u.userId + '" data-mod="' + m + '"/>'
+      + '<input type="checkbox" ' + (active ? 'checked' : '') + ' class="umod-cb" data-uid="' + u.userId + '" data-mod="' + m + '"/>'
       + '<div class="sw-track"></div>'
       + '<div class="sw-thumb"></div>'
       + '</label></div>';
   }).join('');
 
   var blkChk = blocked ? 'checked' : '';
+
+  // ── HISTORIAL / ARCHIVO ───────────────────────────────────────
+  // Datos simulados para demostración (el GAS debe enviar estos campos)
+  var registeredAt = u.registeredAt || u.trialEnd || new Date().toISOString();
+  var planHistory = u.planHistory || [
+    { plan: 'Trial', date: registeredAt, type: 'trial' },
+    u.estado === 'premium' ? { plan: 'Premium', date: new Date().toISOString(), type: 'premium' } : null
+  ].filter(Boolean);
+
+  var activityLog = u.activityLog || [
+    { type: 'login', text: 'Inicio de sesion', time: lastPing },
+    { type: 'info', text: 'Registro en la app', time: registeredAt },
+    { type: 'module', text: 'Acceso a clima basico', time: registeredAt }
+  ];
+
+  // Formatear fecha
+  function fmtDate(d) {
+    if (!d) return '-';
+    var date = new Date(d);
+    return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  // Formatear tiempo relativo
+  function fmtTime(d) {
+    if (!d) return '-';
+    var diff = Math.floor((new Date() - new Date(d)) / 60000);
+    if (diff < 1) return 'Ahora';
+    if (diff < 60) return 'hace ' + diff + 'm';
+    var h = Math.floor(diff / 60);
+    if (h < 24) return 'hace ' + h + 'h';
+    return fmtDate(d);
+  }
+
+  // Renderizar historial de planes
+  var planHistoryHTML = planHistory.slice().reverse().map(function(p) {
+    return '<div class="plan-history-item">'
+      + '<div class="plan-history-icon ' + p.type + '">&#9679;</div>'
+      + '<span class="plan-history-name">' + p.plan + '</span>'
+      + '<span class="plan-history-date">' + fmtDate(p.date) + '</span>'
+      + '</div>';
+  }).join('');
+
+  // Renderizar registro de actividad
+  var activityLogHTML = activityLog.slice().reverse().slice(0, 10).map(function(a) {
+    var dotClass = a.type || 'info';
+    var icons = { login: '&#128100;', module: '&#9881;', plan: '&#9733;', block: '&#9888;', info: '&#8505;' };
+    return '<div class="activity-item">'
+      + '<div class="activity-dot ' + dotClass + '"></div>'
+      + '<span class="activity-text">' + (icons[a.type] || '&#8226;') + ' ' + a.text + '</span>'
+      + '<span class="activity-time">' + fmtTime(a.time) + '</span>'
+      + '</div>';
+  }).join('');
+
+  var historySection = '<div class="history-section">'
+    + '<div class="history-title">&#128193; Archivo / Historial</div>'
+    + '<div class="history-meta">'
+    + '<div class="history-meta-item">'
+    + '<div class="history-meta-label">Registro</div>'
+    + '<div class="history-meta-value">' + fmtDate(registeredAt) + '</div>'
+    + '</div>'
+    + '<div class="history-meta-item">'
+    + '<div class="history-meta-label">Sesiones</div>'
+    + '<div class="history-meta-value">' + (u.totalMinutes > 0 ? Math.ceil(u.totalMinutes / 5) : 0) + ' <span class="badge bu">aprox.</span></div>'
+    + '</div>'
+    + '</div>'
+    + '<div class="plan-history">'
+    + '<div class="plan-history-title">Historial de planes</div>'
+    + '<div class="plan-history-list">' + planHistoryHTML + '</div>'
+    + '</div>'
+    + '<div class="activity-log">'
+    + '<div class="activity-log-title">Actividad reciente</div>'
+    + '<div class="activity-log-list">' + activityLogHTML + '</div>'
+    + '</div>'
+    + '</div>';
 
   return '<div class="user-card' + (blocked ? ' blocked' : '') + '" id="card-' + u.userId + '">'
     + '<div class="user-header" data-uid="' + u.userId + '">'
@@ -433,19 +643,16 @@ function buildUserCard(u) {
     + '<span class="uc">&#9660;</span>'
     + '</div>'
     + '<div class="user-detail"><div class="user-detail-inner">'
-    + '<div class="block-row">'
+    + '<div class="block-row" style="background:rgba(224,85,85,0.05);border-color:rgba(224,85,85,0.12);">'
     + '<span class="block-label">Bloquear acceso completo a la app</span>'
     + '<label class="sw sw-red">'
     + '<input type="checkbox" ' + blkChk + ' class="blk-cb" data-uid="' + u.userId + '"/>'
     + '<div class="sw-track"></div>'
     + '<div class="sw-thumb"></div>'
     + '</label></div>'
-    
-    // Boton ELIMINAR AÑADIDO AQUI
-    + '<div style="text-align:right; margin-bottom:14px;">'
-    + '<button class="del-btn" data-uid="' + u.userId + '" style="background:none; border:1px solid var(--red); color:var(--red); font-size:0.6rem; padding:6px 12px; border-radius:6px; cursor:pointer; font-family:\'DM Mono\',monospace; transition:all 0.2s;">&#10006; Eliminar Usuario Definitivamente</button>'
+    + '<div style="margin-top:12px;display:flex;justify-content:flex-end;">'
+    + '<button class="del-user-btn" data-uid="' + u.userId + '" data-name="' + u.nombre + '">&#128465; Eliminar usuario</button>'
     + '</div>'
-
     + '<div class="mod-section-title">Modulos disponibles para este usuario</div>'
     + '<div class="plans-row">'
     + '<button class="plan-btn" data-uid="' + u.userId + '" data-plan="basico" title="Solo clima actual">Plan Basico</button>'
@@ -453,95 +660,49 @@ function buildUserCard(u) {
     + '<button class="plan-btn" data-uid="' + u.userId + '" data-plan="premium" title="Todo sin restricciones">Plan Premium ★</button>'
     + '</div>'
     + '<div class="user-mods-grid">' + mods + '</div>'
+    + historySection
     + '</div></div></div>';
 }
 
 function filterUsers() {
   var q = document.getElementById('searchInput').value.toLowerCase();
   displayUsers(q
-    ? allUsers.filter(function(u){ return (u.nombre+u.email).toLowerCase().includes(q); })
+    ? allUsers.filter(function(u){ return (u.nombre + u.email).toLowerCase().includes(q); })
     : allUsers);
 }
 
-// ── DELEGACION DE EVENTOS (LOGICA REVISADA) ───────────────────
+// ── DELEGACION DE EVENTOS ─────────────────────────────────────
 function onGlobalClick(e) {
   var header = e.target.closest('.user-header');
   if (header) {
     var card = document.getElementById('card-' + header.dataset.uid);
     if (card) card.classList.toggle('expanded');
   }
-
-  // --- LOGICA DE CAMBIO DE PLAN ---
   var planBtn = e.target.closest('.plan-btn');
   if (planBtn) {
     var uid  = planBtn.dataset.uid;
     var plan = planBtn.dataset.plan;
-
-    // Generamos la plantilla de módulos según el plan
-    var planConfig = {};
-    if (plan === 'basico') {
-      MODULES.forEach(function(m){ planConfig[m] = false; });
-      planConfig['clima_basico'] = true; // Solo el clima base
-    } else if (plan === 'estandar') {
-      MODULES.forEach(function(m){ planConfig[m] = false; });
-      ['clima_basico','pronostico_horas','pronostico_dias','foto_ciudad','datos_viento','datos_detalle'].forEach(function(m){
-        planConfig[m] = true;
-      });
-    } else if (plan === 'premium') {
-      MODULES.forEach(function(m){ planConfig[m] = true; });
-    }
-
-    if (!confirm('Aplicar ' + plan.toUpperCase() + ' al usuario? Esto sobrescribirá sus permisos actuales.')) return;
-
-    gasPost({ 
-      action: 'updateModule', 
-      adminPass: adminPass, 
-      userId: uid, 
-      planName: plan,      // Etiqueta del plan
-      modules: planConfig  // Objeto con todos los booleanos para la base de datos
-    })
-    .then(function(res) {
-      if (!res.ok) throw new Error(res.error);
-      showToast('Plan ' + plan + ' aplicado con éxito');
-      loadUsers(); // Recarga para sincronizar los switches visualmente
-    })
-    .catch(function(e) { showToast('Error: ' + e.message, true); });
-  }
-
-  // --- LOGICA BOTON ELIMINAR AÑADIDA ---
-  var delBtn = e.target.closest('.del-btn');
-  if (delBtn) {
-    var uidDel = delBtn.dataset.uid;
-    if (!confirm('¿ESTAS SEGURO? Esta acción borrará al usuario de la Base de Datos y no se puede deshacer.')) return;
-    
-    delBtn.textContent = 'Eliminando...';
-    delBtn.disabled = true;
-    delBtn.style.opacity = '0.5';
-
-    gasPost({ action: 'deleteUser', adminPass: adminPass, userId: uidDel })
+    if (!confirm('Aplicar ' + plan + ' al usuario?')) return;
+    gasPost({ action: 'updateModule', adminPass: adminPass, userId: uid, plan: plan })
       .then(function(res) {
         if (!res.ok) throw new Error(res.error);
-        showToast('Usuario eliminado exitosamente');
-        
-        // Actualizar UI dinamicamente
-        var cardToRemove = document.getElementById('card-' + uidDel);
-        if (cardToRemove) cardToRemove.remove();
-        
-        allUsers = allUsers.filter(function(u) { return u.userId !== uidDel; });
-        document.getElementById('statTotal').textContent   = allUsers.length;
-        document.getElementById('statTrial').textContent   = allUsers.filter(function(u){ return u.estado === 'trial'; }).length;
-        document.getElementById('statPremium').textContent = allUsers.filter(function(u){ return u.estado === 'premium'; }).length;
-        
-        if (allUsers.length === 0) {
-           document.getElementById('userList').innerHTML = '<div class="empty">Sin usuarios registrados.</div>';
-        }
+        loadUsers();
+        showToast('Plan ' + plan + ' aplicado');
       })
-      .catch(function(e) {
-        showToast('Error al eliminar: ' + e.message, true);
-        delBtn.textContent = '✖ Eliminar Usuario Definitivamente';
-        delBtn.disabled = false;
-        delBtn.style.opacity = '1';
-      });
+      .catch(function(e) { showToast('Error: ' + e.message, true); });
+  }
+  var delBtn = e.target.closest('.del-user-btn');
+  if (delBtn) {
+    var uid   = delBtn.dataset.uid;
+    var name  = delBtn.dataset.name;
+    if (!confirm('Eliminar al usuario "' + name + '"?\n\nEsta accion no se puede deshacer.')) return;
+    gasPost({ action: 'deleteUser', adminPass: adminPass, userId: uid })
+      .then(function(res) {
+        if (!res.ok) throw new Error(res.error);
+        loadUsers();
+        showToast('Usuario eliminado');
+      })
+      .catch(function(e) { showToast('Error: ' + e.message, true); });
   }
 }
 
