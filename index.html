@@ -1656,10 +1656,10 @@ function initRain(weatherCode, precipitation) {
 async function fetchWeather() {
   const { lat, lon } = currentCity;
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
-    `&current=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,wind_speed_10m,wind_direction_10m,weather_code,uv_index,surface_pressure,cloud_cover,visibility` +
+    `&current=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,wind_speed_10m,wind_direction_10m,wind_gusts_10m,weather_code,uv_index,surface_pressure,cloud_cover,visibility,is_day` +
     `&hourly=temperature_2m,precipitation_probability,weather_code,precipitation,wind_speed_10m,relative_humidity_2m` +
     `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,sunrise,sunset,uv_index_max,wind_speed_10m_max` +
-    `&timezone=America%2FSantiago&models=best_match&forecast_days=7&_t=${Date.now()}`;
+    `&timezone=auto&models=best_match&forecast_days=7&_t=${Date.now()}`;
   const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) throw new Error('Error al consultar Open-Meteo');
   return res.json();
@@ -2209,18 +2209,52 @@ async function loadWeather() {
 
 async function updateTemperaturesRealTime() {
   try {
-    const data = await fetchWeather(); const cur = data.current;
-    const tempBig = document.querySelector('.temp-big'); if (tempBig) tempBig.innerHTML = `${toTemp(cur.temperature_2m)}<sup>${tempUnit()}</sup>`;
+    const data = await fetchWeather();
+    const cur  = data.current;
+
+    // Temperatura principal
+    const tempBig = document.querySelector('.temp-big');
+    if (tempBig) tempBig.innerHTML = `${toTemp(cur.temperature_2m)}<sup>${tempUnit()}</sup>`;
+
+    // Ícono y descripción del tiempo
+    const wmo = getWmoInfo(cur.weather_code);
+    const wIcon = document.querySelector('.weather-icon'); if (wIcon) wIcon.innerHTML = wmo.icon;
+    const wDesc = document.querySelector('.weather-desc'); if (wDesc) wDesc.innerHTML = wmo.desc;
+
+    // Fila de sensación / humedad / viento
     const statVals = document.querySelectorAll('.feel-row .stat-val');
-    if (statVals.length >= 1) statVals[0].innerHTML = `${toTemp(cur.apparent_temperature)}${tempUnit()}`;
-    if (statVals.length >= 3) { statVals[1].innerHTML = `${cur.relative_humidity_2m}%`; statVals[2].innerHTML = `${toWind(cur.wind_speed_10m)} ${windLabel()}`; }
-    const wIcon = document.querySelector('.weather-icon'); const wDesc = document.querySelector('.weather-desc'); const wmo = getWmoInfo(cur.weather_code);
-    if (wIcon) wIcon.innerHTML = wmo.icon; if (wDesc) wDesc.innerHTML = wmo.desc;
+    if (statVals[0]) statVals[0].innerHTML = `${toTemp(cur.apparent_temperature)}${tempUnit()}`;
+    if (statVals[1]) statVals[1].innerHTML = `${cur.relative_humidity_2m}%`;
+    if (statVals[2]) statVals[2].innerHTML = `${toWind(cur.wind_speed_10m)} ${windLabel()}`;
+
+    // Precipitación actual
+    const precipEl = document.getElementById('currentPrecip');
+    if (precipEl) precipEl.textContent = `${cur.precipitation} mm`;
+
+    // Presión
+    const pressEl = document.getElementById('currentPressure');
+    if (pressEl) pressEl.textContent = `${Math.round(cur.surface_pressure)} hPa`;
+
+    // Nubosidad
+    const cloudEl = document.getElementById('currentCloud');
+    if (cloudEl) cloudEl.textContent = `${cur.cloud_cover}%`;
+
+    // UV
+    const uvEl = document.getElementById('currentUV');
+    if (uvEl) uvEl.textContent = cur.uv_index;
+
+    // Hora de actualización
     const updEl = document.getElementById('updatedAt');
-    if (updEl) { const updTime = new Date().toLocaleTimeString('es-CL', { hour:'2-digit', minute:'2-digit' }); updEl.textContent = `Actualizado a las ${updTime}`; }
+    if (updEl) {
+      const t = new Date().toLocaleTimeString('es-CL', { hour:'2-digit', minute:'2-digit' });
+      updEl.textContent = `Actualizado ${t}`;
+    }
+
+    // Actualizar lluvia animada si cambió el código
+    initRain(cur.weather_code, cur.precipitation);
   } catch(e) {}
 }
-setInterval(updateTemperaturesRealTime, 3 * 60 * 1000);
+setInterval(updateTemperaturesRealTime, 2 * 60 * 1000);
 
 let searchTimeout = null;
 async function searchCities(query) {
@@ -2355,6 +2389,7 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbxws7KA23vQm3LLxZzKG0Kn
 const PLAN_LABELS = { basico: { name: '🌡 Básico', price: 'Contactar', features: 'Clima actual · Próximas horas' }, estandar: { name: '📅 Estándar', price: 'Contactar', features: 'Básico + Pronóstico 7 días · Info ciudad · Temas' }, premium: { name: '⭐ Premium', price: 'Contactar', features: 'Todo incluido · Sin restricciones' } };
 
 let licenseStatus = 'unknown'; let licenseModules = {}; let selectedPlan = 'estandar'; let deviceId = null;
+let trialEndTimestamp = null; let _trialWatcher = null;
 
 async function generateFingerprint() {
   const stored = localStorage.getItem('climaDeviceId'); if (stored) return stored;
@@ -2372,27 +2407,32 @@ function saveToIDB(key, value) { return new Promise(function(resolve) { try { co
 
 async function initLicense() {
   deviceId = await generateFingerprint();
-  // Verificar OTP pendiente ANTES del servidor — impide que F5 salte la validación
   try { var p = JSON.parse(localStorage.getItem('climaPendingOtp') || 'null'); if (p && p.email && p.phone) { showOtpForm(p.email, p.phone); pollSyncStatus(); return; } } catch(_) {}
   try {
     const res = await gasPost({ action: 'checkLicense', userId: deviceId });
     if (!res.ok) { await registerSilent(deviceId); return; }
-    licenseStatus = res.status; licenseModules = res.modules || {}; applyModules();
+    licenseStatus = res.status; licenseModules = res.modules || {};
+    if (res.trialEnd) trialEndTimestamp = new Date(res.trialEnd).getTime();
+    applyModules();
     if (res.status === 'not_found') { await registerSilent(deviceId); }
-    else if (res.status === 'expired') { showRegistrationForm(true, res.hoursLeft, res.daysLeft); }
+    else if (res.status === 'expired') { showRegistrationForm(true); }
     else if (res.status === 'blocked') { showBlockedScreen('Acceso suspendido'); }
-    else if (res.status === 'trial') { _showTrialBanner(res.daysLeft, res.hoursLeft); }
+    else if (res.status === 'trial') { _showTrialBanner(res.daysLeft, res.hoursLeft); startTrialExpiryWatcher(); }
     pollSyncStatus();
   } catch(_) {
     const cached = localStorage.getItem('climaLicenseCache');
-    if (cached) { try { const c = JSON.parse(cached); licenseStatus = c.status; licenseModules = c.modules || {}; applyModules(); } catch(_) {} }
+    if (cached) { try { const c = JSON.parse(cached); licenseStatus = c.status; licenseModules = c.modules || {}; if (c.trialEnd) trialEndTimestamp = c.trialEnd; applyModules(); if (licenseStatus === 'trial') startTrialExpiryWatcher(); } catch(_) {} }
   }
 }
 
 async function registerSilent(deviceId) {
   try {
     const res = await gasPost({ action: 'registerSilent', deviceId: deviceId, ua: navigator.userAgent.slice(0, 120), lang: navigator.language || 'es' });
-    if (res.ok) { licenseStatus = 'trial'; licenseModules = res.modules || {}; applyModules(); _showTrialBanner(res.daysLeft, res.hoursLeft); }
+    if (res.ok) {
+      licenseStatus = 'trial'; licenseModules = res.modules || {};
+      if (res.trialEnd) trialEndTimestamp = new Date(res.trialEnd).getTime();
+      applyModules(); _showTrialBanner(res.daysLeft, res.hoursLeft); startTrialExpiryWatcher();
+    }
   } catch(_) { applyModules(); }
 }
 
@@ -2449,7 +2489,32 @@ async function submitOTP(email, phone) {
 }
 
 function showBlockedScreen(msg) { document.getElementById('trialPanel').innerHTML = '<h3>' + (msg || 'Acceso suspendido') + '</h3>'; document.getElementById('trialOverlay').classList.add('show'); }
-function closeTrialOverlay() { document.getElementById('trialOverlay').classList.remove('show'); }
+
+function closeTrialOverlay() {
+  // No se puede cerrar si el trial expiró o el usuario está bloqueado
+  if (licenseStatus === 'expired' || licenseStatus === 'blocked') return;
+  document.getElementById('trialOverlay').classList.remove('show');
+}
+
+// Vigila localmente cada 30s si el trial expiró sin que el usuario refresque
+function startTrialExpiryWatcher() {
+  if (_trialWatcher) clearInterval(_trialWatcher);
+  _trialWatcher = setInterval(function() {
+    if (licenseStatus !== 'trial') { clearInterval(_trialWatcher); return; }
+    if (!trialEndTimestamp) return;
+    if (Date.now() >= trialEndTimestamp) {
+      clearInterval(_trialWatcher);
+      licenseStatus = 'expired';
+      licenseModules = {};
+      applyModules();
+      // Mostrar modal y NO permitir cerrarlo
+      showRegistrationForm(true);
+      // Quitar el banner de tiempo restante
+      const banner = document.getElementById('trialBanner');
+      if (banner) banner.remove();
+    }
+  }, 30000);
+}
 
 async function pollSyncStatus() {
   if (!deviceId) return;
@@ -2474,7 +2539,7 @@ async function pollSyncStatus() {
 setInterval(pollSyncStatus, 45000);
 
 function applyModules() {
-  localStorage.setItem('climaLicenseCache', JSON.stringify({ status: licenseStatus, modules: licenseModules, cachedAt: Date.now() }));
+  localStorage.setItem('climaLicenseCache', JSON.stringify({ status: licenseStatus, modules: licenseModules, trialEnd: trialEndTimestamp, cachedAt: Date.now() }));
   const MODULE_ELEMENTS = { pronostico_horas: 'secPronosticoHoras', pronostico_dias: 'secPronosticoDias', seccion_explorar: 'placesSection', temas_visuales: 'settingsBtn', info_ciudad: 'infoBtn', foto_ciudad: 'cityPhotoCard', datos_detalle: 'secDatosDetalle', datos_uv: 'modUV', datos_viento: 'modViento', datos_presion: 'modPresion', datos_nubosidad: 'modNubosidad', datos_visibilidad: 'modVisibilidad', datos_amanecer: 'modAmanecer' };
   const MODULE_LABELS   = { pronostico_horas: 'Pronostico por horas', pronostico_dias: 'Pronostico 6 dias', seccion_explorar: 'Explorar ciudad', temas_visuales: 'Cambiar temas', info_ciudad: 'Info ciudad', foto_ciudad: 'Foto ciudad', datos_detalle: 'Datos del tiempo', datos_uv: 'Indice UV', datos_viento: 'Viento', datos_presion: 'Presion', datos_nubosidad: 'Nubosidad', datos_visibilidad: 'Visibilidad', datos_amanecer: 'Amanecer' };
   function setLocked(elId, locked, isSection, modKey) {
