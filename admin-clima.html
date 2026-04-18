@@ -104,6 +104,16 @@ body{background:var(--ink);color:var(--text);font-family:'DM Mono',monospace;min
 .user-mod-row{background:var(--g2);border-radius:9px;padding:9px 11px;display:flex;align-items:center;gap:8px;}
 .user-mod-name{font-size:0.62rem;color:var(--text);flex:1;}
 
+/* Card header row (visible sin expandir) */
+.card-header-row{display:flex;align-items:center;gap:8px;}
+.card-header-row .user-header{flex:1;}
+
+/* Password eye */
+.pass-wrap{position:relative;margin-bottom:12px;}
+.pass-wrap .login-input{margin-bottom:0;padding-right:42px;}
+.pass-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--dim);font-size:1rem;padding:0;line-height:1;}
+.pass-eye:hover{color:var(--ice);}
+
 /* Loading / empty / toast */
 .loading{text-align:center;padding:40px;font-size:0.7rem;color:var(--dim);}
 .empty{text-align:center;padding:40px;font-size:0.72rem;color:var(--dim);}
@@ -165,7 +175,10 @@ body{background:var(--ink);color:var(--text);font-family:'DM Mono',monospace;min
   <div class="login-card">
     <h1>Clima App</h1>
     <p>Panel de Administrador</p>
-    <input class="login-input" type="password" id="passInput" placeholder="Contrasena"/>
+    <div class="pass-wrap">
+      <input class="login-input" type="password" id="passInput" placeholder="Contrasena"/>
+      <button type="button" class="pass-eye" id="passEye">&#128065;</button>
+    </div>
     <button class="login-btn" id="loginBtn">Ingresar</button>
     <div class="login-error" id="loginError">Contrasena incorrecta</div>
   </div>
@@ -199,7 +212,6 @@ body{background:var(--ink);color:var(--text);font-family:'DM Mono',monospace;min
           <button class="unit-btn active" id="btnDias" data-unit="dias">Dias</button>
           <button class="unit-btn" id="btnHoras" data-unit="horas">Horas</button>
         </div>
-        <button class="save-btn" id="saveTrialDur">Guardar</button>
       </div>
       <div style="font-size:0.6rem;color:var(--dim);margin-bottom:16px;">
         Afecta solo a nuevos registros. Los usuarios existentes conservan su fecha actual.
@@ -210,7 +222,7 @@ body{background:var(--ink);color:var(--text);font-family:'DM Mono',monospace;min
         <!-- Se llena en init() y se actualiza cuando llega la config del servidor -->
       </div>
       <div style="margin-top:12px;">
-        <button class="save-btn" id="saveTrialMods">Guardar modulos trial</button>
+        <button class="save-btn" id="saveTrialMods">Guardar configuracion trial</button>
       </div>
     </div>
 
@@ -230,7 +242,7 @@ body{background:var(--ink);color:var(--text);font-family:'DM Mono',monospace;min
 <div class="toast" id="toast"></div>
 
 <script>
-var GAS_URL      = 'https://script.google.com/macros/s/AKfycbxSdxWfA23PFCh5lI-lIT5BV9fAhyieUw75QiWHCfYnofHf6cdl_IzuUv5TnWIaLAU4/exec';
+var GAS_URL      = 'https://script.google.com/macros/s/AKfycbxws7KA23vQm3LLxZzKG0Kn4bFeJG14lMUZ1CWmMx03_bJgNm9SoP1fKTQUqy0H0tIL/exec';
 var adminPass    = '';
 var allUsers     = [];
 var globalConfig = {};
@@ -261,10 +273,15 @@ function init() {
   document.getElementById('loginBtn').addEventListener('click', doLogin);
   document.getElementById('logoutBtn').addEventListener('click', doLogout);
   document.getElementById('refreshBtn').addEventListener('click', loadUsers);
-  document.getElementById('saveTrialDur').addEventListener('click', saveTrialDuration);
-  document.getElementById('saveTrialMods').addEventListener('click', saveTrialMods);
+  document.getElementById('saveTrialMods').addEventListener('click', saveTrialConfig);
   document.getElementById('passInput').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') doLogin();
+  });
+  document.getElementById('passEye').addEventListener('click', function() {
+    var inp = document.getElementById('passInput');
+    var isPass = inp.type === 'password';
+    inp.type = isPass ? 'text' : 'password';
+    this.textContent = isPass ? '🙈' : '👁';
   });
   document.getElementById('searchInput').addEventListener('input', filterUsers);
   document.getElementById('btnDias').addEventListener('click', function() { setUnit('dias'); });
@@ -342,7 +359,7 @@ function doLogin() {
         if (!adminPass) return;
         gasPost({ action: 'getUsers', adminPass: adminPass }).then(function(r) {
           if (!r.ok) return;
-          if (r.config) applyGlobalConfig(r.config);
+          // NO se toca la config aquí — solo se actualiza al hacer login
           if (r.users) {
             var oldMap = {};
             allUsers.forEach(function(u) { oldMap[u.userId] = u; });
@@ -430,41 +447,25 @@ function updateTrialModsState(cfg) {
   });
 }
 
-function saveTrialDuration() {
+function saveTrialConfig() {
   var val = document.getElementById('trialValor').value;
-  if (!val || isNaN(val) || val < 1) { showToast('Ingresa un numero valido', true); return; }
+  if (!val || isNaN(val) || val < 1) { showToast('Ingresa un numero valido para la duracion', true); return; }
   var cfg = { trial_valor: val, trial_unidad: trialUnit };
-  document.getElementById('saveTrialDur').textContent = 'Guardando...';
-  gasPost({ action: 'updateConfig', adminPass: adminPass, config: cfg })
-    .then(function(res) {
-      document.getElementById('saveTrialDur').textContent = 'Guardar';
-      if (!res.ok) throw new Error(res.error);
-      globalConfig['trial_valor']  = val;
-      globalConfig['trial_unidad'] = trialUnit;
-      showToast('Trial: ' + val + ' ' + trialUnit + ' guardado');
-    })
-    .catch(function(e) {
-      document.getElementById('saveTrialDur').textContent = 'Guardar';
-      showToast('Error: ' + e.message, true);
-    });
-}
-
-function saveTrialMods() {
-  var cfg = {};
   document.querySelectorAll('[data-cfgmod]').forEach(function(cb) {
     cfg['trial_mod_' + cb.dataset.cfgmod] = cb.checked ? 'true' : 'false';
   });
-  document.getElementById('saveTrialMods').textContent = 'Guardando...';
+  var btn = document.getElementById('saveTrialMods');
+  btn.textContent = 'Guardando...';
   gasPost({ action: 'updateConfig', adminPass: adminPass, config: cfg })
     .then(function(res) {
-      document.getElementById('saveTrialMods').textContent = 'Guardar modulos trial';
-      if (!res.ok) throw new Error(res.error);
+      btn.textContent = 'Guardar configuracion trial';
+      if (!res.ok) throw new Error(res.error || JSON.stringify(res));
       Object.assign(globalConfig, cfg);
-      showToast('Modulos trial guardados');
+      showToast('Trial: ' + val + ' ' + trialUnit + ' + modulos guardados');
     })
     .catch(function(e) {
-      document.getElementById('saveTrialMods').textContent = 'Guardar modulos trial';
-      showToast('Error: ' + e.message, true);
+      btn.textContent = 'Guardar configuracion trial';
+      showToast('Error al guardar: ' + e.message, true);
     });
 }
 
@@ -474,7 +475,7 @@ function loadUsers() {
   gasPost({ action: 'getUsers', adminPass: adminPass })
     .then(function(res) {
       if (!res.ok) throw new Error(res.error);
-      if (res.config) applyGlobalConfig(res.config);
+      // NO se toca la config — el botón Actualizar solo refresca la lista
       renderUsers(res.users);
     })
     .catch(function(e) {
@@ -633,6 +634,7 @@ function buildUserCard(u) {
     + '</div>';
 
   return '<div class="user-card' + (blocked ? ' blocked' : '') + '" id="card-' + u.userId + '">'
+    + '<div class="card-header-row">'
     + '<div class="user-header" data-uid="' + u.userId + '">'
     + '<div class="user-avatar">&#128100;</div>'
     + '<div class="user-info">'
@@ -642,6 +644,8 @@ function buildUserCard(u) {
     + '</div>'
     + '<span class="uc">&#9660;</span>'
     + '</div>'
+    + '<button class="del-user-btn" data-uid="' + u.userId + '" data-name="' + u.nombre.replace(/"/g,'&quot;') + '">&#128465;</button>'
+    + '</div>'
     + '<div class="user-detail"><div class="user-detail-inner">'
     + '<div class="block-row" style="background:rgba(224,85,85,0.05);border-color:rgba(224,85,85,0.12);">'
     + '<span class="block-label">Bloquear acceso completo a la app</span>'
@@ -650,9 +654,6 @@ function buildUserCard(u) {
     + '<div class="sw-track"></div>'
     + '<div class="sw-thumb"></div>'
     + '</label></div>'
-    + '<div style="margin-top:12px;display:flex;justify-content:flex-end;">'
-    + '<button class="del-user-btn" data-uid="' + u.userId + '" data-name="' + u.nombre + '">&#128465; Eliminar usuario</button>'
-    + '</div>'
     + '<div class="mod-section-title">Modulos disponibles para este usuario</div>'
     + '<div class="plans-row">'
     + '<button class="plan-btn" data-uid="' + u.userId + '" data-plan="basico" title="Solo clima actual">Plan Basico</button>'
@@ -673,10 +674,15 @@ function filterUsers() {
 
 // ── DELEGACION DE EVENTOS ─────────────────────────────────────
 function onGlobalClick(e) {
-  var header = e.target.closest('.user-header');
-  if (header) {
-    var card = document.getElementById('card-' + header.dataset.uid);
-    if (card) card.classList.toggle('expanded');
+  // Si el clic fue en el boton eliminar, no expandir la tarjeta
+  if (e.target.closest('.del-user-btn')) {
+    // se maneja abajo
+  } else {
+    var header = e.target.closest('.user-header');
+    if (header) {
+      var card = document.getElementById('card-' + header.dataset.uid);
+      if (card) card.classList.toggle('expanded');
+    }
   }
   var planBtn = e.target.closest('.plan-btn');
   if (planBtn) {
@@ -698,11 +704,12 @@ function onGlobalClick(e) {
     if (!confirm('Eliminar al usuario "' + name + '"?\n\nEsta accion no se puede deshacer.')) return;
     gasPost({ action: 'deleteUser', adminPass: adminPass, userId: uid })
       .then(function(res) {
-        if (!res.ok) throw new Error(res.error);
-        loadUsers();
+        if (!res.ok) throw new Error(res.error || JSON.stringify(res));
+        allUsers = allUsers.filter(function(u){ return u.userId !== uid; });
+        renderUsers(allUsers);
         showToast('Usuario eliminado');
       })
-      .catch(function(e) { showToast('Error: ' + e.message, true); });
+      .catch(function(e) { showToast('Error al eliminar: ' + e.message, true); });
   }
 }
 
@@ -734,12 +741,22 @@ function onGlobalChange(e) {
 
 // ── UTILS ─────────────────────────────────────────────────────
 function gasPost(data) {
+  console.log('[GAS →]', data.action, data);
   return fetch(GAS_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify(data),
     redirect: 'follow'
-  }).then(function(r) { return r.json(); });
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(res) {
+    console.log('[GAS ←]', data.action, res);
+    return res;
+  })
+  .catch(function(err) {
+    console.error('[GAS ERROR]', data.action, err);
+    throw err;
+  });
 }
 
 function showToast(msg, error) {
