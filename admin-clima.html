@@ -168,7 +168,7 @@ body{background:var(--ink);color:var(--text);font-family:'DM Mono',monospace;min
 <body>
 
 <!-- Alert banner -->
-<div id="alertBanner" style="display:none;position:sticky;top:0;z-index:200;background:rgba(76,175,80,0.12);border-bottom:1px solid rgba(76,175,80,0.3);padding:10px 16px;text-align:center;font-size:0.68rem;color:#66bb6a;letter-spacing:0.05em;"></div>
+<div id="alertBanner" style="display:none;position:sticky;top:0;z-index:200;padding:10px 16px;text-align:center;font-size:0.68rem;letter-spacing:0.05em;transition:background 0.3s;"></div>
 
 <!-- Login -->
 <div class="login-screen" id="loginScreen">
@@ -320,13 +320,22 @@ function userDataChanged(a, b) {
     || JSON.stringify(a.modules) !== JSON.stringify(b.modules);
 }
 
-function showAlert(msg) {
+function showAlert(msg, type) {
   var el = document.getElementById('alertBanner');
   el.textContent = msg;
   el.style.display = 'block';
-  // Auto-ocultar tras 6 segundos
+  if (type === 'new-client') {
+    el.style.background    = 'rgba(255,152,0,0.18)';
+    el.style.borderBottom  = '1px solid rgba(255,152,0,0.4)';
+    el.style.color         = '#ffb74d';
+  } else {
+    el.style.background    = 'rgba(76,175,80,0.12)';
+    el.style.borderBottom  = '1px solid rgba(76,175,80,0.3)';
+    el.style.color         = '#66bb6a';
+  }
   if (el._timeout) clearTimeout(el._timeout);
-  el._timeout = setTimeout(function() { hideAlert(); }, 6000);
+  var duration = type === 'new-client' ? 10000 : 6000;
+  el._timeout = setTimeout(function() { hideAlert(); }, duration);
 }
 
 function hideAlert() {
@@ -355,9 +364,12 @@ function doLogin() {
       // applyGlobalConfig actualiza los toggles del grid ya renderizado
       if (res.config) applyGlobalConfig(res.config);
       renderUsers(res.users);
+      var _refreshing = false;
       _autoRefreshTimer = setInterval(function() {
-        if (!adminPass) return;
+        if (!adminPass || _refreshing) return;
+        _refreshing = true;
         gasPost({ action: 'getUsers', adminPass: adminPass }).then(function(r) {
+          _refreshing = false;
           if (!r.ok) return;
           // NO se toca la config aquí — solo se actualiza al hacer login
           if (r.users) {
@@ -366,10 +378,12 @@ function doLogin() {
             var newUsers = 0;
             var subscriptions = 0;
             var dataChanges = 0;
+            var newClientNames = [];
             r.users.forEach(function(u) {
               var old = oldMap[u.userId];
               if (!old) {
                 newUsers++;
+                newClientNames.push(u.nombre || 'Nuevo dispositivo');
               } else if (old.estado !== 'premium' && u.estado === 'premium') {
                 subscriptions++;
               } else if (userDataChanged(old, u)) {
@@ -380,15 +394,20 @@ function doLogin() {
             if (totalChanges > 0) {
               allUsers = r.users;
               renderUsers(allUsers);
-              var msgs = [];
-              if (newUsers > 0) msgs.push(newUsers + ' nuevo(s) usuario(s)');
-              if (subscriptions > 0) msgs.push(subscriptions + ' suscripcion(es) a Premium');
-              if (dataChanges > 0) msgs.push(dataChanges + ' actualizacion(s) de datos');
-              showAlert(msgs.join(' · ') + ' detected');
+              if (newUsers > 0) {
+                var nombres = newClientNames.slice(0, 2).join(', ') + (newClientNames.length > 2 ? ' y ' + (newClientNames.length - 2) + ' mas' : '');
+                showAlert('🟠 Nuevo cliente conectado: ' + nombres, 'new-client');
+                showToast('🟠 Nuevo cliente: ' + newClientNames[0]);
+              } else {
+                var msgs = [];
+                if (subscriptions > 0) msgs.push(subscriptions + ' suscripcion(es) a Premium');
+                if (dataChanges > 0) msgs.push(dataChanges + ' actualizacion(es) de datos');
+                showAlert('✓ ' + msgs.join(' · '));
+              }
             }
           }
-        }).catch(function() {});
-      }, 30000);
+        }).catch(function() { _refreshing = false; });
+      }, 12000);
     })
     .catch(function() {
       document.getElementById('loginError').style.display = 'block';
