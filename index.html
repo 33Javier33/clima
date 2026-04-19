@@ -21,7 +21,6 @@ Copia y pega este código completo. He marcado con comentarios `<!-- NUEVO -->` 
 <link rel="apple-touch-icon" href="./img/icon-192x192.png"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400&family=Noto+Serif:ital,wght@0,400;0,700;1,400&family=Space+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/WLs=" crossorigin=""></script>
 <style>
   /* ── TEMA: Lago (default) ── */
   :root {
@@ -218,8 +217,7 @@ Copia y pega este código completo. He marcado con comentarios `<!-- NUEVO -->` 
     position: relative; z-index: 2;
     max-width: 480px;
     margin: 0 auto;
-    /* FIX 7: Reducido el padding inferior excesivo */
-    padding: 32px 20px 24px;
+    padding: 16px 20px 24px;
     min-height: 100vh;
   }
 
@@ -246,8 +244,15 @@ Copia y pega este código completo. He marcado con comentarios `<!-- NUEVO -->` 
   .header .updated {
     font-size: 0.6rem;
     color: var(--dim);
-    margin-top: 10px;
+    margin-top: 8px;
     opacity: 0.7;
+  }
+  .header .date-line {
+    font-size: 0.62rem;
+    color: var(--cold);
+    letter-spacing: 0.1em;
+    margin-top: 5px;
+    opacity: 0.85;
   }
 
   .search-wrap { position: relative; margin: 16px 0 0; }
@@ -1444,6 +1449,7 @@ Copia y pega este código completo. He marcado con comentarios `<!-- NUEVO -->` 
 
 <div class="app">
   <div class="header">
+    <div class="date-line" id="dateDisplay"></div>
     <div class="city" id="cityName">Puerto Varas <button class="fav-btn" id="favBtn" title="Guardar en favoritos">♡</button></div>
     <div class="region" id="cityRegion">Región de Los Lagos · Chile</div>
     <div class="updated" id="updatedAt">Cargando datos...</div>
@@ -1617,6 +1623,7 @@ Copia y pega este código completo. He marcado con comentarios `<!-- NUEVO -->` 
   </div>
 </div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/WLs=" crossorigin=""></script>
 <script>
 let currentCity = (() => {
   try {
@@ -1683,8 +1690,18 @@ const WMO_CODES = {
   96: { icon:'⛈',  desc:'Tormenta con granizo' },
   99: { icon:'⛈',  desc:'Tormenta severa' },
 };
-const DAYS_ES = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const DAYS_ES  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const MONTHS_ES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 const WIND_DIRS = ['N','NE','E','SE','S','SO','O','NO'];
+
+function updateDateDisplay() {
+  const el = document.getElementById('dateDisplay');
+  if (!el) return;
+  const now = new Date();
+  el.textContent = `${DAYS_ES[now.getDay()]} ${now.getDate()} de ${MONTHS_ES[now.getMonth()]} ${now.getFullYear()}`;
+}
+updateDateDisplay();
+setInterval(updateDateDisplay, 60000);
 
 function getWmoInfo(code) { return WMO_CODES[code] || { icon:'🌡', desc:'Variable' }; }
 function windDirection(deg) { return WIND_DIRS[Math.round(deg / 45) % 8]; }
@@ -2673,7 +2690,7 @@ function applyModules() {
   const infoBtn = document.getElementById('infoBtn'); if (infoBtn) { infoBtn.style.opacity = licenseModules['info_ciudad'] ? '' : '0.35'; infoBtn.style.pointerEvents = licenseModules['info_ciudad'] ? '' : 'none'; }
   if (licenseModules['datos_detalle'] === false) { setLocked('secDatosDetalle', true, true, 'datos_detalle'); } else { setLocked('secDatosDetalle', false, false, null); setLocked('modUV', licenseModules['datos_uv'] === false, false, 'datos_uv'); setLocked('modViento', licenseModules['datos_viento'] === false, false, 'datos_viento'); setLocked('modPresion', licenseModules['datos_presion'] === false, false, 'datos_presion'); setLocked('modNubosidad', licenseModules['datos_nubosidad'] === false, false, 'datos_nubosidad'); setLocked('modVisibilidad', licenseModules['datos_visibilidad'] === false, false, 'datos_visibilidad'); setLocked('modAmanecer', licenseModules['datos_amanecer'] === false, false, 'datos_amanecer'); }
   if (licenseModules['temas_visuales'] === false) { document.documentElement.setAttribute('data-theme', ''); localStorage.setItem('climaTema', ''); }
-  setLocked('secMapaCiudad', !licenseModules['mapa_ciudad'], true, 'mapa_ciudad');
+  setLocked('secMapaCiudad', licenseModules['mapa_ciudad'] === false, true, 'mapa_ciudad');
   const feelEls = document.querySelectorAll('.sensacion-horas-data'); feelEls.forEach(el => { el.style.display = licenseModules['sensacion_horas'] === false ? 'none' : ''; });
 }
 
@@ -2696,20 +2713,26 @@ function shareWeather() {
 }
 
 let _leafletMap = null;
-let _leafletMarker = null;
 function loadMap(lat, lon) {
   const el = document.getElementById('mapLeaflet');
   if (!el || typeof L === 'undefined') return;
-  if (_leafletMap) {
-    _leafletMap.setView([lat, lon], 13);
-    if (_leafletMarker) _leafletMarker.setLatLng([lat, lon]);
-    return;
-  }
-  _leafletMap = L.map('mapLeaflet', { zoomControl: true, scrollWheelZoom: false, attributionControl: false }).setView([lat, lon], 13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(_leafletMap);
-  const icon = L.divIcon({ className: '', html: '<div style="font-size:1.4rem;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.8))">📍</div>', iconSize: [28, 28], iconAnchor: [14, 28] });
-  _leafletMarker = L.marker([lat, lon], { icon }).addTo(_leafletMap);
-  setTimeout(() => { if (_leafletMap) _leafletMap.invalidateSize(); }, 300);
+  // El div se regenera con cada buildHTML — siempre destruir y recrear
+  if (_leafletMap) { try { _leafletMap.remove(); } catch(_){} _leafletMap = null; }
+  _leafletMap = L.map('mapLeaflet', {
+    zoomControl: true, scrollWheelZoom: false, attributionControl: false
+  }).setView([lat, lon], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18, crossOrigin: true
+  }).addTo(_leafletMap);
+  const icon = L.divIcon({
+    className: '',
+    html: '<div style="font-size:1.6rem;line-height:1;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.9))">📍</div>',
+    iconSize: [28, 32], iconAnchor: [14, 32]
+  });
+  L.marker([lat, lon], { icon }).addTo(_leafletMap);
+  // Forzar redibujado después de que el contenedor sea visible
+  requestAnimationFrame(() => { if (_leafletMap) _leafletMap.invalidateSize(); });
+  setTimeout(() => { if (_leafletMap) _leafletMap.invalidateSize(); }, 400);
 }
 
 // Event Listeners nuevos
