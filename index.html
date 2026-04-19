@@ -20,7 +20,6 @@ Copia y pega este código completo. He marcado con comentarios `<!-- NUEVO -->` 
 <meta name="theme-color" content="#0d1117"/>
 <link rel="apple-touch-icon" href="./img/icon-192x192.png"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400&family=Noto+Serif:ital,wght@0,400;0,700;1,400&family=Space+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 <style>
   /* ── TEMA: Lago (default) ── */
   :root {
@@ -223,7 +222,7 @@ Copia y pega este código completo. He marcado con comentarios `<!-- NUEVO -->` 
 
   .header {
     text-align: center;
-    margin-bottom: 36px;
+    margin-bottom: 18px;
     animation: fadeDown 0.7s ease both;
   }
   .header .city {
@@ -1384,21 +1383,24 @@ Copia y pega este código completo. He marcado con comentarios `<!-- NUEVO -->` 
   }
   #update-banner .upd-btn:hover { background: rgba(126,184,212,0.35); }
 
-  /* Estilos para el mapa Leaflet */
+  /* Estilos para el mapa iframe */
   .map-container {
-    width: 100%; height: 260px;
+    width: 100%; height: 240px;
     border-radius: 16px; overflow: hidden;
-    border: 1px solid rgba(126,184,212,0.15);
+    border: 1px solid rgba(126,184,212,0.12);
     background: var(--glass);
-    margin-top: 20px;
+    margin-top: 8px;
     position: relative;
   }
-  #mapLeaflet { width: 100%; height: 100%; }
-  .leaflet-tile { filter: brightness(0.7) saturate(0.8); }
-  .leaflet-container { background: #0d1117; font-family: 'DM Mono', monospace; }
+  .map-container iframe {
+    width: 100%; height: 100%; border: none;
+    filter: invert(88%) hue-rotate(180deg) saturate(0.9);
+    opacity: 0.85;
+  }
   .map-overlay {
-    position: absolute; bottom: 0; left: 0; right: 0; z-index: 1000;
-    padding: 8px 14px; background: linear-gradient(to top, rgba(13,17,23,0.9), transparent);
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 10px 14px;
+    background: linear-gradient(to top, rgba(13,17,23,0.88), transparent);
     font-size: 0.58rem; color: var(--text); pointer-events: none;
   }
   .map-title {
@@ -1623,7 +1625,6 @@ Copia y pega este código completo. He marcado con comentarios `<!-- NUEVO -->` 
   </div>
 </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/WLs=" crossorigin=""></script>
 <script>
 let currentCity = (() => {
   try {
@@ -2017,7 +2018,7 @@ function buildHTML(data, aqiData = null) {
     <div class="gap-section" id="secMapaCiudad">
       <div class="section-title map-title">📍 Mapa · ${currentCity.name}</div>
       <div class="map-container" id="mapContainer">
-        <div id="mapLeaflet"></div>
+        <iframe id="mapFrame" src="" loading="lazy" title="Mapa de ${currentCity.name}"></iframe>
         <div class="map-overlay">📍 ${currentCity.name} · ${currentCity.region}</div>
       </div>
     </div>
@@ -2712,27 +2713,11 @@ function shareWeather() {
   }
 }
 
-let _leafletMap = null;
 function loadMap(lat, lon) {
-  const el = document.getElementById('mapLeaflet');
-  if (!el || typeof L === 'undefined') return;
-  // El div se regenera con cada buildHTML — siempre destruir y recrear
-  if (_leafletMap) { try { _leafletMap.remove(); } catch(_){} _leafletMap = null; }
-  _leafletMap = L.map('mapLeaflet', {
-    zoomControl: true, scrollWheelZoom: false, attributionControl: false
-  }).setView([lat, lon], 13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 18, crossOrigin: true
-  }).addTo(_leafletMap);
-  const icon = L.divIcon({
-    className: '',
-    html: '<div style="font-size:1.6rem;line-height:1;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.9))">📍</div>',
-    iconSize: [28, 32], iconAnchor: [14, 32]
-  });
-  L.marker([lat, lon], { icon }).addTo(_leafletMap);
-  // Forzar redibujado después de que el contenedor sea visible
-  requestAnimationFrame(() => { if (_leafletMap) _leafletMap.invalidateSize(); });
-  setTimeout(() => { if (_leafletMap) _leafletMap.invalidateSize(); }, 400);
+  const iframe = document.getElementById('mapFrame');
+  if (!iframe) return;
+  const d = 0.04;
+  iframe.src = `https://www.openstreetmap.org/export/embed.html?bbox=${lon-d},${lat-d},${lon+d},${lat+d}&layer=mapnik&marker=${lat},${lon}`;
 }
 
 // Event Listeners nuevos
