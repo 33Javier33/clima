@@ -368,8 +368,16 @@
     color: var(--cold);
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    margin-bottom: 20px;
+    margin-bottom: 8px;
   }
+
+  .today-minmax {
+    display: flex; gap: 14px; align-items: center;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+  }
+  .today-minmax .t-max { color: var(--ice); font-weight: 600; }
+  .today-minmax .t-min { color: var(--dim); }
 
   .stats-grid {
     display: grid;
@@ -490,8 +498,9 @@
   .day-name  { font-size: 0.75rem; color: var(--text); flex: 1; }
   .day-date  { font-size: 0.58rem; color: var(--dim); }
   .day-icon  { font-size: 1.2rem; }
-  .day-temps { font-size: 0.75rem; color: var(--dim); white-space: nowrap; }
-  .day-temps span { color: var(--ice); }
+  .day-temps { font-size: 0.8rem; color: var(--dim); white-space: nowrap; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+  .day-temps .d-max { color: var(--ice); font-weight: 600; }
+  .day-temps .d-min { color: var(--dim); }
   .day-rain-badge {
     font-size: 0.55rem;
     background: rgba(74,144,184,0.2);
@@ -1837,7 +1846,10 @@ function buildHTML(data, aqiData = null) {
             <div class="day-date">${dateLabel}</div>
           </div>
           <div class="day-icon">${dWmo.icon}</div>
-          <div class="day-temps"><span>${toTemp(daily.temperature_2m_max[idx])}°</span> / ${toTemp(daily.temperature_2m_min[idx])}°</div>
+          <div class="day-temps">
+            <span class="d-max">↑ ${toTemp(daily.temperature_2m_max[idx])}°</span>
+            <span class="d-min">↓ ${toTemp(daily.temperature_2m_min[idx])}°</span>
+          </div>
           <div class="day-rain-badge">💧 ${daily.precipitation_probability_max[idx]}%</div>
           <div class="day-chevron">›</div>
         </div>
@@ -1897,6 +1909,10 @@ function buildHTML(data, aqiData = null) {
         <div class="weather-icon">${wmo.icon}</div>
       </div>
       <div class="weather-desc">${wmo.desc}</div>
+      <div class="today-minmax">
+        <span class="t-max">↑ ${toTemp(daily.temperature_2m_max[todayIdx >= 0 ? todayIdx : 0])}${tempUnit()}</span>
+        <span class="t-min">↓ ${toTemp(daily.temperature_2m_min[todayIdx >= 0 ? todayIdx : 0])}${tempUnit()}</span>
+      </div>
       <div class="feel-row">
         <div class="stat"><div class="stat-label">Sensación</div><div class="stat-val">${toTemp(cur.apparent_temperature)}${tempUnit()}</div></div>
         <div class="stat"><div class="stat-label">Humedad</div><div class="stat-val">${cur.relative_humidity_2m}%</div></div>
@@ -2331,6 +2347,7 @@ async function updateTemperaturesRealTime() {
   try {
     const data = await fetchWeather();
     const cur  = data.current;
+    const daily = data.daily;
 
     // Temperatura principal
     const tempBig = document.querySelector('.temp-big');
@@ -2340,6 +2357,15 @@ async function updateTemperaturesRealTime() {
     const wmo = getWmoInfo(cur.weather_code);
     const wIcon = document.querySelector('.weather-icon'); if (wIcon) wIcon.innerHTML = wmo.icon;
     const wDesc = document.querySelector('.weather-desc'); if (wDesc) wDesc.innerHTML = wmo.desc;
+
+    // Min/Max de hoy
+    const todayStr = new Date().toISOString().split('T')[0];
+    const tIdx = daily.time.indexOf(todayStr);
+    const idx0 = tIdx >= 0 ? tIdx : 0;
+    const minmaxEl = document.querySelector('.today-minmax');
+    if (minmaxEl && daily.temperature_2m_max && daily.temperature_2m_min) {
+      minmaxEl.innerHTML = `<span class="t-max">↑ ${toTemp(daily.temperature_2m_max[idx0])}${tempUnit()}</span><span class="t-min">↓ ${toTemp(daily.temperature_2m_min[idx0])}${tempUnit()}</span>`;
+    }
 
     // Fila de sensación / humedad / viento
     const statVals = document.querySelectorAll('.feel-row .stat-val');
