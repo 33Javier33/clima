@@ -1,7 +1,7 @@
 // sw.js — Clima App
 // CarlosPN Interactive® 
 
-const CACHE_NAME = 'clima-app-v1';
+const CACHE_NAME = 'clima-app-v2';
 
 const PRECACHE = [
   './index.html',
