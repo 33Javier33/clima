@@ -59,12 +59,12 @@
     --bg:linear-gradient(175deg,#030e14 0%,#071820 40%,#030e14 100%);
     --bg-glow:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(0,160,160,0.18) 0%,transparent 60%);
   }
-  [data-theme="noche"] {
-    --ink:#060608;--glass:rgba(200,200,220,0.05);--glass2:rgba(200,200,220,0.08);
-    --cold:#a8a8c8;--ice:#d8d8e8;--rain:#6060a0;--text:#c8c8d8;--dim:#606080;
-    --drop-color:rgba(168,168,200,0.3);
-    --bg:linear-gradient(175deg,#060608 0%,#0c0c12 40%,#060608 100%);
-    --bg-glow:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(80,80,140,0.12) 0%,transparent 60%);
+  [data-theme="blanco"] {
+    --ink:#f2f6fc;--glass:rgba(255,255,255,0.72);--glass2:rgba(255,255,255,0.86);
+    --cold:#4a82c4;--ice:#1a3d78;--rain:#2e5fa0;--text:#243047;--dim:#7888a8;
+    --drop-color:rgba(74,130,196,0.28);
+    --bg:linear-gradient(175deg,#dbe8fa 0%,#eef4fd 45%,#dbe8fa 100%);
+    --bg-glow:radial-gradient(ellipse 80% 60% at 28% 0%,rgba(100,155,235,0.28) 0%,transparent 60%);
   }
   [data-theme="sakura"] {
     --ink:#120810;--glass:rgba(255,160,200,0.06);--glass2:rgba(255,160,200,0.10);
@@ -80,12 +80,12 @@
     --bg:linear-gradient(175deg,#060a10 0%,#0c1420 40%,#060a10 100%);
     --bg-glow:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(40,80,200,0.2) 0%,transparent 60%);
   }
-  [data-theme="aurora"] {
-    --ink:#030a08;--glass:rgba(50,220,160,0.06);--glass2:rgba(50,220,160,0.10);
-    --cold:#30d4a0;--ice:#80f0d0;--rain:#10906a;--text:#c0e8d8;--dim:#408868;
-    --drop-color:rgba(48,212,160,0.35);
-    --bg:linear-gradient(175deg,#030a08 0%,#071510 40%,#030a08 100%);
-    --bg-glow:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(20,180,120,0.18) 0%,transparent 60%);
+  [data-theme="cielo"] {
+    --ink:#e4f4ff;--glass:rgba(255,255,255,0.66);--glass2:rgba(255,255,255,0.80);
+    --cold:#1a9ed4;--ice:#074f6e;--rain:#0e7ab0;--text:#083048;--dim:#4a7a98;
+    --drop-color:rgba(26,158,212,0.38);
+    --bg:linear-gradient(175deg,#a8daf5 0%,#ceeeff 45%,#a8daf5 100%);
+    --bg-glow:radial-gradient(ellipse 80% 60% at 28% 0%,rgba(30,160,230,0.32) 0%,transparent 60%);
   }
   [data-theme="monzon"] {
     --ink:#060c10;--glass:rgba(100,160,220,0.06);--glass2:rgba(100,160,220,0.10);
@@ -172,9 +172,39 @@
   }
 
   .bg-layer {
-    position: fixed; inset: 0; z-index: 0;
+    position: fixed; inset: 0; z-index: 0; overflow: hidden;
     background: var(--bg-glow), var(--bg);
-    transition: background 0.5s ease;
+    transition: background 0.6s ease;
+  }
+  .bg-layer::before {
+    content: '';
+    position: absolute; border-radius: 50%; pointer-events: none;
+    width: 90vw; height: 90vw;
+    background: radial-gradient(circle at center, var(--cold) 0%, transparent 65%);
+    opacity: 0.11;
+    top: -30%; left: -25%;
+    animation: orb-a 26s ease-in-out infinite;
+  }
+  .bg-layer::after {
+    content: '';
+    position: absolute; border-radius: 50%; pointer-events: none;
+    width: 65vw; height: 65vw;
+    background: radial-gradient(circle at center, var(--ice) 0%, transparent 65%);
+    opacity: 0.08;
+    bottom: 8%; right: -20%;
+    animation: orb-b 35s ease-in-out infinite;
+  }
+  @keyframes orb-a {
+    0%   { transform: translate(0,0) scale(1); }
+    33%  { transform: translate(7vw,12vh) scale(1.07); }
+    66%  { transform: translate(-4vw,5vh) scale(0.93); }
+    100% { transform: translate(0,0) scale(1); }
+  }
+  @keyframes orb-b {
+    0%   { transform: translate(0,0) scale(1); }
+    40%  { transform: translate(-10vw,-8vh) scale(1.09); }
+    75%  { transform: translate(5vw,-3vh) scale(0.94); }
+    100% { transform: translate(0,0) scale(1); }
   }
 
   .rain-container {
@@ -712,12 +742,56 @@
   .t-desierto { background: radial-gradient(circle at 40% 40%, #d4a94a, #120c06); }
   .t-volcan   { background: radial-gradient(circle at 40% 40%, #e8623a, #0f0505); }
   .t-oceano   { background: radial-gradient(circle at 40% 40%, #2ecfc8, #030e14); }
-  .t-noche    { background: radial-gradient(circle at 40% 40%, #a8a8c8, #060608); }
+  .t-blanco   { background: radial-gradient(circle at 40% 40%, #6aabee, #dbe8fa); border: 1px solid rgba(74,130,196,0.25); }
   .t-sakura   { background: radial-gradient(circle at 40% 40%, #e890b8, #120810); }
   .t-tormenta { background: radial-gradient(circle at 40% 40%, #5a9aee, #060a10); }
-  .t-aurora   { background: radial-gradient(circle at 40% 40%, #30d4a0, #030a08); }
+  .t-cielo    { background: radial-gradient(circle at 40% 40%, #1a9ed4, #a8daf5); border: 1px solid rgba(26,158,212,0.25); }
   .t-monzon   { background: radial-gradient(circle at 40% 40%, #6ab0e0, #060c10); }
   .t-stratus  { background: radial-gradient(circle at 40% 40%, #a9c7ff, #10141a); border: 1px solid rgba(169,199,255,0.4); }
+
+  /* ── Temas claros: ajustes de contraste ── */
+  [data-theme="blanco"] .bg-layer::before,
+  [data-theme="cielo"] .bg-layer::before { opacity: 0.18; }
+  [data-theme="blanco"] .bg-layer::after,
+  [data-theme="cielo"] .bg-layer::after  { opacity: 0.15; }
+
+  [data-theme="blanco"] .main-card,
+  [data-theme="blanco"] .extra-card,
+  [data-theme="blanco"] .hour-card,
+  [data-theme="blanco"] .day-accordion,
+  [data-theme="blanco"] .settings-panel,
+  [data-theme="cielo"] .main-card,
+  [data-theme="cielo"] .extra-card,
+  [data-theme="cielo"] .hour-card,
+  [data-theme="cielo"] .day-accordion,
+  [data-theme="cielo"] .settings-panel {
+    border-color: rgba(0,80,160,0.1);
+    box-shadow: 0 2px 18px rgba(0,60,130,0.08);
+  }
+  [data-theme="blanco"] .stat,
+  [data-theme="cielo"] .stat {
+    border-color: rgba(0,80,160,0.08);
+  }
+  [data-theme="blanco"] body,
+  [data-theme="cielo"] body {
+    background: var(--ink);
+  }
+  [data-theme="blanco"] .section-title,
+  [data-theme="cielo"] .section-title {
+    color: var(--ice);
+    border-bottom-color: rgba(0,80,160,0.15);
+  }
+  [data-theme="blanco"] .rain-bar-bg,
+  [data-theme="cielo"] .rain-bar-bg {
+    background: rgba(0,0,0,0.08);
+  }
+  [data-theme="blanco"] .search-box,
+  [data-theme="blanco"] .search-results,
+  [data-theme="cielo"] .search-box,
+  [data-theme="cielo"] .search-results {
+    background: rgba(255,255,255,0.92);
+    border-color: rgba(0,80,160,0.12);
+  }
 
   [data-theme="stratus"] .city,
   [data-theme="stratus"] .temp-big,
@@ -1506,10 +1580,10 @@
       <button class="theme-btn t-desierto"      data-theme="desierto" data-label="Desierto"></button>
       <button class="theme-btn t-volcan"        data-theme="volcan"   data-label="Volcán"></button>
       <button class="theme-btn t-oceano"        data-theme="oceano"   data-label="Océano"></button>
-      <button class="theme-btn t-noche"         data-theme="noche"    data-label="Noche"></button>
+      <button class="theme-btn t-blanco"         data-theme="blanco"   data-label="Blanco"></button>
       <button class="theme-btn t-sakura"        data-theme="sakura"   data-label="Sakura"></button>
       <button class="theme-btn t-tormenta"      data-theme="tormenta" data-label="Tormenta"></button>
-      <button class="theme-btn t-aurora"        data-theme="aurora"   data-label="Aurora"></button>
+      <button class="theme-btn t-cielo"         data-theme="cielo"    data-label="Cielo"></button>
       <button class="theme-btn t-monzon"        data-theme="monzon"   data-label="Monzón"></button>
       <button class="theme-btn t-stratus"       data-theme="stratus"  data-label="Stratus"></button>
     </div>
@@ -2494,7 +2568,7 @@ function closeAll() { document.getElementById('settingsPanel').classList.remove(
 document.getElementById('settingsBtn').addEventListener('click', openSettings);
 document.getElementById('modalOverlay').addEventListener('click', closeAll);
 
-const THEMES = ['','amanecer','bosque','polar','desierto','volcan','oceano','noche','sakura','tormenta','aurora','monzon','stratus'];
+const THEMES = ['','amanecer','bosque','polar','desierto','volcan','oceano','blanco','sakura','tormenta','cielo','monzon','stratus'];
 function applyTheme(theme) { document.documentElement.setAttribute('data-theme', theme); document.querySelectorAll('.theme-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === theme)); try { localStorage.setItem('climaTema', theme); } catch(_) {} }
 document.getElementById('themeSwitcher').addEventListener('click', e => { const b = e.target.closest('.theme-btn'); if (b) applyTheme(b.dataset.theme); });
 
