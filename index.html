@@ -803,6 +803,16 @@
   [data-theme="sakura"] .rain-bar-bg,   [data-theme="desierto"] .rain-bar-bg,
   [data-theme="monzon"] .rain-bar-bg { background: rgba(0,0,0,0.10); }
 
+  [data-theme="blanco"] .mc-stats-row,  [data-theme="cielo"] .mc-stats-row,
+  [data-theme="sakura"] .mc-stats-row,  [data-theme="desierto"] .mc-stats-row,
+  [data-theme="monzon"] .mc-stats-row  { background: rgba(255,255,255,0.55); }
+  [data-theme="blanco"] .mc-divider,   [data-theme="cielo"] .mc-divider,
+  [data-theme="sakura"] .mc-divider,   [data-theme="desierto"] .mc-divider,
+  [data-theme="monzon"] .mc-divider    { background: rgba(0,0,0,0.10); }
+  [data-theme="blanco"] .mc-hourly-title,  [data-theme="cielo"] .mc-hourly-title,
+  [data-theme="sakura"] .mc-hourly-title,  [data-theme="desierto"] .mc-hourly-title,
+  [data-theme="monzon"] .mc-hourly-title  { color: var(--ice); }
+
   [data-theme="blanco"] .section-title,   [data-theme="cielo"] .section-title,
   [data-theme="sakura"] .section-title,   [data-theme="desierto"] .section-title,
   [data-theme="monzon"] .section-title { color: var(--ice); }
@@ -1502,6 +1512,209 @@
   }
   /* Sensación térmica horaria */
   .h-feel { font-size: 0.5rem; color: var(--cold); margin-top: 2px; opacity: 0.85; }
+
+  /* ── Nuevo layout tarjeta principal ── */
+  .mc-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 14px;
+  }
+  .mc-left {}
+  .mc-right {
+    text-align: right;
+    padding-top: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  .mc-right .weather-icon {
+    font-size: 3rem;
+    margin-bottom: 6px;
+    display: block;
+  }
+  .mc-right .weather-desc {
+    margin-bottom: 4px;
+    font-size: 0.72rem;
+  }
+  .mc-feels {
+    font-size: 0.78rem;
+    color: var(--dim);
+  }
+  .mc-stats-row {
+    display: flex;
+    gap: 0;
+    margin-bottom: 14px;
+    background: var(--glass2);
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
+    overflow: hidden;
+  }
+  .mc-stat {
+    flex: 1;
+    text-align: center;
+    font-size: 0.78rem;
+    color: var(--ice);
+    padding: 9px 4px;
+    border-right: 1px solid var(--card-border);
+  }
+  .mc-stat:last-child { border-right: none; }
+  .mc-stat span { display: block; font-size: 0.5rem; color: var(--dim); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 3px; }
+  .mc-divider {
+    height: 1px;
+    background: var(--card-border);
+    margin: 0 -24px 14px;
+  }
+  .mc-hourly-title {
+    font-size: 0.56rem;
+    letter-spacing: 0.2em;
+    color: var(--dim);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .mc-hourly-wrap {}
+  .main-card { padding-bottom: 0; }
+
+  /* ── Escena de clima ── */
+  .mc-scene {
+    margin: 14px -24px 0;
+    height: 88px;
+    border-radius: 0 0 20px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .mc-scene-bg {
+    position: absolute;
+    inset: 0;
+  }
+  /* Sol */
+  .mc-scene[data-s="sun"] .mc-scene-bg { background: linear-gradient(180deg,#0a1a2e 0%,#1a3a6e 40%,#7a4020 80%,#c05010 100%); }
+  .sc-sun {
+    position: absolute; top: 10px; right: 22px;
+    width: 32px; height: 32px;
+    background: radial-gradient(circle, #fef08a 30%, #f59e0b 100%);
+    border-radius: 50%;
+    box-shadow: 0 0 20px #fde68a99, 0 0 40px #f59e0b55;
+    animation: sc-sun-pulse 5s ease-in-out infinite;
+  }
+  @keyframes sc-sun-pulse {
+    0%,100% { box-shadow: 0 0 20px #fde68a99, 0 0 40px #f59e0b55; }
+    50%      { box-shadow: 0 0 32px #fde68acc, 0 0 64px #f59e0b77; }
+  }
+  .sc-sun-ray {
+    position: absolute; top: 0; right: 0;
+    width: 200px; height: 88px;
+    background: conic-gradient(from -30deg at 100% -10%, #f59e0b22 0deg, transparent 30deg, #f59e0b11 60deg, transparent 90deg);
+    opacity: 0.6;
+  }
+  /* Nublado */
+  .mc-scene[data-s="cloud"] .mc-scene-bg { background: linear-gradient(180deg,#0d1a26 0%,#1a2d3f 50%,#253a4a 100%); }
+  .sc-cloud {
+    position: absolute;
+    background: rgba(255,255,255,0.07);
+    border-radius: 50px;
+    animation: sc-cloud-drift 12s ease-in-out infinite alternate;
+  }
+  .sc-cloud:nth-child(1) { width:90px; height:28px; top:14px; left:-10px; animation-delay:0s; }
+  .sc-cloud:nth-child(2) { width:70px; height:22px; top:22px; left:55%; animation-delay:-4s; animation-duration:16s; }
+  .sc-cloud:nth-child(3) { width:50px; height:18px; top:10px; right:10px; animation-delay:-8s; animation-duration:14s; }
+  @keyframes sc-cloud-drift {
+    from { transform: translateX(0); }
+    to   { transform: translateX(18px); }
+  }
+  /* Llovizna / Lluvia */
+  .mc-scene[data-s="rain"] .mc-scene-bg  { background: linear-gradient(180deg,#060d14 0%,#0d1a26 45%,#152233 100%); }
+  .mc-scene[data-s="drizzle"] .mc-scene-bg { background: linear-gradient(180deg,#0a1520 0%,#172538 50%,#1e3048 100%); }
+  .sc-rain {
+    position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(
+      176deg,
+      transparent 0px, transparent 10px,
+      rgba(110,180,230,0.22) 10px, rgba(110,180,230,0.22) 11px
+    );
+    background-size: 14px 28px;
+    animation: sc-rain-fall 0.55s linear infinite;
+  }
+  .sc-rain.light {
+    background-image: repeating-linear-gradient(
+      176deg,
+      transparent 0px, transparent 14px,
+      rgba(110,180,230,0.14) 14px, rgba(110,180,230,0.14) 15px
+    );
+    animation-duration: 0.9s;
+  }
+  @keyframes sc-rain-fall {
+    from { background-position: 0 -28px; }
+    to   { background-position: 0 28px; }
+  }
+  /* Nieve */
+  .mc-scene[data-s="snow"] .mc-scene-bg { background: linear-gradient(180deg,#0a1520 0%,#152030 50%,#1e2f40 100%); }
+  .sc-snow {
+    position: absolute; inset: 0;
+    background-image:
+      radial-gradient(circle, rgba(200,230,255,0.7) 1px, transparent 1px),
+      radial-gradient(circle, rgba(200,230,255,0.4) 1px, transparent 1px);
+    background-size: 22px 22px, 15px 15px;
+    background-position: 0 0, 8px 8px;
+    animation: sc-snow-fall 5s linear infinite;
+  }
+  @keyframes sc-snow-fall {
+    from { background-position: 0 -22px, 8px -14px; }
+    to   { background-position: 0 22px, 8px 15px; }
+  }
+  /* Tormenta */
+  .mc-scene[data-s="storm"] .mc-scene-bg { background: linear-gradient(180deg,#050810 0%,#0d1420 50%,#141e2e 100%); }
+  .sc-storm-rain {
+    position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(
+      173deg,
+      transparent 0px, transparent 8px,
+      rgba(80,140,200,0.28) 8px, rgba(80,140,200,0.28) 9px
+    );
+    background-size: 12px 24px;
+    animation: sc-rain-fall 0.4s linear infinite;
+  }
+  .sc-lightning {
+    position: absolute; top: 4px; left: 42%;
+    width: 10px; height: 44px;
+    opacity: 0;
+    animation: sc-flash 5s ease-in-out infinite;
+  }
+  .sc-lightning::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg,#fef08a,#fde047 50%,transparent);
+    clip-path: polygon(35% 0%,65% 0%,75% 48%,100% 48%,35% 100%,60% 52%,0% 52%);
+    filter: blur(1px);
+  }
+  @keyframes sc-flash {
+    0%,80%,100%  { opacity: 0; }
+    82%,86%      { opacity: 1; }
+    84%          { opacity: 0.2; }
+  }
+  /* Niebla */
+  .mc-scene[data-s="fog"] .mc-scene-bg { background: linear-gradient(180deg,#151f28 0%,#243040 50%,#2e3c4c 100%); }
+  .sc-fog {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg,
+      transparent 0%,
+      rgba(160,190,210,0.12) 30%,
+      rgba(160,190,210,0.20) 60%,
+      rgba(160,190,210,0.12) 100%);
+    animation: sc-fog-drift 10s ease-in-out infinite alternate;
+  }
+  @keyframes sc-fog-drift {
+    from { transform: translateX(-12px); opacity: 0.7; }
+    to   { transform: translateX(12px);  opacity: 1; }
+  }
+  /* Terreno común */
+  .sc-ground {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 38px;
+    pointer-events: none;
+  }
+  .sc-ground svg { width: 100%; height: 100%; display: block; }
 </style>
 </head>
 <body>
@@ -1798,6 +2011,27 @@ updateDateDisplay();
 setInterval(updateDateDisplay, 60000);
 
 function getWmoInfo(code) { return WMO_CODES[code] || { icon:'🌡', desc:'Variable' }; }
+
+function getSceneClass(code) {
+  if (code === 0) return 'sun';
+  if (code <= 3) return 'cloud';
+  if (code <= 48) return 'fog';
+  if (code === 51 || code === 53 || code === 55 || code === 80) return 'drizzle';
+  if (code <= 67 || code <= 82) return 'rain';
+  if (code <= 86) return 'snow';
+  return 'storm';
+}
+function getSceneElements(code) {
+  const s = getSceneClass(code);
+  if (s === 'sun') return '<div class="sc-sun-ray"></div><div class="sc-sun"></div>';
+  if (s === 'cloud') return '<div class="sc-cloud"></div><div class="sc-cloud"></div><div class="sc-cloud"></div>';
+  if (s === 'drizzle') return '<div class="sc-rain light"></div>';
+  if (s === 'rain') return '<div class="sc-rain"></div>';
+  if (s === 'snow') return '<div class="sc-snow"></div>';
+  if (s === 'storm') return '<div class="sc-storm-rain"></div><div class="sc-lightning"></div>';
+  if (s === 'fog') return '<div class="sc-fog"></div>';
+  return '';
+}
 function windDirection(deg) { return WIND_DIRS[Math.round(deg / 45) % 8]; }
 function formatHour(isoStr) { return fmtHour(isoStr); }
 function formatDayName(isoStr) { const d = new Date(isoStr); return DAYS_ES[d.getDay()]; }
@@ -2000,29 +2234,39 @@ function buildHTML(data, aqiData = null) {
       <div style="width:100%;height:100%;background:var(--glass2);display:flex;align-items:center;justify-content:center;font-size:0.6rem;color:var(--dim)">Cargando foto...</div>
     </div>
     <div class="main-card gap-section">
-      <div class="temp-row">
-        <div class="temp-big">${toTemp(cur.temperature_2m)}<sup>${tempUnit()}</sup></div>
-        <div class="weather-icon">${wmo.icon}</div>
+      <div class="mc-top">
+        <div class="mc-left">
+          <div class="temp-big">${toTemp(cur.temperature_2m)}<sup>${tempUnit()}</sup></div>
+          <div class="today-minmax">
+            <span class="t-max">↑ ${toTemp(daily.temperature_2m_max[todayIdx >= 0 ? todayIdx : 0])}${tempUnit()}</span>
+            <span class="t-min">↓ ${toTemp(daily.temperature_2m_min[todayIdx >= 0 ? todayIdx : 0])}${tempUnit()}</span>
+          </div>
+        </div>
+        <div class="mc-right">
+          <div class="weather-icon">${wmo.icon}</div>
+          <div class="weather-desc">${wmo.desc}</div>
+          <div class="mc-feels">Sensación ${toTemp(cur.apparent_temperature)}${tempUnit()}</div>
+        </div>
       </div>
-      <div class="weather-desc">${wmo.desc}</div>
-      <div class="today-minmax">
-        <span class="t-max">↑ ${toTemp(daily.temperature_2m_max[todayIdx >= 0 ? todayIdx : 0])}${tempUnit()}</span>
-        <span class="t-min">↓ ${toTemp(daily.temperature_2m_min[todayIdx >= 0 ? todayIdx : 0])}${tempUnit()}</span>
+      <div class="mc-stats-row">
+        <div class="mc-stat"><span>Humedad</span>${cur.relative_humidity_2m}%</div>
+        <div class="mc-stat"><span>Viento</span>${toWind(cur.wind_speed_10m)} ${windLabel()}</div>
+        <div class="mc-stat"><span>Lluvia hoy</span>${rainToday.toFixed(1)} mm</div>
       </div>
-      <div class="feel-row">
-        <div class="stat"><div class="stat-label">Sensación</div><div class="stat-val">${toTemp(cur.apparent_temperature)}${tempUnit()}</div></div>
-        <div class="stat"><div class="stat-label">Humedad</div><div class="stat-val">${cur.relative_humidity_2m}%</div></div>
-        <div class="stat"><div class="stat-label">Viento</div><div class="stat-val">${toWind(cur.wind_speed_10m)} ${windLabel()}</div></div>
+      <div class="mc-divider"></div>
+      <div class="mc-hourly-wrap" id="secPronosticoHoras">
+        <div class="mc-hourly-title">Próximas horas</div>
+        <div class="hourly-scroll">${hourlyHTML}</div>
       </div>
-      <div class="rain-bar-section">
-        <div class="rain-label">Lluvia acumulada hoy</div>
-        <div class="rain-bar-bg"><div class="rain-bar-fill" style="width:${rainBar}%"></div></div>
-        <div class="rain-mm">${rainToday.toFixed(1)} mm</div>
+      <div class="mc-scene" data-s="${getSceneClass(cur.weather_code)}">
+        <div class="mc-scene-bg"></div>
+        ${getSceneElements(cur.weather_code)}
+        <div class="sc-ground">
+          <svg viewBox="0 0 400 38" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill="rgba(0,0,0,0.38)" d="M0,38 L0,24 Q8,22 14,24 L22,14 L26,24 Q32,26 38,24 L48,16 L54,24 Q60,26 66,24 L78,9 L84,24 Q90,26 96,24 L106,15 L112,24 Q118,26 124,24 L136,11 L142,24 Q148,26 154,24 L164,17 L170,24 Q176,26 182,24 L194,7 L200,24 Q206,26 212,24 L222,13 L228,24 Q234,26 240,24 L252,9 L258,24 Q264,26 270,24 L280,16 L286,24 Q292,26 298,24 L308,12 L314,24 Q320,26 326,24 L338,7 L344,24 Q350,26 356,24 L366,13 L372,24 Q380,27 388,24 L394,20 L400,24 L400,38 Z"/>
+          </svg>
+        </div>
       </div>
-    </div>
-    <div class="gap-section" id="secPronosticoHoras">
-      <div class="section-title">Próximas horas</div>
-      <div class="hourly-scroll">${hourlyHTML}</div>
     </div>
     <div class="places-section" id="placesSection">
       <button class="places-toggle" id="placesToggle" onclick="togglePlaces()">
@@ -2463,15 +2707,22 @@ async function updateTemperaturesRealTime() {
       minmaxEl.innerHTML = `<span class="t-max">↑ ${toTemp(daily.temperature_2m_max[idx0])}${tempUnit()}</span><span class="t-min">↓ ${toTemp(daily.temperature_2m_min[idx0])}${tempUnit()}</span>`;
     }
 
-    // Fila de sensación / humedad / viento
-    const statVals = document.querySelectorAll('.feel-row .stat-val');
-    if (statVals[0]) statVals[0].innerHTML = `${toTemp(cur.apparent_temperature)}${tempUnit()}`;
-    if (statVals[1]) statVals[1].innerHTML = `${cur.relative_humidity_2m}%`;
-    if (statVals[2]) statVals[2].innerHTML = `${toWind(cur.wind_speed_10m)} ${windLabel()}`;
+    // Fila estadísticas (nuevo diseño mc-stats-row)
+    const mcStats = document.querySelectorAll('.mc-stat');
+    if (mcStats[0]) mcStats[0].lastChild.textContent = `${cur.relative_humidity_2m}%`;
+    if (mcStats[1]) mcStats[1].lastChild.textContent = `${toWind(cur.wind_speed_10m)} ${windLabel()}`;
+    // mc-stat[2] = lluvia hoy, se actualiza con la barra abajo
+    // Sensación en mc-feels
+    const mcFeels = document.querySelector('.mc-feels');
+    if (mcFeels) mcFeels.textContent = `Sensación ${toTemp(cur.apparent_temperature)}${tempUnit()}`;
+    // Actualizar escena visual
+    const scene = document.querySelector('.mc-scene');
+    if (scene) { scene.dataset.s = getSceneClass(cur.weather_code); scene.querySelectorAll(':scope > *:not(.mc-scene-bg):not(.sc-ground)').forEach(el => el.remove()); const tmp = document.createElement('div'); tmp.innerHTML = getSceneElements(cur.weather_code); Array.from(tmp.children).forEach(el => scene.insertBefore(el, scene.querySelector('.sc-ground'))); }
 
     // Precipitación actual
     const precipEl = document.getElementById('currentPrecip');
     if (precipEl) precipEl.textContent = `${cur.precipitation} mm`;
+    if (mcStats[2]) { const todayRain = (tIdx >= 0 && daily.precipitation_sum) ? daily.precipitation_sum[tIdx] : cur.precipitation; mcStats[2].lastChild.textContent = `${(todayRain || 0).toFixed(1)} mm`; }
 
     // Presión
     const pressEl = document.getElementById('currentPressure');
