@@ -69,6 +69,8 @@ function doPost(e) {
     if (action === 'checkLicense')    return respond(checkLicense(body));
     if (action === 'trackUsage')      return respond(trackUsage(body));
     if (action === 'checkSync')       return respond(checkSync(body));
+    if (action === 'requestOTP')      return respond(requestOTP(body));
+    if (action === 'verifyOTP')       return respond(verifyOTP(body));
 
     // Acciones de admin (requieren contraseña)
     if (!verifyAdmin(pass)) return respond({ ok: false, error: 'No autorizado' });
@@ -601,4 +603,126 @@ function respond(data) {
   return ContentService
     .createTextOutput(JSON.stringify(data))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ══════════════════════════════════════════════════════════════
+// SOLICITUD Y VERIFICACIÓN DE OTP
+// ══════════════════════════════════════════════════════════════
+function requestOTP(body) {
+  const { deviceId, email, phone, plan } = body;
+  if (!email || !phone) return { ok: false, message: 'Correo y teléfono son requeridos.' };
+
+  // Generar código numérico de 6 dígitos
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const cacheKey = 'OTP_' + (deviceId || email);
+
+  // Guardar OTP en CacheService por 10 minutos (600 segundos)
+  const cache = CacheService.getScriptCache();
+  cache.put(cacheKey, JSON.stringify({ otp, email, phone, plan, attempts: 0 }), 600);
+
+  // Enviar OTP por correo al usuario
+  try {
+    MailApp.sendEmail({
+      to: email,
+      subject: '🔑 Tu código de verificación — Clima App',
+      htmlBody: `<div style="font-family:sans-serif;background:#0d1117;color:#ccd9e6;padding:24px;border-radius:12px">
+        <h2 style="color:#7eb8d4">Código de Verificación</h2>
+        <p>Usa el siguiente código de 6 dígitos para completar tu verificación:</p>
+        <div style="font-size:2rem;font-weight:bold;letter-spacing:0.3em;color:#b8dce8;margin:20px 0;">${otp}</div>
+        <p style="color:#7a92a8;font-size:0.8rem;">Este código expira en 10 minutos.</p>
+      </div>`,
+    });
+  } catch(e) {
+    Logger.log('Error al enviar correo OTP: ' + e.message);
+    return { ok: false, message: 'No se pudo enviar el correo de verificación: ' + e.message };
+  }
+
+  return { ok: true };
+}
+
+function verifyOTP(body) {
+  const { deviceId, email, phone, otp, plan } = body;
+  const cacheKey = 'OTP_' + (deviceId || email);
+
+  const cache = CacheService.getScriptCache();
+  const cachedDataStr = cache.get(cacheKey);
+
+  if (!cachedDataStr) {
+    return { ok: false, message: 'Código expirado o no solicitado.' };
+  }
+
+  const cachedData = JSON.parse(cachedDataStr);
+  if (cachedData.otp !== otp) {
+    cachedData.attempts = (cachedData.attempts || 0) + 1;
+    if (cachedData.attempts >= 5) {
+      cache.remove(cacheKey);
+      return { ok: false, message: 'Demasiados intentos fallidos. Solicita un nuevo código.' };
+    } else {
+      cache.put(cacheKey, JSON.stringify(cachedData), 600);
+      return { ok: false, message: 'Código incorrecto.' };
+    }
+  }
+
+  // Código correcto: eliminar del caché
+  cache.remove(cacheKey);
+
+  // Actualizar o registrar datos del usuario
+  const SS = getSS();
+  ensureMasterSheet();
+  const master = SS.getSheetByName(MASTER_SHEET);
+  const data = master.getDataRange().getValues();
+
+  const idToUse = deviceId || generateId(email);
+  let foundIndex = -1;
+
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0] === idToUse || data[i][2] === email) {
+      foundIndex = i + 1;
+      break;
+    }
+  }
+
+  // Módulos según plan seleccionado
+  const plans = {
+    basico: ['clima_basico'],
+    estandar: ['clima_basico','pronostico_horas','pronostico_dias','datos_viento','foto_ciudad'],
+    premium: MODULES,
+  };
+  const activePlan = plan || 'estandar';
+  const modules = {};
+  MODULES.forEach(m => {
+    modules[m] = (plans[activePlan] || plans.estandar).includes(m);
+  });
+
+  if (foundIndex > 0) {
+    master.getRange(foundIndex, 3).setValue(email);
+    master.getRange(foundIndex, 4).setValue(phone);
+    master.getRange(foundIndex, 7).setValue('premium');
+    master.getRange(foundIndex, 8).setValue(JSON.stringify(modules));
+    master.getRange(foundIndex, 9).setValue('activo');
+  } else {
+    const trialEnd = new Date();
+    trialEnd.setDate(trialEnd.getDate() + 30);
+    master.appendRow([
+      idToUse,
+      email.split('@')[0],
+      email,
+      phone,
+      new Date().toISOString(),
+      trialEnd.toISOString(),
+      'premium',
+      JSON.stringify(modules),
+      'activo',
+      0,
+      null,
+    ]);
+  }
+
+  appendLog(SS, 'VERIFY_OTP', email, `OTP verificado con éxito (plan: ${activePlan})`);
+
+  return {
+    ok: true,
+    status: 'premium',
+    modules: modules,
+  };
 }

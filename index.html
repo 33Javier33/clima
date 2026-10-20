@@ -2627,7 +2627,7 @@ try {
 loadWeather();
 setTimeout(initLicense, 1500);
 
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbxws7KA23vQm3LLxZzKG0Kn4bFeJG14lMUZ1CWmMx03_bJgNm9SoP1fKTQUqy0H0tIL/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycby4Nfjbdjz12bTkkLeoXwbCMIXBikdKo9aab17NqJFxt9z8cXasNoLOcdqZHBhJ-NcU/exec';
 const PLAN_LABELS = { basico: { name: '🌡 Básico', price: 'Contactar', features: 'Clima actual · Próximas horas' }, estandar: { name: '📅 Estándar', price: 'Contactar', features: 'Básico + Pronóstico 7 días · Info ciudad · Temas' }, premium: { name: '⭐ Premium', price: 'Contactar', features: 'Todo incluido · Sin restricciones' } };
 
 let licenseStatus = 'unknown'; let licenseModules = {}; let selectedPlan = 'estandar'; let deviceId = null;
@@ -2725,7 +2725,7 @@ async function submitOTP(email, phone) {
       licenseStatus = res.status || 'trial'; licenseModules = res.modules || {}; applyModules();
       setTimeout(() => { closeTrialOverlay(); }, 3000);
     } else {
-      if (valOverlay) valOverlay.classList.remove('show'); btn.disabled = false; btn.textContent = 'Verificar Identidad'; alert('Código incorrecto o expirado. Intenta nuevamente.'); otpInput.value = ''; otpInput.focus();
+      if (valOverlay) valOverlay.classList.remove('show'); btn.disabled = false; btn.textContent = 'Verificar Identidad'; alert('Error: ' + (res.message || 'Código incorrecto o expirado. Intenta nuevamente.')); otpInput.value = ''; otpInput.focus();
     }
   } catch(e) { if (valOverlay) valOverlay.classList.remove('show'); btn.disabled = false; btn.textContent = 'Verificar Identidad'; alert('Error de conexión al verificar el código.'); }
 }
@@ -2808,7 +2808,32 @@ function applyModules() {
 async function gasPost(data) { const res = await fetch(GAS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(data), redirect: 'follow' }); return res.json(); }
 const PING_INTERVAL_MS = 5 * 60 * 1000; let _pingTimer = null; function startUsagePing() { if (_pingTimer) return; _sendPing(); _pingTimer = setInterval(_sendPing, PING_INTERVAL_MS); } function stopUsagePing() { if (_pingTimer) { clearInterval(_pingTimer); _pingTimer = null; } } async function _sendPing() { if (!deviceId) return; try { await gasPost({ action:'trackUsage', deviceId:deviceId, minutes:5 }); } catch(_) {} } document.addEventListener('visibilitychange', function() { if (document.visibilityState === 'visible') startUsagePing(); else stopUsagePing(); }); if (document.visibilityState === 'visible') startUsagePing();
 
-if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').then(reg => { reg.addEventListener('updatefound', () => { const newWorker = reg.installing; newWorker.addEventListener('statechange', () => { if (newWorker.state === 'installed' && navigator.serviceWorker.controller) document.getElementById('update-banner').classList.add('visible'); }); }); }); }); }
+let newWorkerRegistration = null;
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        if (newWorker) {
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              newWorkerRegistration = reg;
+              const banner = document.getElementById('update-banner');
+              if (banner) banner.classList.add('visible');
+            }
+          });
+        }
+      });
+    });
+  });
+}
+
+function activarActualizacion() {
+  if (newWorkerRegistration && newWorkerRegistration.waiting) {
+    newWorkerRegistration.waiting.postMessage('SKIP_WAITING');
+  }
+  window.location.reload();
+}
 
 // NUEVO: Funciones para compartir y mapa
 function shareWeather() {
