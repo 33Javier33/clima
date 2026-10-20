@@ -634,6 +634,7 @@ function requestOTP(body) {
     });
   } catch(e) {
     Logger.log('Error al enviar correo OTP: ' + e.message);
+    return { ok: false, message: 'No se pudo enviar el correo de verificación: ' + e.message };
   }
 
   return { ok: true };

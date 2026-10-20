@@ -2725,7 +2725,7 @@ async function submitOTP(email, phone) {
       licenseStatus = res.status || 'trial'; licenseModules = res.modules || {}; applyModules();
       setTimeout(() => { closeTrialOverlay(); }, 3000);
     } else {
-      if (valOverlay) valOverlay.classList.remove('show'); btn.disabled = false; btn.textContent = 'Verificar Identidad'; alert('Código incorrecto o expirado. Intenta nuevamente.'); otpInput.value = ''; otpInput.focus();
+      if (valOverlay) valOverlay.classList.remove('show'); btn.disabled = false; btn.textContent = 'Verificar Identidad'; alert('Error: ' + (res.message || 'Código incorrecto o expirado. Intenta nuevamente.')); otpInput.value = ''; otpInput.focus();
     }
   } catch(e) { if (valOverlay) valOverlay.classList.remove('show'); btn.disabled = false; btn.textContent = 'Verificar Identidad'; alert('Error de conexión al verificar el código.'); }
 }
