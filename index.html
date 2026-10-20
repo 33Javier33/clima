@@ -2808,7 +2808,32 @@ function applyModules() {
 async function gasPost(data) { const res = await fetch(GAS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(data), redirect: 'follow' }); return res.json(); }
 const PING_INTERVAL_MS = 5 * 60 * 1000; let _pingTimer = null; function startUsagePing() { if (_pingTimer) return; _sendPing(); _pingTimer = setInterval(_sendPing, PING_INTERVAL_MS); } function stopUsagePing() { if (_pingTimer) { clearInterval(_pingTimer); _pingTimer = null; } } async function _sendPing() { if (!deviceId) return; try { await gasPost({ action:'trackUsage', deviceId:deviceId, minutes:5 }); } catch(_) {} } document.addEventListener('visibilitychange', function() { if (document.visibilityState === 'visible') startUsagePing(); else stopUsagePing(); }); if (document.visibilityState === 'visible') startUsagePing();
 
-if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').then(reg => { reg.addEventListener('updatefound', () => { const newWorker = reg.installing; newWorker.addEventListener('statechange', () => { if (newWorker.state === 'installed' && navigator.serviceWorker.controller) document.getElementById('update-banner').classList.add('visible'); }); }); }); }); }
+let newWorkerRegistration = null;
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        if (newWorker) {
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              newWorkerRegistration = reg;
+              const banner = document.getElementById('update-banner');
+              if (banner) banner.classList.add('visible');
+            }
+          });
+        }
+      });
+    });
+  });
+}
+
+function activarActualizacion() {
+  if (newWorkerRegistration && newWorkerRegistration.waiting) {
+    newWorkerRegistration.waiting.postMessage('SKIP_WAITING');
+  }
+  window.location.reload();
+}
 
 // NUEVO: Funciones para compartir y mapa
 function shareWeather() {
