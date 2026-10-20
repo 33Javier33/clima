@@ -566,7 +566,7 @@ function updateUserSheet(SS, userId, modules, estado, acceso) {
 // ══════════════════════════════════════════════════════════════
 function requestOTP(body) {
   const { email, phone, plan } = body;
-  if (!email || !phone) return { ok: false, message: 'Correo y teléfono requeridos.' };
+  if (!email) return { ok: false, message: 'Correo requerido.' };
 
   // Generar código de 6 dígitos
   const code = String(Math.floor(100000 + Math.random() * 900000));
@@ -634,8 +634,13 @@ function verifyOTP(body) {
 
   for (let i = 1; i < data.length; i++) {
     if (data[i][2] === email) {
+      // Si el deviceId cambió (nuevo dispositivo), actualizarlo en la hoja
+      if (deviceId && data[i][0] !== deviceId) {
+        master.getRange(i + 1, 1).setValue(deviceId);
+        appendLog(SS, 'ACTIVATE_DEVICE', email, 'Nuevo deviceId: ' + deviceId);
+      }
       return {
-        ok: true, userId: data[i][0],
+        ok: true, userId: deviceId || data[i][0],
         status:  data[i][6] || 'trial',
         trialEnd: data[i][5],
         modules:  JSON.parse(data[i][7] || '{}'),

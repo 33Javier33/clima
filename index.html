@@ -2649,14 +2649,18 @@ function saveToIDB(key, value) { return new Promise(function(resolve) { try { co
 
 async function initLicense() {
   deviceId = await generateFingerprint();
+  try { var pa = localStorage.getItem('climaPendingActivation'); if (pa) { showActivateOtpForm(pa); return; } } catch(_) {}
   try { var p = JSON.parse(localStorage.getItem('climaPendingOtp') || 'null'); if (p && p.email && p.phone) { showOtpForm(p.email, p.phone); pollSyncStatus(); return; } } catch(_) {}
   try {
-    const res = await gasPost({ action: 'checkLicense', userId: deviceId });
-    if (!res.ok) { await registerSilent(deviceId); return; }
+    const storedEmail = localStorage.getItem('climaUserEmail');
+    const checkBody = { action: 'checkLicense', userId: deviceId };
+    if (storedEmail) checkBody.email = storedEmail;
+    const res = await gasPost(checkBody);
+    if (!res.ok) { showWelcomeChoice(); return; }
     licenseStatus = res.status; licenseModules = res.modules || {};
     if (res.trialEnd) trialEndTimestamp = new Date(res.trialEnd).getTime();
     applyModules();
-    if (res.status === 'not_found') { await registerSilent(deviceId); }
+    if (res.status === 'not_found') { showWelcomeChoice(); }
     else if (res.status === 'expired') { showRegistrationForm(true); }
     else if (res.status === 'blocked') { showBlockedScreen('Acceso suspendido'); }
     else if (res.status === 'trial') { _showTrialBanner(res.daysLeft, res.hoursLeft); startTrialExpiryWatcher(); }
@@ -2733,9 +2737,67 @@ async function submitOTP(email, phone) {
 function showBlockedScreen(msg) { document.getElementById('trialPanel').innerHTML = '<h3>' + (msg || 'Acceso suspendido') + '</h3>'; document.getElementById('trialOverlay').classList.add('show'); }
 
 function closeTrialOverlay() {
-  // No se puede cerrar si el trial expiró o el usuario está bloqueado
   if (licenseStatus === 'expired' || licenseStatus === 'blocked') return;
   document.getElementById('trialOverlay').classList.remove('show');
+}
+
+function showWelcomeChoice() {
+  const panel = document.getElementById('trialPanel');
+  panel.innerHTML = '<div class="panel-handle"></div><div class="trial-badge">🌤 Bienvenido a Clima App</div><h2 style="text-align:center">¿Tienes una cuenta?</h2><p class="t-sub" style="text-align:center;margin-bottom:28px">Si ya tienes una suscripción activa, actívala en este dispositivo.<br>Si eres nuevo, comienza con una prueba gratis.</p><div style="display:flex;flex-direction:column;gap:12px;padding:0 8px 8px"><button class="t-submit" onclick="showActivateForm()">📱 Tengo cuenta — Activar aquí</button><button class="t-back" style="opacity:1;font-size:0.95rem;padding:13px;border-radius:12px;cursor:pointer" onclick="startFreeTrial()">🆓 Comenzar prueba gratis</button></div>';
+  document.getElementById('trialOverlay').classList.add('show');
+}
+
+async function startFreeTrial() {
+  const btn = document.querySelector('#trialPanel .t-back');
+  if (btn) { btn.disabled = true; btn.textContent = 'Registrando...'; }
+  await registerSilent(deviceId);
+  closeTrialOverlay();
+}
+
+function showActivateForm() {
+  const panel = document.getElementById('trialPanel');
+  panel.innerHTML = '<div class="panel-handle"></div><div class="trial-badge">📱 Activar cuenta</div><h2>Ingresa tu correo</h2><div class="t-sub">Enviaremos un código de verificación al correo de tu cuenta.</div><div class="trial-form"><input class="t-input" id="aEmail" type="email" placeholder="tu@correo.com" autocomplete="email"/></div><button class="t-submit" id="aSubmitBtn" onclick="submitActivation()">Enviar código</button><button class="t-back" onclick="showWelcomeChoice()">← Volver</button>';
+  setTimeout(function() { const el = document.getElementById('aEmail'); if (el) el.focus(); }, 100);
+}
+
+async function submitActivation() {
+  const email = (document.getElementById('aEmail') || {}).value || '';
+  const trimmed = email.trim();
+  if (!trimmed || !trimmed.includes('@')) return alert('Ingresa un correo válido.');
+  const btn = document.getElementById('aSubmitBtn'); btn.disabled = true; btn.textContent = 'Enviando...';
+  try {
+    const res = await gasPost({ action: 'requestOTP', deviceId: deviceId, email: trimmed, phone: '', plan: '' });
+    if (res.ok) { localStorage.setItem('climaPendingActivation', trimmed); showActivateOtpForm(trimmed); }
+    else { btn.disabled = false; btn.textContent = 'Enviar código'; alert(res.message || 'No se encontró esa cuenta. Verifica el correo.'); }
+  } catch(e) { btn.disabled = false; btn.textContent = 'Enviar código'; alert('Error de conexión. Intenta de nuevo.'); }
+}
+
+function showActivateOtpForm(email) {
+  const panel = document.getElementById('trialPanel');
+  panel.innerHTML = '<div class="panel-handle"></div><div class="trial-badge">🔒 Verificación</div><h2>Código de activación</h2><div class="t-sub">Hemos enviado un código a <b>' + email + '</b>. Revisa tu bandeja de entrada.</div><div class="trial-form"><input class="otp-input" id="aOtpCode" type="text" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code"/></div><button class="t-submit" id="aVerifyBtn" onclick="verifyActivation(\'' + email + '\')">Activar dispositivo</button><button class="t-back" onclick="showActivateForm()">← Volver</button>';
+  document.getElementById('trialOverlay').classList.add('show');
+  setTimeout(function() { const el = document.getElementById('aOtpCode'); if (el) el.focus(); }, 100);
+}
+
+async function verifyActivation(email) {
+  const otpInput = document.getElementById('aOtpCode'); const otp = otpInput ? otpInput.value.trim() : '';
+  if (otp.length < 4) return alert('Ingresa un código válido.');
+  const btn = document.getElementById('aVerifyBtn'); btn.disabled = true; btn.textContent = 'Verificando...';
+  try {
+    const res = await gasPost({ action: 'verifyOTP', deviceId: deviceId, email: email, phone: '', otp: otp, plan: '' });
+    if (res.ok) {
+      localStorage.setItem('climaUserEmail', email);
+      localStorage.removeItem('climaPendingActivation');
+      document.getElementById('trialPanel').innerHTML = '<div class="t-success"><div class="s-icon">✅</div><h3>¡Dispositivo activado!</h3><p>Tu cuenta ha sido restaurada en este dispositivo.</p></div>';
+      licenseStatus = res.status || 'trial'; licenseModules = res.modules || {}; applyModules();
+      if (res.trialEnd) trialEndTimestamp = new Date(res.trialEnd).getTime();
+      setTimeout(function() { closeTrialOverlay(); }, 3000);
+    } else {
+      btn.disabled = false; btn.textContent = 'Activar dispositivo';
+      alert(res.message || 'Código incorrecto o expirado. Intenta de nuevo.');
+      if (otpInput) { otpInput.value = ''; otpInput.focus(); }
+    }
+  } catch(e) { btn.disabled = false; btn.textContent = 'Activar dispositivo'; alert('Error de conexión al verificar.'); }
 }
 
 // Vigila localmente cada 30s si el trial expiró sin que el usuario refresque
