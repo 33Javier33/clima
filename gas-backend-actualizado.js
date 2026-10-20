@@ -69,6 +69,8 @@ function doPost(e) {
     if (action === 'checkLicense')    return respond(checkLicense(body));
     if (action === 'trackUsage')      return respond(trackUsage(body));
     if (action === 'checkSync')       return respond(checkSync(body));
+    if (action === 'requestOTP')      return respond(requestOTP(body));
+    if (action === 'verifyOTP')       return respond(verifyOTP(body));
 
     // Acciones de admin (requieren contraseña)
     if (!verifyAdmin(pass)) return respond({ ok: false, error: 'No autorizado' });
@@ -557,6 +559,113 @@ function updateUserSheet(SS, userId, modules, estado, acceso) {
       break;
     }
   }
+}
+
+// ══════════════════════════════════════════════════════════════
+// OTP: SOLICITAR CÓDIGO DE VERIFICACIÓN
+// ══════════════════════════════════════════════════════════════
+function requestOTP(body) {
+  const { email, phone, plan } = body;
+  if (!email || !phone) return { ok: false, message: 'Correo y teléfono requeridos.' };
+
+  // Generar código de 6 dígitos
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+
+  // Guardar en caché con TTL de 10 minutos (600s)
+  try {
+    const cache = CacheService.getScriptCache();
+    cache.put('otp_' + email, JSON.stringify({ code: code, phone: phone, plan: plan || 'basico' }), 600);
+  } catch(e) {
+    return { ok: false, message: 'Error interno al generar el código. Intenta de nuevo.' };
+  }
+
+  // Enviar por email
+  try {
+    MailApp.sendEmail({
+      to: email,
+      subject: '🔐 Clima App — Tu código de acceso: ' + code,
+      htmlBody: [
+        '<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#0d1117;color:#ccd9e6;border-radius:16px;padding:32px">',
+        '<h2 style="color:#7eb8d4;margin-top:0">Clima App</h2>',
+        '<p style="font-size:15px">Tu código de verificación es:</p>',
+        '<div style="font-size:42px;font-weight:bold;letter-spacing:10px;color:#b8dce8;margin:24px 0;text-align:center">' + code + '</div>',
+        '<p style="color:#7a92a8;font-size:13px">Este código expira en 10 minutos.<br>Si no solicitaste este código, ignora este mensaje.</p>',
+        '<p style="color:#7a92a8;font-size:12px;margin-top:24px">Plan seleccionado: <b style="color:#ccd9e6">' + (plan || 'básico') + '</b></p>',
+        '</div>'
+      ].join(''),
+    });
+  } catch(e) {
+    return { ok: false, message: 'No se pudo enviar el correo. Verifica la dirección e intenta de nuevo.' };
+  }
+
+  return { ok: true };
+}
+
+// ══════════════════════════════════════════════════════════════
+// OTP: VERIFICAR CÓDIGO Y REGISTRAR USUARIO
+// ══════════════════════════════════════════════════════════════
+function verifyOTP(body) {
+  const { email, phone, otp, plan, deviceId } = body;
+  if (!email || !otp) return { ok: false, message: 'Datos incompletos.' };
+
+  // Leer código almacenado
+  let stored;
+  try {
+    const cache = CacheService.getScriptCache();
+    const raw = cache.get('otp_' + email);
+    if (!raw) return { ok: false, message: 'El código expiró o no existe. Solicita uno nuevo.' };
+    stored = JSON.parse(raw);
+  } catch(e) {
+    return { ok: false, message: 'Error al verificar. Intenta de nuevo.' };
+  }
+
+  if (String(stored.code) !== String(otp).trim()) {
+    return { ok: false, message: 'Código incorrecto.' };
+  }
+
+  // Código válido: invalidarlo inmediatamente
+  try { CacheService.getScriptCache().remove('otp_' + email); } catch(_) {}
+
+  // Registrar o recuperar usuario
+  const SS = getSS();
+  ensureMasterSheet();
+  const master = SS.getSheetByName(MASTER_SHEET);
+  const data   = master.getDataRange().getValues();
+
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][2] === email) {
+      return {
+        ok: true, userId: data[i][0],
+        status:  data[i][6] || 'trial',
+        trialEnd: data[i][5],
+        modules:  JSON.parse(data[i][7] || '{}'),
+      };
+    }
+  }
+
+  // Nuevo usuario: crear registro trial
+  const trialValor  = parseInt(PROPS.getProperty('trial_valor')  || '7');
+  const trialUnidad = PROPS.getProperty('trial_unidad') || 'dias';
+  const trialEnd = new Date();
+  if (trialUnidad === 'horas') trialEnd.setHours(trialEnd.getHours() + trialValor);
+  else                         trialEnd.setDate(trialEnd.getDate() + trialValor);
+  const trialEndStr = trialEnd.toISOString();
+
+  const userId = deviceId || generateId(email);
+  const nombre = email.split('@')[0];
+
+  const modulesInit = {};
+  MODULES.forEach(m => {
+    modulesInit[m] = (PROPS.getProperty('trial_mod_' + m) === 'true');
+  });
+  if (modulesInit['clima_basico'] === undefined) modulesInit['clima_basico'] = true;
+
+  master.appendRow([userId, nombre, email, phone || '', new Date().toISOString(), trialEndStr, 'trial', JSON.stringify(modulesInit), 'activo']);
+  createUserSheet(SS, userId, nombre, '', email, phone || '', trialEndStr, modulesInit);
+  notifyAdmin(nombre, '', email, phone || '');
+  appendLog(SS, 'REGISTER_OTP', email, 'Plan: ' + (plan || 'basico') + ' | Trial hasta ' + trialEndStr);
+
+  return { ok: true, userId, status: 'trial', trialEnd: trialEndStr, modules: modulesInit };
 }
 
 function appendLog(SS, action, email, detail) {
