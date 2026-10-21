@@ -512,10 +512,29 @@ function renderUsers(users) {
   displayUsers(allUsers);
 }
 
+function sortUsers(users) {
+  var priority = { premium: 0, estandar: 1, pending: 2, trial: 3, basico: 4, expired: 5, bloqueado: 6 };
+  var now = new Date();
+  return users.slice().sort(function(a, b) {
+    var aBlocked = a.acceso === 'bloqueado';
+    var bBlocked = b.acceso === 'bloqueado';
+    var aExpired = a.estado === 'trial' && now > new Date(a.trialEnd);
+    var bExpired = b.estado === 'trial' && now > new Date(b.trialEnd);
+    var aKey = aBlocked ? 'bloqueado' : aExpired ? 'expired' : (a.estado || 'trial');
+    var bKey = bBlocked ? 'bloqueado' : bExpired ? 'expired' : (b.estado || 'trial');
+    var pa = priority[aKey] !== undefined ? priority[aKey] : 3;
+    var pb = priority[bKey] !== undefined ? priority[bKey] : 3;
+    if (pa !== pb) return pa - pb;
+    var ta = a.lastPing ? new Date(a.lastPing).getTime() : 0;
+    var tb = b.lastPing ? new Date(b.lastPing).getTime() : 0;
+    return tb - ta;
+  });
+}
+
 function displayUsers(users) {
   var list = document.getElementById('userList');
   if (!users.length) { list.innerHTML = '<div class="empty">Sin usuarios registrados.</div>'; return; }
-  list.innerHTML = users.map(buildUserCard).join('');
+  list.innerHTML = sortUsers(users).map(buildUserCard).join('');
 }
 
 function buildUserCard(u) {
@@ -533,8 +552,12 @@ function buildUserCard(u) {
     : expired
       ? '<span class="badge be">Trial expirado</span>'
       : u.estado === 'premium'
-        ? '<span class="badge bp">Premium</span>'
-        : '<span class="badge bt">Trial</span><span class="badge bd">' + timeLeft + ' restante</span>';
+        ? '<span class="badge bp">Premium ⭐</span>'
+        : u.estado === 'estandar'
+          ? '<span class="badge bp" style="background:rgba(100,160,240,0.18);color:#7ab4f0;">Estándar</span>'
+          : u.estado === 'pending'
+            ? '<span class="badge bu">⏳ Pendiente</span>'
+            : '<span class="badge bt">Trial</span><span class="badge bd">' + timeLeft + ' restante</span>';
 
   var totalMin = u.totalMinutes || 0;
   var lastPing = u.lastPing     || null;
