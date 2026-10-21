@@ -7,101 +7,124 @@
 <link rel="manifest" href="./manifest.json"/>
 <meta name="theme-color" content="#0d1117"/>
 <link rel="apple-touch-icon" href="./img/icon-192x192.png"/>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400&family=Noto+Serif:ital,wght@0,400;0,700;1,400&family=Space+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400&family=Noto+Serif:ital,wght@0,400;0,700;1,400&family=Space+Grotesk:wght@300;400;500;600&family=Inter:wght@300;400;500;600&family=Nunito:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Josefin+Sans:wght@300;400;600&display=swap" rel="stylesheet"/>
 <style>
-  /* ── TEMA: Lago (default) ── */
+  /* ── TEMAS OSCUROS (8) ── */
   :root {
-    --ink:#0d1117;--glass:rgba(255,255,255,0.05);--glass2:rgba(255,255,255,0.08);
-    --cold:#7eb8d4;--ice:#b8dce8;--rain:#4a90b8;--text:#ccd9e6;--dim:#7a92a8;
-    --drop-color:rgba(126,184,212,0.4);
-    --bg:linear-gradient(175deg,#0d1117 0%,#141f2e 40%,#0d1117 100%);
-    --bg-glow:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(74,144,184,0.15) 0%,transparent 60%);
+    --ink:#060a0f;--glass:rgba(255,255,255,0.08);--glass2:rgba(255,255,255,0.13);
+    --cold:#6ab4e0;--ice:#aed8f8;--rain:#3878b8;--text:#c0d8f0;--dim:#6888a8;
+    --drop-color:rgba(106,180,224,0.40);
+    --bg:linear-gradient(160deg,#03080e 0%,#07101e 35%,#0c182a 65%,#060a0f 100%);
+    --bg-glow:radial-gradient(ellipse 90% 70% at 20% 10%,rgba(50,130,200,0.20) 0%,transparent 55%);
+    --card-border:rgba(106,180,224,0.13);
+    --font-body:'DM Mono',monospace;
+    --font-display:'Playfair Display',serif;
   }
   [data-theme="amanecer"] {
-    --ink:#1a0e0a;--glass:rgba(255,220,180,0.07);--glass2:rgba(255,220,180,0.11);
-    --cold:#e8a87c;--ice:#ffd4a8;--rain:#c47a4a;--text:#f0d8c0;--dim:#a07858;
-    --drop-color:rgba(232,168,124,0.35);
-    --bg:linear-gradient(175deg,#1a0e0a 0%,#2a1810 40%,#1a0e0a 100%);
-    --bg-glow:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(200,100,50,0.18) 0%,transparent 60%);
+    --ink:#0d0712;--glass:rgba(180,80,255,0.09);--glass2:rgba(180,80,255,0.16);
+    --cold:#c060f0;--ice:#e8b0ff;--rain:#8020c0;--text:#f0d0ff;--dim:#9858b0;
+    --drop-color:rgba(192,96,240,0.35);
+    --bg:linear-gradient(160deg,#0a0510 0%,#180a28 35%,#1e0e34 65%,#0d0712 100%);
+    --bg-glow:radial-gradient(ellipse 90% 70% at 15% 5%,rgba(140,30,220,0.26) 0%,transparent 55%);
+    --card-border:rgba(192,96,240,0.16);
   }
   [data-theme="bosque"] {
-    --ink:#080f0a;--glass:rgba(100,200,120,0.06);--glass2:rgba(100,200,120,0.10);
-    --cold:#6dba7e;--ice:#a8e0b4;--rain:#3d8a50;--text:#c8e8d0;--dim:#5a8a68;
-    --drop-color:rgba(109,186,126,0.35);
-    --bg:linear-gradient(175deg,#080f0a 0%,#0f1f12 40%,#080f0a 100%);
-    --bg-glow:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(60,140,80,0.15) 0%,transparent 60%);
+    --ink:#030d08;--glass:rgba(30,200,110,0.09);--glass2:rgba(30,200,110,0.15);
+    --cold:#28cc80;--ice:#80f0c0;--rain:#0a8040;--text:#c0f0d8;--dim:#40a868;
+    --drop-color:rgba(40,204,128,0.35);
+    --bg:linear-gradient(160deg,#020a05 0%,#051808 35%,#082010 65%,#030d08 100%);
+    --bg-glow:radial-gradient(ellipse 90% 70% at 15% 5%,rgba(20,160,80,0.24) 0%,transparent 55%);
+    --card-border:rgba(40,204,128,0.14);
   }
   [data-theme="polar"] {
-    --ink:#0a0812;--glass:rgba(180,160,255,0.06);--glass2:rgba(180,160,255,0.10);
-    --cold:#b49eff;--ice:#ddd4ff;--rain:#7c5fd4;--text:#d8d0f0;--dim:#8878b8;
-    --drop-color:rgba(180,158,255,0.35);
-    --bg:linear-gradient(175deg,#0a0812 0%,#130e20 40%,#0a0812 100%);
-    --bg-glow:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(120,80,220,0.15) 0%,transparent 60%);
-  }
-  [data-theme="desierto"] {
-    --ink:#120c06;--glass:rgba(255,210,120,0.06);--glass2:rgba(255,210,120,0.10);
-    --cold:#d4a94a;--ice:#f0d090;--rain:#a87030;--text:#e8d4a8;--dim:#907040;
-    --drop-color:rgba(212,169,74,0.35);
-    --bg:linear-gradient(175deg,#120c06 0%,#1e1408 40%,#120c06 100%);
-    --bg-glow:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(180,120,30,0.18) 0%,transparent 60%);
+    --ink:#060410;--glass:rgba(100,60,255,0.09);--glass2:rgba(100,60,255,0.15);
+    --cold:#7850ff;--ice:#c8b0ff;--rain:#3010c0;--text:#e0d8ff;--dim:#7058b8;
+    --drop-color:rgba(120,80,255,0.35);
+    --bg:linear-gradient(160deg,#04020c 0%,#0a0620 35%,#100830 65%,#060410 100%);
+    --bg-glow:radial-gradient(ellipse 90% 70% at 15% 5%,rgba(80,30,220,0.28) 0%,transparent 55%);
+    --card-border:rgba(120,80,255,0.16);
   }
   [data-theme="volcan"] {
-    --ink:#0f0505;--glass:rgba(255,80,40,0.06);--glass2:rgba(255,80,40,0.10);
-    --cold:#e8623a;--ice:#ffb090;--rain:#c03010;--text:#f0c8b8;--dim:#905040;
-    --drop-color:rgba(232,98,58,0.35);
-    --bg:linear-gradient(175deg,#0f0505 0%,#1e0a06 40%,#0f0505 100%);
-    --bg-glow:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(200,50,20,0.18) 0%,transparent 60%);
+    --ink:#0a0200;--glass:rgba(255,60,20,0.09);--glass2:rgba(255,60,20,0.15);
+    --cold:#ff4a18;--ice:#ff9060;--rain:#c82000;--text:#ffd0a8;--dim:#a04030;
+    --drop-color:rgba(255,74,24,0.40);
+    --bg:linear-gradient(160deg,#0c0100 0%,#1c0400 35%,#240600 65%,#0a0200 100%);
+    --bg-glow:radial-gradient(ellipse 90% 70% at 15% 5%,rgba(220,30,0,0.30) 0%,transparent 55%);
+    --card-border:rgba(255,74,24,0.16);
   }
   [data-theme="oceano"] {
-    --ink:#030e14;--glass:rgba(0,210,200,0.06);--glass2:rgba(0,210,200,0.10);
-    --cold:#2ecfc8;--ice:#90ede8;--rain:#0a9090;--text:#c0ecec;--dim:#4a8888;
-    --drop-color:rgba(46,207,200,0.35);
-    --bg:linear-gradient(175deg,#030e14 0%,#071820 40%,#030e14 100%);
-    --bg-glow:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(0,160,160,0.18) 0%,transparent 60%);
-  }
-  [data-theme="noche"] {
-    --ink:#060608;--glass:rgba(200,200,220,0.05);--glass2:rgba(200,200,220,0.08);
-    --cold:#a8a8c8;--ice:#d8d8e8;--rain:#6060a0;--text:#c8c8d8;--dim:#606080;
-    --drop-color:rgba(168,168,200,0.3);
-    --bg:linear-gradient(175deg,#060608 0%,#0c0c12 40%,#060608 100%);
-    --bg-glow:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(80,80,140,0.12) 0%,transparent 60%);
-  }
-  [data-theme="sakura"] {
-    --ink:#120810;--glass:rgba(255,160,200,0.06);--glass2:rgba(255,160,200,0.10);
-    --cold:#e890b8;--ice:#ffc8dc;--rain:#b85080;--text:#f0d0e0;--dim:#a06880;
-    --drop-color:rgba(232,144,184,0.35);
-    --bg:linear-gradient(175deg,#120810 0%,#1e1018 40%,#120810 100%);
-    --bg-glow:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(180,60,120,0.18) 0%,transparent 60%);
+    --ink:#01050e;--glass:rgba(0,170,255,0.09);--glass2:rgba(0,170,255,0.14);
+    --cold:#0898f8;--ice:#58c8ff;--rain:#0450a0;--text:#a8d8ff;--dim:#1060a8;
+    --drop-color:rgba(8,152,248,0.40);
+    --bg:linear-gradient(160deg,#020810 0%,#03102a 35%,#041838 65%,#01050e 100%);
+    --bg-glow:radial-gradient(ellipse 90% 70% at 15% 5%,rgba(0,130,200,0.26) 0%,transparent 55%);
+    --card-border:rgba(8,152,248,0.14);
   }
   [data-theme="tormenta"] {
-    --ink:#060a10;--glass:rgba(80,140,255,0.06);--glass2:rgba(80,140,255,0.10);
-    --cold:#5a9aee;--ice:#a0c8ff;--rain:#2050c0;--text:#c0d0e8;--dim:#4a6090;
-    --drop-color:rgba(90,154,238,0.4);
-    --bg:linear-gradient(175deg,#060a10 0%,#0c1420 40%,#060a10 100%);
-    --bg-glow:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(40,80,200,0.2) 0%,transparent 60%);
-  }
-  [data-theme="aurora"] {
-    --ink:#030a08;--glass:rgba(50,220,160,0.06);--glass2:rgba(50,220,160,0.10);
-    --cold:#30d4a0;--ice:#80f0d0;--rain:#10906a;--text:#c0e8d8;--dim:#408868;
-    --drop-color:rgba(48,212,160,0.35);
-    --bg:linear-gradient(175deg,#030a08 0%,#071510 40%,#030a08 100%);
-    --bg-glow:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(20,180,120,0.18) 0%,transparent 60%);
-  }
-  [data-theme="monzon"] {
-    --ink:#060c10;--glass:rgba(100,160,220,0.06);--glass2:rgba(100,160,220,0.10);
-    --cold:#6ab0e0;--ice:#b0d8f8;--rain:#2878b0;--text:#c8ddf0;--dim:#4878a0;
-    --drop-color:rgba(106,176,224,0.45);
-    --bg:linear-gradient(175deg,#060c10 0%,#0a1820 40%,#060c10 100%);
-    --bg-glow:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(40,120,180,0.2) 0%,transparent 60%);
+    --ink:#030308;--glass:rgba(120,80,255,0.09);--glass2:rgba(120,80,255,0.14);
+    --cold:#9870ff;--ice:#d0c0ff;--rain:#5030d0;--text:#e0d8ff;--dim:#706098;
+    --drop-color:rgba(152,112,255,0.40);
+    --bg:linear-gradient(160deg,#020206 0%,#060412 35%,#0a061e 65%,#030308 100%);
+    --bg-glow:radial-gradient(ellipse 90% 70% at 15% 5%,rgba(80,40,200,0.28) 0%,transparent 55%);
+    --card-border:rgba(152,112,255,0.16);
   }
   [data-theme="stratus"] {
-    --ink:#10141a;--glass:rgba(49,53,60,0.4);--glass2:rgba(49,53,60,0.6);
-    --cold:#a9c7ff;--ice:#dfe2eb;--rain:#295ea6;--text:#dfe2eb;--dim:#908f9d;
-    --drop-color:rgba(169,199,255,0.35);
-    --bg:linear-gradient(175deg,#0a0e14 0%,#10141a 50%,#0a0e14 100%);
-    --bg-glow:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(41,94,166,0.18) 0%,transparent 60%);
+    --ink:#0e0e10;--glass:rgba(60,60,70,0.42);--glass2:rgba(60,60,70,0.60);
+    --cold:#c8b890;--ice:#f0e8d8;--rain:#907040;--text:#e8e0d0;--dim:#909080;
+    --drop-color:rgba(200,184,144,0.30);
+    --bg:linear-gradient(160deg,#0a0a0c 0%,#101010 35%,#141412 65%,#0e0e10 100%);
+    --bg-glow:radial-gradient(ellipse 90% 70% at 15% 5%,rgba(120,100,50,0.16) 0%,transparent 55%);
+    --card-border:rgba(200,184,144,0.12);
     --font-display:'Noto Serif',serif;
     --font-label:'Space Grotesk',sans-serif;
+  }
+
+  /* ── FUENTES ── */
+  [data-font="inter"]   { --font-body:'Inter',sans-serif; --font-display:'Inter',sans-serif; }
+  [data-font="nunito"]  { --font-body:'Nunito',sans-serif; --font-display:'Nunito',sans-serif; }
+  [data-font="lora"]    { --font-body:'Lora',serif; --font-display:'Lora',serif; }
+  [data-font="josefin"] { --font-body:'Josefin Sans',sans-serif; --font-display:'Josefin Sans',sans-serif; }
+
+  /* ── TEMAS CLAROS (5) ── */
+  [data-theme="blanco"] {
+    --ink:#faf7f4;--glass:rgba(255,255,255,0.82);--glass2:rgba(255,255,255,0.93);
+    --cold:#c06840;--ice:#7a3a18;--rain:#a84820;--text:#3c180a;--dim:#906050;
+    --drop-color:rgba(192,104,64,0.25);
+    --bg:linear-gradient(160deg,#f0e8e0 0%,#f8f0e8 35%,#fdf8f4 65%,#f0e8e0 100%);
+    --bg-glow:radial-gradient(ellipse 90% 70% at 80% 5%,rgba(200,120,60,0.22) 0%,transparent 55%);
+    --card-border:rgba(192,104,64,0.14);
+  }
+  [data-theme="sakura"] {
+    --ink:#fef5f7;--glass:rgba(255,255,255,0.82);--glass2:rgba(255,255,255,0.93);
+    --cold:#b84068;--ice:#780830;--rain:#a02858;--text:#3a0818;--dim:#a03860;
+    --drop-color:rgba(184,64,104,0.25);
+    --bg:linear-gradient(160deg,#f8d8e0 0%,#fce8ee 35%,#fff0f4 65%,#f8d8e0 100%);
+    --bg-glow:radial-gradient(ellipse 90% 70% at 80% 5%,rgba(200,50,90,0.22) 0%,transparent 55%);
+    --card-border:rgba(184,64,104,0.14);
+  }
+  [data-theme="cielo"] {
+    --ink:#f2f8fe;--glass:rgba(255,255,255,0.82);--glass2:rgba(255,255,255,0.93);
+    --cold:#0872d4;--ice:#04408a;--rain:#0660b8;--text:#021c40;--dim:#2866b0;
+    --drop-color:rgba(8,114,212,0.28);
+    --bg:linear-gradient(160deg,#cce8fc 0%,#dff0fe 35%,#edf6ff 65%,#cce8fc 100%);
+    --bg-glow:radial-gradient(ellipse 90% 70% at 80% 5%,rgba(0,140,240,0.28) 0%,transparent 55%);
+    --card-border:rgba(8,114,212,0.14);
+  }
+  [data-theme="desierto"] {
+    --ink:#fdf8f0;--glass:rgba(255,255,255,0.80);--glass2:rgba(255,255,255,0.92);
+    --cold:#c87020;--ice:#804008;--rain:#b05810;--text:#3c1800;--dim:#906028;
+    --drop-color:rgba(200,112,32,0.28);
+    --bg:linear-gradient(160deg,#f8e8c0 0%,#fdf0d4 35%,#fff8e8 65%,#f8e8c0 100%);
+    --bg-glow:radial-gradient(ellipse 90% 70% at 80% 5%,rgba(210,140,30,0.28) 0%,transparent 55%);
+    --card-border:rgba(200,112,32,0.14);
+  }
+  [data-theme="monzon"] {
+    --ink:#f4faf6;--glass:rgba(255,255,255,0.82);--glass2:rgba(255,255,255,0.93);
+    --cold:#1a8840;--ice:#0a5020;--rain:#107838;--text:#052018;--dim:#308048;
+    --drop-color:rgba(26,136,64,0.28);
+    --bg:linear-gradient(160deg,#c8ecda 0%,#dcf4e8 35%,#eef8f2 65%,#c8ecda 100%);
+    --bg-glow:radial-gradient(ellipse 90% 70% at 80% 5%,rgba(20,160,80,0.28) 0%,transparent 55%);
+    --card-border:rgba(26,136,64,0.14);
   }
 
   /* FIX 7: Corrección estructural para evitar scroll fantasma */
@@ -117,7 +140,7 @@
   body {
     background: var(--ink);
     color: var(--text);
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-body);
     min-height: 100vh;
     position: relative;
     transition: background 0.5s ease, color 0.5s ease;
@@ -135,10 +158,10 @@
     background: var(--ink) !important;
     border-radius: inherit;
     display: flex; align-items: center; justify-content: center;
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-body);
     font-size: 0.6rem; letter-spacing: 0.1em;
     color: var(--dim); text-transform: uppercase;
-    border: 1px solid rgba(126,184,212,0.1);
+    border: 1px solid var(--card-border);
     pointer-events: all !important;
     cursor: not-allowed;
     z-index: 100;
@@ -157,10 +180,10 @@
     position: absolute; top: 0; left: 0; right: 0; bottom: 0;
     z-index: 110;
     background: var(--ink) !important;
-    border: 1px solid rgba(126,184,212,0.12);
+    border: 1px solid var(--card-border);
     border-radius: 14px;
     display: flex; align-items: center; justify-content: center;
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-body);
     font-size: 0.6rem; color: var(--dim);
     letter-spacing: 0.1em; text-transform: uppercase;
     white-space: nowrap;
@@ -172,9 +195,39 @@
   }
 
   .bg-layer {
-    position: fixed; inset: 0; z-index: 0;
+    position: fixed; inset: 0; z-index: 0; overflow: hidden;
     background: var(--bg-glow), var(--bg);
-    transition: background 0.5s ease;
+    transition: background 0.6s ease;
+  }
+  .bg-layer::before {
+    content: '';
+    position: absolute; border-radius: 50%; pointer-events: none;
+    width: 90vw; height: 90vw;
+    background: radial-gradient(circle at center, var(--cold) 0%, transparent 65%);
+    opacity: 0.11;
+    top: -30%; left: -25%;
+    animation: orb-a 26s ease-in-out infinite;
+  }
+  .bg-layer::after {
+    content: '';
+    position: absolute; border-radius: 50%; pointer-events: none;
+    width: 65vw; height: 65vw;
+    background: radial-gradient(circle at center, var(--ice) 0%, transparent 65%);
+    opacity: 0.08;
+    bottom: 8%; right: -20%;
+    animation: orb-b 35s ease-in-out infinite;
+  }
+  @keyframes orb-a {
+    0%   { transform: translate(0,0) scale(1); }
+    33%  { transform: translate(7vw,12vh) scale(1.07); }
+    66%  { transform: translate(-4vw,5vh) scale(0.93); }
+    100% { transform: translate(0,0) scale(1); }
+  }
+  @keyframes orb-b {
+    0%   { transform: translate(0,0) scale(1); }
+    40%  { transform: translate(-10vw,-8vh) scale(1.09); }
+    75%  { transform: translate(5vw,-3vh) scale(0.94); }
+    100% { transform: translate(0,0) scale(1); }
   }
 
   .rain-container {
@@ -214,7 +267,7 @@
     animation: fadeDown 0.7s ease both;
   }
   .header .city {
-    font-family: 'Playfair Display', serif;
+    font-family: var(--font-display);
     font-size: 2rem;
     font-weight: 700;
     letter-spacing: 0.03em;
@@ -247,10 +300,10 @@
   .search-input {
     flex: 1;
     background: var(--glass2);
-    border: 1px solid rgba(126,184,212,0.15);
+    border: 1px solid var(--card-border);
     border-radius: 10px;
     padding: 9px 14px;
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-body);
     font-size: 0.75rem;
     color: var(--ice);
     outline: none;
@@ -260,7 +313,7 @@
   .search-input:focus { border-color: var(--cold); }
   .btn-icon {
     background: var(--glass2);
-    border: 1px solid rgba(126,184,212,0.15);
+    border: 1px solid var(--card-border);
     border-radius: 10px;
     padding: 9px 13px;
     color: var(--cold);
@@ -274,7 +327,7 @@
   /* NUEVO: Estilo para botón de compartir */
   .btn-share {
     background: var(--glass2);
-    border: 1px solid rgba(126,184,212,0.15);
+    border: 1px solid var(--card-border);
     border-radius: 10px;
     padding: 9px 13px;
     color: var(--cold);
@@ -288,7 +341,7 @@
   .suggestions {
     position: fixed;
     background: #162030;
-    border: 1px solid rgba(126,184,212,0.35);
+    border: 1px solid var(--card-border);
     border-radius: 14px;
     overflow: hidden;
     z-index: 999;
@@ -331,10 +384,11 @@
 
   .main-card {
     background: var(--glass);
-    border: 1px solid rgba(126,184,212,0.12);
+    border: 1px solid var(--card-border);
     border-radius: 20px;
     padding: 28px 24px;
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.06);
     margin-bottom: 16px;
     animation: fadeUp 0.7s 0.1s ease both;
   }
@@ -346,7 +400,7 @@
     margin-bottom: 16px;
   }
   .temp-big {
-    font-family: 'Playfair Display', serif;
+    font-family: var(--font-display);
     font-size: 5.5rem;
     line-height: 1;
     color: var(--ice);
@@ -388,7 +442,7 @@
     background: var(--glass2);
     border-radius: 12px;
     padding: 10px 12px;
-    border: 1px solid rgba(255,255,255,0.05);
+    border: 1px solid var(--card-border);
   }
   .stat-label {
     font-size: 0.55rem;
@@ -454,17 +508,19 @@
   .hourly-scroll::-webkit-scrollbar { display: none; }
   .hour-card {
     background: var(--glass);
-    border: 1px solid rgba(126,184,212,0.1);
+    border: 1px solid var(--card-border);
     border-radius: 14px;
     padding: 12px 14px;
     min-width: 70px;
     text-align: center;
     flex-shrink: 0;
     transition: background 0.2s;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.14);
   }
   .hour-card.now {
-    background: rgba(74,144,184,0.18);
-    border-color: rgba(126,184,212,0.3);
+    background: var(--glass2);
+    border-color: var(--cold);
+    box-shadow: 0 2px 14px rgba(0,0,0,0.2);
   }
   .hour-card .h-time { font-size: 0.6rem; color: var(--dim); margin-bottom: 6px; }
   .hour-card .h-icon { font-size: 1.3rem; margin-bottom: 4px; }
@@ -479,12 +535,13 @@
   }
   .day-accordion {
     background: var(--glass);
-    border: 1px solid rgba(126,184,212,0.08);
+    border: 1px solid var(--card-border);
     border-radius: 14px;
     overflow: hidden;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.14);
   }
-  .day-accordion.open { border-color: rgba(126,184,212,0.22); }
+  .day-accordion.open { border-color: var(--cold); box-shadow: 0 4px 16px rgba(0,0,0,0.20); }
   .day-header {
     display: flex;
     align-items: center;
@@ -534,7 +591,7 @@
   .day-hourly-scroll::-webkit-scrollbar { display: none; }
   .dh-card {
     background: var(--glass2);
-    border: 1px solid rgba(126,184,212,0.08);
+    border: 1px solid var(--card-border);
     border-radius: 10px;
     padding: 8px 10px;
     min-width: 58px;
@@ -570,15 +627,16 @@
   }
   .extra-card {
     background: var(--glass);
-    border: 1px solid rgba(126,184,212,0.08);
+    border: 1px solid var(--card-border);
     border-radius: 16px;
     padding: 16px;
     cursor: pointer;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s;
     -webkit-tap-highlight-color: transparent;
     position: relative;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.14);
   }
-  .extra-card.expanded { border-color: rgba(126,184,212,0.25); }
+  .extra-card.expanded { border-color: var(--cold); box-shadow: 0 4px 16px rgba(0,0,0,0.20); }
   .extra-card .e-label {
     font-size: 0.55rem;
     letter-spacing: 0.15em;
@@ -587,11 +645,11 @@
     margin-bottom: 8px;
   }
   .extra-card .e-val {
-    font-family: 'Playfair Display', serif;
+    font-family: var(--font-display);
     font-size: 2rem; color: var(--ice); line-height: 1;
   }
   .extra-card .e-unit {
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-body);
     font-size: 0.65rem; color: var(--cold); margin-top: 4px;
   }
   .wind-dir { font-size: 0.7rem; color: var(--dim); margin-top: 4px; }
@@ -651,9 +709,9 @@
     display: block;
     margin: 24px auto 0;
     background: var(--glass2);
-    border: 1px solid rgba(126,184,212,0.15);
+    border: 1px solid var(--card-border);
     color: var(--cold);
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-body);
     font-size: 0.65rem;
     letter-spacing: 0.15em;
     text-transform: uppercase;
@@ -703,21 +761,81 @@
     font-size: 0.42rem;
     color: var(--dim);
     white-space: nowrap;
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-body);
   }
-  .t-lago     { background: radial-gradient(circle at 40% 40%, #4a90b8, #0d1117); }
-  .t-amanecer { background: radial-gradient(circle at 40% 40%, #e8a87c, #1a0e0a); }
-  .t-bosque   { background: radial-gradient(circle at 40% 40%, #6dba7e, #080f0a); }
-  .t-polar    { background: radial-gradient(circle at 40% 40%, #b49eff, #0a0812); }
-  .t-desierto { background: radial-gradient(circle at 40% 40%, #d4a94a, #120c06); }
-  .t-volcan   { background: radial-gradient(circle at 40% 40%, #e8623a, #0f0505); }
-  .t-oceano   { background: radial-gradient(circle at 40% 40%, #2ecfc8, #030e14); }
-  .t-noche    { background: radial-gradient(circle at 40% 40%, #a8a8c8, #060608); }
-  .t-sakura   { background: radial-gradient(circle at 40% 40%, #e890b8, #120810); }
-  .t-tormenta { background: radial-gradient(circle at 40% 40%, #5a9aee, #060a10); }
-  .t-aurora   { background: radial-gradient(circle at 40% 40%, #30d4a0, #030a08); }
-  .t-monzon   { background: radial-gradient(circle at 40% 40%, #6ab0e0, #060c10); }
-  .t-stratus  { background: radial-gradient(circle at 40% 40%, #a9c7ff, #10141a); border: 1px solid rgba(169,199,255,0.4); }
+  .t-lago     { background: radial-gradient(circle at 40% 40%, #6ab4e0, #060a0f); }
+  .t-amanecer { background: radial-gradient(circle at 40% 40%, #c060f0, #0d0712); }
+  .t-bosque   { background: radial-gradient(circle at 40% 40%, #28cc80, #020a05); }
+  .t-polar    { background: radial-gradient(circle at 40% 40%, #7850ff, #04020c); }
+  .t-volcan   { background: radial-gradient(circle at 40% 40%, #ff4a18, #0c0100); }
+  .t-oceano   { background: radial-gradient(circle at 40% 40%, #0898f8, #020810); }
+  .t-tormenta { background: radial-gradient(circle at 40% 40%, #9870ff, #020206); }
+  .t-stratus  { background: radial-gradient(circle at 40% 40%, #c8b890, #0a0a0c); }
+  .t-blanco   { background: radial-gradient(circle at 40% 40%, #c06840, #fdf8f4); border: 1px solid rgba(192,104,64,0.22); }
+  .t-sakura   { background: radial-gradient(circle at 40% 40%, #b84068, #fff0f4); border: 1px solid rgba(184,64,104,0.22); }
+  .t-cielo    { background: radial-gradient(circle at 40% 40%, #0872d4, #edf6ff); border: 1px solid rgba(8,114,212,0.22); }
+  .t-desierto { background: radial-gradient(circle at 40% 40%, #c87020, #fff8e8); border: 1px solid rgba(200,112,32,0.22); }
+  .t-monzon   { background: radial-gradient(circle at 40% 40%, #1a8840, #eef8f2); border: 1px solid rgba(26,136,64,0.22); }
+  .font-row { display:flex; flex-wrap:wrap; gap:8px; }
+  .font-btn { background: var(--glass); border: 1.5px solid var(--card-border); color: var(--text); padding: 7px 14px; border-radius: 10px; font-size: 0.88rem; cursor: pointer; transition: background 0.2s, border-color 0.2s, color 0.2s; letter-spacing: 0.01em; }
+  .font-btn:hover { background: var(--glass2); }
+  .font-btn.active { background: var(--cold); color: var(--ink); border-color: var(--cold); font-weight: 600; }
+
+  /* ── Temas claros: ajustes de contraste ── */
+  [data-theme="blanco"] .bg-layer::before,
+  [data-theme="cielo"] .bg-layer::before,
+  [data-theme="sakura"] .bg-layer::before,
+  [data-theme="desierto"] .bg-layer::before,
+  [data-theme="monzon"] .bg-layer::before { opacity: 0.20; }
+  [data-theme="blanco"] .bg-layer::after,
+  [data-theme="cielo"] .bg-layer::after,
+  [data-theme="sakura"] .bg-layer::after,
+  [data-theme="desierto"] .bg-layer::after,
+  [data-theme="monzon"] .bg-layer::after  { opacity: 0.16; }
+
+  [data-theme="blanco"] .main-card,   [data-theme="blanco"] .extra-card,
+  [data-theme="blanco"] .hour-card,   [data-theme="blanco"] .day-accordion,
+  [data-theme="blanco"] .settings-panel,
+  [data-theme="cielo"] .main-card,    [data-theme="cielo"] .extra-card,
+  [data-theme="cielo"] .hour-card,    [data-theme="cielo"] .day-accordion,
+  [data-theme="cielo"] .settings-panel,
+  [data-theme="sakura"] .main-card,   [data-theme="sakura"] .extra-card,
+  [data-theme="sakura"] .hour-card,   [data-theme="sakura"] .day-accordion,
+  [data-theme="sakura"] .settings-panel,
+  [data-theme="desierto"] .main-card, [data-theme="desierto"] .extra-card,
+  [data-theme="desierto"] .hour-card, [data-theme="desierto"] .day-accordion,
+  [data-theme="desierto"] .settings-panel,
+  [data-theme="monzon"] .main-card,   [data-theme="monzon"] .extra-card,
+  [data-theme="monzon"] .hour-card,   [data-theme="monzon"] .day-accordion,
+  [data-theme="monzon"] .settings-panel {
+    box-shadow: 0 2px 20px rgba(0,0,0,0.10);
+    backdrop-filter: blur(18px);
+  }
+  [data-theme="blanco"] .rain-bar-bg,   [data-theme="cielo"] .rain-bar-bg,
+  [data-theme="sakura"] .rain-bar-bg,   [data-theme="desierto"] .rain-bar-bg,
+  [data-theme="monzon"] .rain-bar-bg { background: rgba(0,0,0,0.10); }
+
+  [data-theme="blanco"] .mc-stats-row,  [data-theme="cielo"] .mc-stats-row,
+  [data-theme="sakura"] .mc-stats-row,  [data-theme="desierto"] .mc-stats-row,
+  [data-theme="monzon"] .mc-stats-row  { background: rgba(255,255,255,0.55); }
+  [data-theme="blanco"] .mc-divider,   [data-theme="cielo"] .mc-divider,
+  [data-theme="sakura"] .mc-divider,   [data-theme="desierto"] .mc-divider,
+  [data-theme="monzon"] .mc-divider    { background: rgba(0,0,0,0.10); }
+  [data-theme="blanco"] .mc-hourly-title,  [data-theme="cielo"] .mc-hourly-title,
+  [data-theme="sakura"] .mc-hourly-title,  [data-theme="desierto"] .mc-hourly-title,
+  [data-theme="monzon"] .mc-hourly-title  { color: var(--ice); }
+
+  [data-theme="blanco"] .section-title,   [data-theme="cielo"] .section-title,
+  [data-theme="sakura"] .section-title,   [data-theme="desierto"] .section-title,
+  [data-theme="monzon"] .section-title { color: var(--ice); }
+
+  [data-theme="blanco"] .search-box,     [data-theme="blanco"] .search-results,
+  [data-theme="cielo"] .search-box,      [data-theme="cielo"] .search-results,
+  [data-theme="sakura"] .search-box,     [data-theme="sakura"] .search-results,
+  [data-theme="desierto"] .search-box,   [data-theme="desierto"] .search-results,
+  [data-theme="monzon"] .search-box,     [data-theme="monzon"] .search-results {
+    background: rgba(255,255,255,0.94);
+  }
 
   [data-theme="stratus"] .city,
   [data-theme="stratus"] .temp-big,
@@ -745,7 +863,7 @@
     position: relative; border-radius: 20px;
     overflow: hidden; height: 160px;
     margin-bottom: 20px;
-    border: 1px solid rgba(126,184,212,0.1);
+    border: 1px solid var(--card-border);
     animation: fadeUp 0.7s ease both;
   }
   .city-photo-card img {
@@ -836,14 +954,14 @@
   .unit-toggle {
     display: flex;
     background: var(--glass2);
-    border: 1px solid rgba(126,184,212,0.12);
+    border: 1px solid var(--card-border);
     border-radius: 10px;
     overflow: hidden;
   }
   .unit-btn {
     flex: 1;
     padding: 9px 0;
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-body);
     font-size: 0.75rem;
     color: var(--dim);
     background: none;
@@ -859,7 +977,7 @@
 
   .btn-gear {
     background: var(--glass2);
-    border: 1px solid rgba(126,184,212,0.15);
+    border: 1px solid var(--card-border);
     border-radius: 10px;
     padding: 9px 13px;
     color: var(--dim);
@@ -878,11 +996,12 @@
     line-height: 1;
     padding: 0 0 0 8px;
     vertical-align: middle;
-    opacity: 0.5;
-    transition: opacity 0.2s, transform 0.2s;
+    color: var(--dim);
+    -webkit-text-fill-color: var(--dim);
+    transition: color 0.2s, transform 0.2s;
   }
-  .fav-btn:hover { opacity: 1; }
-  .fav-btn.saved { opacity: 1; }
+  .fav-btn:hover { color: #ff6b8a; -webkit-text-fill-color: #ff6b8a; }
+  .fav-btn.saved { color: #ff4d6d; -webkit-text-fill-color: #ff4d6d; }
   .fav-btn.saved.pulse { transform: scale(1.4); }
 
   .fav-strip {
@@ -897,7 +1016,7 @@
     align-items: center;
     gap: 5px;
     background: var(--glass2);
-    border: 1px solid rgba(126,184,212,0.12);
+    border: 1px solid var(--card-border);
     border-radius: 99px;
     padding: 5px 12px 5px 10px;
     font-size: 0.65rem;
@@ -964,9 +1083,9 @@
   }
   .ci-tab {
     font-size: 0.6rem; padding: 5px 12px;
-    border-radius: 99px; border: 1px solid rgba(126,184,212,0.15);
+    border-radius: 99px; border: 1px solid var(--card-border);
     background: none; color: var(--dim);
-    cursor: pointer; font-family: 'DM Mono', monospace;
+    cursor: pointer; font-family: var(--font-body);
     transition: all 0.2s; letter-spacing: 0.05em;
   }
   .ci-tab.active, .ci-tab:hover {
@@ -998,7 +1117,7 @@
   .help-overlay.hidden { opacity:0; pointer-events:none; }
   .help-panel {
     background: #0e1a26;
-    border: 1px solid rgba(126,184,212,0.15);
+    border: 1px solid var(--card-border);
     border-radius: 24px 24px 0 0;
     width: 100%; max-width: 480px;
     margin: 0 auto;
@@ -1008,7 +1127,7 @@
   }
   .help-panel::-webkit-scrollbar { display:none; }
   .help-panel h2 {
-    font-family: 'Playfair Display', serif;
+    font-family: var(--font-display);
     font-size: 1.4rem; color: var(--ice);
     margin-bottom: 4px; font-weight: 700;
   }
@@ -1033,7 +1152,7 @@
   }
   .help-text h3 {
     font-size: 0.78rem; color: var(--ice);
-    margin-bottom: 4px; font-family: 'DM Mono', monospace;
+    margin-bottom: 4px; font-family: var(--font-body);
   }
   .help-text p {
     font-size: 0.68rem; color: var(--dim); line-height: 1.6;
@@ -1042,9 +1161,9 @@
     display: block; width: 100%;
     margin-top: 20px;
     background: rgba(126,184,212,0.12);
-    border: 1px solid rgba(126,184,212,0.25);
+    border: 1px solid var(--card-border);
     color: var(--ice);
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-body);
     font-size: 0.7rem; letter-spacing: 0.1em;
     text-transform: uppercase;
     padding: 13px; border-radius: 12px;
@@ -1056,7 +1175,7 @@
     font-size: 0.58rem; color: var(--dim);
     margin-top: 10px; cursor: pointer;
     background: none; border: none;
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-body);
     transition: color 0.2s; width: 100%;
   }
   .help-no-show:hover { color: var(--cold); }
@@ -1064,12 +1183,12 @@
   .s-toggle {
     display: flex;
     background: var(--glass2);
-    border: 1px solid rgba(126,184,212,0.12);
+    border: 1px solid var(--card-border);
     border-radius: 10px; overflow: hidden;
   }
   .s-toggle-btn {
     flex: 1; padding: 8px 4px;
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-body);
     font-size: 0.65rem; color: var(--dim);
     background: none; border: none; cursor: pointer;
     transition: background 0.2s, color 0.2s;
@@ -1081,7 +1200,7 @@
 
   .btn-help {
     background: var(--glass2);
-    border: 1px solid rgba(126,184,212,0.15);
+    border: 1px solid var(--card-border);
     border-radius: 10px; padding: 9px 13px;
     color: var(--dim); font-size: 1rem;
     cursor: pointer; transition: color 0.2s, border-color 0.2s;
@@ -1120,11 +1239,11 @@
     text-transform: uppercase; background: rgba(255,152,0,0.15);
     color: #ff9800; border-radius: 99px; padding: 3px 12px; margin-bottom: 14px;
   }
-  .trial-panel h2 { font-family:'Playfair Display',serif; font-size:1.5rem; color:var(--ice); margin-bottom:8px; }
+  .trial-panel h2 { font-family:var(--font-display); font-size:1.5rem; color:var(--ice); margin-bottom:8px; }
   .trial-panel .t-sub { font-size:0.68rem; color:var(--dim); line-height:1.6; margin-bottom:20px; }
   .plan-cards { display:flex; flex-direction:column; gap:10px; margin-bottom:20px; }
   .plan-card {
-    border:1px solid rgba(126,184,212,0.1); border-radius:14px; padding:14px 16px;
+    border:1px solid var(--card-border); border-radius:14px; padding:14px 16px;
     cursor:pointer; transition:border-color 0.2s,background 0.2s; background:var(--glass);
   }
   .plan-card:hover { border-color:rgba(126,184,212,0.3); background:var(--glass2); }
@@ -1134,16 +1253,16 @@
   .plan-price { font-size:0.7rem; color:var(--cold); margin-top:6px; }
   .trial-form { display:flex; flex-direction:column; gap:10px; margin-bottom:16px; }
   .t-input {
-    background:var(--glass2); border:1px solid rgba(126,184,212,0.15);
+    background:var(--glass2); border:1px solid var(--card-border);
     border-radius:10px; padding:11px 14px;
-    font-family:'DM Mono',monospace; font-size:0.78rem; color:var(--ice); outline:none;
+    font-family:var(--font-body); font-size:0.78rem; color:var(--ice); outline:none;
   }
   .t-input:focus { border-color:var(--cold); }
   .t-input::placeholder { color:var(--dim); }
   .t-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .t-submit {
-    background:rgba(126,184,212,0.15); border:1px solid rgba(126,184,212,0.3);
-    color:var(--ice); font-family:'DM Mono',monospace; font-size:0.72rem;
+    background:rgba(126,184,212,0.15); border:1px solid var(--card-border);
+    color:var(--ice); font-family:var(--font-body); font-size:0.72rem;
     letter-spacing:0.12em; text-transform:uppercase; padding:13px;
     border-radius:12px; cursor:pointer; transition:background 0.2s; margin-top:4px; width:100%;
   }
@@ -1158,21 +1277,21 @@
   .trial-banner.hidden { display:none; }
   .t-success { text-align:center; padding:20px 0; }
   .t-success .s-icon { font-size:2.5rem; margin-bottom:12px; }
-  .t-success h3 { font-family:'Playfair Display',serif; color:var(--ice); margin-bottom:8px; }
+  .t-success h3 { font-family:var(--font-display); color:var(--ice); margin-bottom:8px; }
   .t-success p { font-size:0.68rem; color:var(--dim); line-height:1.6; }
 
   /* Estilos para Input de OTP */
   .otp-input {
-    background: var(--glass2); border: 1px solid rgba(126,184,212,0.3);
+    background: var(--glass2); border: 1px solid var(--card-border);
     border-radius: 10px; padding: 14px; font-size: 1.5rem;
-    font-family: 'DM Mono', monospace; color: var(--ice);
+    font-family: var(--font-body); color: var(--ice);
     text-align: center; letter-spacing: 0.5em; width: 100%;
     outline: none; margin-bottom: 12px;
   }
   .otp-input:focus { border-color: var(--cold); }
   .t-back {
     background: none; border: none; color: var(--dim);
-    font-family: 'DM Mono', monospace; font-size: 0.65rem;
+    font-family: var(--font-body); font-size: 0.65rem;
     cursor: pointer; margin-top: 12px; transition: color 0.2s;
     text-decoration: underline; width: 100%; display: block; text-align: center;
   }
@@ -1184,11 +1303,11 @@
     background: rgba(0,0,0,0.92); backdrop-filter: blur(8px);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     opacity: 0; pointer-events: none; transition: opacity 0.3s;
-    color: var(--ice); font-family: 'DM Mono', monospace; text-align: center;
+    color: var(--ice); font-family: var(--font-body); text-align: center;
   }
   .validation-overlay.show { opacity: 1; pointer-events: all; }
   .val-spinner { font-size: 3.5rem; animation: pulse 1.5s infinite; margin-bottom: 24px; filter: drop-shadow(0 0 12px rgba(126,184,212,0.4)); }
-  .val-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; margin-bottom: 12px; font-weight: 700; }
+  .val-title { font-family: var(--font-display); font-size: 1.8rem; margin-bottom: 12px; font-weight: 700; }
   .val-text { font-size: 0.8rem; color: var(--dim); line-height: 1.6; padding: 0 24px; letter-spacing: 0.05em; }
 
   /* Sección de lugares */
@@ -1196,12 +1315,12 @@
   .places-toggle {
     width: 100%;
     background: var(--glass);
-    border: 1px solid rgba(126,184,212,0.1);
+    border: 1px solid var(--card-border);
     border-radius: 14px;
     padding: 14px 16px;
     display: flex; align-items: center; gap: 10px;
     cursor: pointer; color: var(--text);
-    font-family: 'DM Mono', monospace; font-size: 0.75rem;
+    font-family: var(--font-body); font-size: 0.75rem;
     transition: background 0.2s, border-color 0.2s;
     -webkit-tap-highlight-color: transparent;
   }
@@ -1230,14 +1349,14 @@
   .places-tabs::-webkit-scrollbar { display: none; }
   .place-tab {
     font-size: 0.6rem; padding: 5px 12px; white-space: nowrap;
-    border-radius: 99px; border: 1px solid rgba(126,184,212,0.15);
+    border-radius: 99px; border: 1px solid var(--card-border);
     background: none; color: var(--dim); cursor: pointer;
-    font-family: 'DM Mono', monospace; transition: all 0.2s; flex-shrink: 0;
+    font-family: var(--font-body); transition: all 0.2s; flex-shrink: 0;
   }
   .place-tab.active { background: rgba(126,184,212,0.12); color: var(--ice); border-color: var(--cold); }
   .places-list { display: flex; flex-direction: column; gap: 8px; }
   .place-card {
-    background: var(--glass); border: 1px solid rgba(126,184,212,0.08);
+    background: var(--glass); border: 1px solid var(--card-border);
     border-radius: 14px; padding: 12px 14px;
     display: flex; align-items: center; gap: 12px;
     cursor: pointer; transition: border-color 0.2s, background 0.2s;
@@ -1266,7 +1385,7 @@
   .app.searching .search-results { display: flex; }
   .sr-item {
     background: #162030;
-    border: 1px solid rgba(126,184,212,0.15);
+    border: 1px solid var(--card-border);
     border-radius: 12px;
     padding: 13px 16px;
     display: flex;
@@ -1353,13 +1472,13 @@
     transform: translateX(-50%);
     z-index: 9999;
     background: #1a2d40;
-    border: 1px solid rgba(126,184,212,0.35);
+    border: 1px solid var(--card-border);
     border-radius: 14px;
     padding: 12px 18px;
     gap: 12px;
     align-items: center;
     box-shadow: 0 8px 32px rgba(0,0,0,0.6);
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-body);
     font-size: 0.72rem;
     color: var(--ice);
     white-space: nowrap;
@@ -1368,11 +1487,11 @@
   #update-banner.visible { display: flex; }
   #update-banner .upd-btn {
     background: rgba(126,184,212,0.2);
-    border: 1px solid rgba(126,184,212,0.4);
+    border: 1px solid var(--card-border);
     color: var(--ice);
     border-radius: 8px;
     padding: 6px 14px;
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-body);
     font-size: 0.65rem;
     cursor: pointer;
     letter-spacing: 0.08em;
@@ -1384,7 +1503,7 @@
   .map-container {
     width: 100%; height: 240px;
     border-radius: 16px; overflow: hidden;
-    border: 1px solid rgba(126,184,212,0.12);
+    border: 1px solid var(--card-border);
     background: var(--glass);
     margin-top: 8px;
     position: relative;
@@ -1406,6 +1525,209 @@
   }
   /* Sensación térmica horaria */
   .h-feel { font-size: 0.5rem; color: var(--cold); margin-top: 2px; opacity: 0.85; }
+
+  /* ── Nuevo layout tarjeta principal ── */
+  .mc-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 14px;
+  }
+  .mc-left {}
+  .mc-right {
+    text-align: right;
+    padding-top: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  .mc-right .weather-icon {
+    font-size: 3rem;
+    margin-bottom: 6px;
+    display: block;
+  }
+  .mc-right .weather-desc {
+    margin-bottom: 4px;
+    font-size: 0.72rem;
+  }
+  .mc-feels {
+    font-size: 0.78rem;
+    color: var(--dim);
+  }
+  .mc-stats-row {
+    display: flex;
+    gap: 0;
+    margin-bottom: 14px;
+    background: var(--glass2);
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
+    overflow: hidden;
+  }
+  .mc-stat {
+    flex: 1;
+    text-align: center;
+    font-size: 0.78rem;
+    color: var(--ice);
+    padding: 9px 4px;
+    border-right: 1px solid var(--card-border);
+  }
+  .mc-stat:last-child { border-right: none; }
+  .mc-stat span { display: block; font-size: 0.5rem; color: var(--dim); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 3px; }
+  .mc-divider {
+    height: 1px;
+    background: var(--card-border);
+    margin: 0 -24px 14px;
+  }
+  .mc-hourly-title {
+    font-size: 0.56rem;
+    letter-spacing: 0.2em;
+    color: var(--dim);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .mc-hourly-wrap {}
+  .main-card { padding-bottom: 0; }
+
+  /* ── Escena de clima ── */
+  .mc-scene {
+    margin: 14px -24px 0;
+    height: 88px;
+    border-radius: 0 0 20px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .mc-scene-bg {
+    position: absolute;
+    inset: 0;
+  }
+  /* Sol */
+  .mc-scene[data-s="sun"] .mc-scene-bg { background: linear-gradient(180deg,#0a1a2e 0%,#1a3a6e 40%,#7a4020 80%,#c05010 100%); }
+  .sc-sun {
+    position: absolute; top: 10px; right: 22px;
+    width: 32px; height: 32px;
+    background: radial-gradient(circle, #fef08a 30%, #f59e0b 100%);
+    border-radius: 50%;
+    box-shadow: 0 0 20px #fde68a99, 0 0 40px #f59e0b55;
+    animation: sc-sun-pulse 5s ease-in-out infinite;
+  }
+  @keyframes sc-sun-pulse {
+    0%,100% { box-shadow: 0 0 20px #fde68a99, 0 0 40px #f59e0b55; }
+    50%      { box-shadow: 0 0 32px #fde68acc, 0 0 64px #f59e0b77; }
+  }
+  .sc-sun-ray {
+    position: absolute; top: 0; right: 0;
+    width: 200px; height: 88px;
+    background: conic-gradient(from -30deg at 100% -10%, #f59e0b22 0deg, transparent 30deg, #f59e0b11 60deg, transparent 90deg);
+    opacity: 0.6;
+  }
+  /* Nublado */
+  .mc-scene[data-s="cloud"] .mc-scene-bg { background: linear-gradient(180deg,#0d1a26 0%,#1a2d3f 50%,#253a4a 100%); }
+  .sc-cloud {
+    position: absolute;
+    background: rgba(255,255,255,0.07);
+    border-radius: 50px;
+    animation: sc-cloud-drift 12s ease-in-out infinite alternate;
+  }
+  .sc-cloud:nth-child(1) { width:90px; height:28px; top:14px; left:-10px; animation-delay:0s; }
+  .sc-cloud:nth-child(2) { width:70px; height:22px; top:22px; left:55%; animation-delay:-4s; animation-duration:16s; }
+  .sc-cloud:nth-child(3) { width:50px; height:18px; top:10px; right:10px; animation-delay:-8s; animation-duration:14s; }
+  @keyframes sc-cloud-drift {
+    from { transform: translateX(0); }
+    to   { transform: translateX(18px); }
+  }
+  /* Llovizna / Lluvia */
+  .mc-scene[data-s="rain"] .mc-scene-bg  { background: linear-gradient(180deg,#060d14 0%,#0d1a26 45%,#152233 100%); }
+  .mc-scene[data-s="drizzle"] .mc-scene-bg { background: linear-gradient(180deg,#0a1520 0%,#172538 50%,#1e3048 100%); }
+  .sc-rain {
+    position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(
+      176deg,
+      transparent 0px, transparent 10px,
+      rgba(110,180,230,0.22) 10px, rgba(110,180,230,0.22) 11px
+    );
+    background-size: 14px 28px;
+    animation: sc-rain-fall 0.55s linear infinite;
+  }
+  .sc-rain.light {
+    background-image: repeating-linear-gradient(
+      176deg,
+      transparent 0px, transparent 14px,
+      rgba(110,180,230,0.14) 14px, rgba(110,180,230,0.14) 15px
+    );
+    animation-duration: 0.9s;
+  }
+  @keyframes sc-rain-fall {
+    from { background-position: 0 -28px; }
+    to   { background-position: 0 28px; }
+  }
+  /* Nieve */
+  .mc-scene[data-s="snow"] .mc-scene-bg { background: linear-gradient(180deg,#0a1520 0%,#152030 50%,#1e2f40 100%); }
+  .sc-snow {
+    position: absolute; inset: 0;
+    background-image:
+      radial-gradient(circle, rgba(200,230,255,0.7) 1px, transparent 1px),
+      radial-gradient(circle, rgba(200,230,255,0.4) 1px, transparent 1px);
+    background-size: 22px 22px, 15px 15px;
+    background-position: 0 0, 8px 8px;
+    animation: sc-snow-fall 5s linear infinite;
+  }
+  @keyframes sc-snow-fall {
+    from { background-position: 0 -22px, 8px -14px; }
+    to   { background-position: 0 22px, 8px 15px; }
+  }
+  /* Tormenta */
+  .mc-scene[data-s="storm"] .mc-scene-bg { background: linear-gradient(180deg,#050810 0%,#0d1420 50%,#141e2e 100%); }
+  .sc-storm-rain {
+    position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(
+      173deg,
+      transparent 0px, transparent 8px,
+      rgba(80,140,200,0.28) 8px, rgba(80,140,200,0.28) 9px
+    );
+    background-size: 12px 24px;
+    animation: sc-rain-fall 0.4s linear infinite;
+  }
+  .sc-lightning {
+    position: absolute; top: 4px; left: 42%;
+    width: 10px; height: 44px;
+    opacity: 0;
+    animation: sc-flash 5s ease-in-out infinite;
+  }
+  .sc-lightning::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg,#fef08a,#fde047 50%,transparent);
+    clip-path: polygon(35% 0%,65% 0%,75% 48%,100% 48%,35% 100%,60% 52%,0% 52%);
+    filter: blur(1px);
+  }
+  @keyframes sc-flash {
+    0%,80%,100%  { opacity: 0; }
+    82%,86%      { opacity: 1; }
+    84%          { opacity: 0.2; }
+  }
+  /* Niebla */
+  .mc-scene[data-s="fog"] .mc-scene-bg { background: linear-gradient(180deg,#151f28 0%,#243040 50%,#2e3c4c 100%); }
+  .sc-fog {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg,
+      transparent 0%,
+      rgba(160,190,210,0.12) 30%,
+      rgba(160,190,210,0.20) 60%,
+      rgba(160,190,210,0.12) 100%);
+    animation: sc-fog-drift 10s ease-in-out infinite alternate;
+  }
+  @keyframes sc-fog-drift {
+    from { transform: translateX(-12px); opacity: 0.7; }
+    to   { transform: translateX(12px);  opacity: 1; }
+  }
+  /* Terreno común */
+  .sc-ground {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 38px;
+    pointer-events: none;
+  }
+  .sc-ground svg { width: 100%; height: 100%; display: block; }
 </style>
 </head>
 <body>
@@ -1499,19 +1821,30 @@
   <div class="setting-row">
     <div class="setting-label">Tema visual</div>
     <div class="theme-row" id="themeSwitcher" style="flex-wrap:wrap;gap:12px 14px;">
-      <button class="theme-btn t-lago active"  data-theme=""         data-label="Lago"></button>
-      <button class="theme-btn t-amanecer"      data-theme="amanecer" data-label="Amanecer"></button>
-      <button class="theme-btn t-bosque"        data-theme="bosque"   data-label="Bosque"></button>
-      <button class="theme-btn t-polar"         data-theme="polar"    data-label="Polar"></button>
-      <button class="theme-btn t-desierto"      data-theme="desierto" data-label="Desierto"></button>
-      <button class="theme-btn t-volcan"        data-theme="volcan"   data-label="Volcán"></button>
-      <button class="theme-btn t-oceano"        data-theme="oceano"   data-label="Océano"></button>
-      <button class="theme-btn t-noche"         data-theme="noche"    data-label="Noche"></button>
-      <button class="theme-btn t-sakura"        data-theme="sakura"   data-label="Sakura"></button>
-      <button class="theme-btn t-tormenta"      data-theme="tormenta" data-label="Tormenta"></button>
-      <button class="theme-btn t-aurora"        data-theme="aurora"   data-label="Aurora"></button>
-      <button class="theme-btn t-monzon"        data-theme="monzon"   data-label="Monzón"></button>
-      <button class="theme-btn t-stratus"       data-theme="stratus"  data-label="Stratus"></button>
+      <button class="theme-btn t-lago active"  data-theme=""         data-label="Noche"></button>
+      <button class="theme-btn t-amanecer"      data-theme="amanecer" data-label="Crepúsculo"></button>
+      <button class="theme-btn t-bosque"        data-theme="bosque"   data-label="Esmeralda"></button>
+      <button class="theme-btn t-polar"         data-theme="polar"    data-label="Índigo"></button>
+      <button class="theme-btn t-volcan"        data-theme="volcan"   data-label="Magma"></button>
+      <button class="theme-btn t-oceano"        data-theme="oceano"   data-label="Abismo"></button>
+      <button class="theme-btn t-tormenta"      data-theme="tormenta" data-label="Galáctico"></button>
+      <button class="theme-btn t-stratus"       data-theme="stratus"  data-label="Obsidiana"></button>
+      <button class="theme-btn t-blanco"        data-theme="blanco"   data-label="Perla"></button>
+      <button class="theme-btn t-sakura"        data-theme="sakura"   data-label="Rosa"></button>
+      <button class="theme-btn t-cielo"         data-theme="cielo"    data-label="Celeste"></button>
+      <button class="theme-btn t-desierto"      data-theme="desierto" data-label="Ámbar"></button>
+      <button class="theme-btn t-monzon"        data-theme="monzon"   data-label="Eucalipto"></button>
+    </div>
+  </div>
+
+  <div class="setting-row">
+    <div class="setting-label">Tipografía</div>
+    <div class="font-row" id="fontSwitcher">
+      <button class="font-btn active" data-font=""        style="font-family:'DM Mono',monospace">Aa Mono</button>
+      <button class="font-btn"        data-font="inter"   style="font-family:'Inter',sans-serif">Aa Sans</button>
+      <button class="font-btn"        data-font="nunito"  style="font-family:'Nunito',sans-serif">Aa Redondo</button>
+      <button class="font-btn"        data-font="lora"    style="font-family:'Lora',serif">Aa Clásico</button>
+      <button class="font-btn"        data-font="josefin" style="font-family:'Josefin Sans',sans-serif">Aa Estilizado</button>
     </div>
   </div>
 
@@ -1565,7 +1898,7 @@
   <div class="help-panel">
     <div class="panel-handle"></div>
     <h2>Bienvenido 🌤</h2>
-    <div class="help-sub">CarlosPN Interactive® · Clima App · Guía de uso</div>
+    <div class="help-sub">Carlos P. Nauto Interactive · Clima App · Guía de uso</div>
 
     <div class="help-feature">
       <div class="help-icon">🔍</div>
@@ -1702,6 +2035,27 @@ updateDateDisplay();
 setInterval(updateDateDisplay, 60000);
 
 function getWmoInfo(code) { return WMO_CODES[code] || { icon:'🌡', desc:'Variable' }; }
+
+function getSceneClass(code) {
+  if (code === 0) return 'sun';
+  if (code <= 3) return 'cloud';
+  if (code <= 48) return 'fog';
+  if (code === 51 || code === 53 || code === 55 || code === 80) return 'drizzle';
+  if (code <= 67 || code <= 82) return 'rain';
+  if (code <= 86) return 'snow';
+  return 'storm';
+}
+function getSceneElements(code) {
+  const s = getSceneClass(code);
+  if (s === 'sun') return '<div class="sc-sun-ray"></div><div class="sc-sun"></div>';
+  if (s === 'cloud') return '<div class="sc-cloud"></div><div class="sc-cloud"></div><div class="sc-cloud"></div>';
+  if (s === 'drizzle') return '<div class="sc-rain light"></div>';
+  if (s === 'rain') return '<div class="sc-rain"></div>';
+  if (s === 'snow') return '<div class="sc-snow"></div>';
+  if (s === 'storm') return '<div class="sc-storm-rain"></div><div class="sc-lightning"></div>';
+  if (s === 'fog') return '<div class="sc-fog"></div>';
+  return '';
+}
 function windDirection(deg) { return WIND_DIRS[Math.round(deg / 45) % 8]; }
 function formatHour(isoStr) { return fmtHour(isoStr); }
 function formatDayName(isoStr) { const d = new Date(isoStr); return DAYS_ES[d.getDay()]; }
@@ -1904,29 +2258,39 @@ function buildHTML(data, aqiData = null) {
       <div style="width:100%;height:100%;background:var(--glass2);display:flex;align-items:center;justify-content:center;font-size:0.6rem;color:var(--dim)">Cargando foto...</div>
     </div>
     <div class="main-card gap-section">
-      <div class="temp-row">
-        <div class="temp-big">${toTemp(cur.temperature_2m)}<sup>${tempUnit()}</sup></div>
-        <div class="weather-icon">${wmo.icon}</div>
+      <div class="mc-top">
+        <div class="mc-left">
+          <div class="temp-big">${toTemp(cur.temperature_2m)}<sup>${tempUnit()}</sup></div>
+          <div class="today-minmax">
+            <span class="t-max">↑ ${toTemp(daily.temperature_2m_max[todayIdx >= 0 ? todayIdx : 0])}${tempUnit()}</span>
+            <span class="t-min">↓ ${toTemp(daily.temperature_2m_min[todayIdx >= 0 ? todayIdx : 0])}${tempUnit()}</span>
+          </div>
+        </div>
+        <div class="mc-right">
+          <div class="weather-icon">${wmo.icon}</div>
+          <div class="weather-desc">${wmo.desc}</div>
+          <div class="mc-feels">Sensación ${toTemp(cur.apparent_temperature)}${tempUnit()}</div>
+        </div>
       </div>
-      <div class="weather-desc">${wmo.desc}</div>
-      <div class="today-minmax">
-        <span class="t-max">↑ ${toTemp(daily.temperature_2m_max[todayIdx >= 0 ? todayIdx : 0])}${tempUnit()}</span>
-        <span class="t-min">↓ ${toTemp(daily.temperature_2m_min[todayIdx >= 0 ? todayIdx : 0])}${tempUnit()}</span>
+      <div class="mc-stats-row">
+        <div class="mc-stat"><span>Humedad</span>${cur.relative_humidity_2m}%</div>
+        <div class="mc-stat"><span>Viento</span>${toWind(cur.wind_speed_10m)} ${windLabel()}</div>
+        <div class="mc-stat"><span>Lluvia hoy</span>${rainToday.toFixed(1)} mm</div>
       </div>
-      <div class="feel-row">
-        <div class="stat"><div class="stat-label">Sensación</div><div class="stat-val">${toTemp(cur.apparent_temperature)}${tempUnit()}</div></div>
-        <div class="stat"><div class="stat-label">Humedad</div><div class="stat-val">${cur.relative_humidity_2m}%</div></div>
-        <div class="stat"><div class="stat-label">Viento</div><div class="stat-val">${toWind(cur.wind_speed_10m)} ${windLabel()}</div></div>
+      <div class="mc-divider"></div>
+      <div class="mc-hourly-wrap" id="secPronosticoHoras">
+        <div class="mc-hourly-title">Próximas horas</div>
+        <div class="hourly-scroll">${hourlyHTML}</div>
       </div>
-      <div class="rain-bar-section">
-        <div class="rain-label">Lluvia acumulada hoy</div>
-        <div class="rain-bar-bg"><div class="rain-bar-fill" style="width:${rainBar}%"></div></div>
-        <div class="rain-mm">${rainToday.toFixed(1)} mm</div>
+      <div class="mc-scene" data-s="${getSceneClass(cur.weather_code)}">
+        <div class="mc-scene-bg"></div>
+        ${getSceneElements(cur.weather_code)}
+        <div class="sc-ground">
+          <svg viewBox="0 0 400 38" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill="rgba(0,0,0,0.38)" d="M0,38 L0,24 Q8,22 14,24 L22,14 L26,24 Q32,26 38,24 L48,16 L54,24 Q60,26 66,24 L78,9 L84,24 Q90,26 96,24 L106,15 L112,24 Q118,26 124,24 L136,11 L142,24 Q148,26 154,24 L164,17 L170,24 Q176,26 182,24 L194,7 L200,24 Q206,26 212,24 L222,13 L228,24 Q234,26 240,24 L252,9 L258,24 Q264,26 270,24 L280,16 L286,24 Q292,26 298,24 L308,12 L314,24 Q320,26 326,24 L338,7 L344,24 Q350,26 356,24 L366,13 L372,24 Q380,27 388,24 L394,20 L400,24 L400,38 Z"/>
+          </svg>
+        </div>
       </div>
-    </div>
-    <div class="gap-section" id="secPronosticoHoras">
-      <div class="section-title">Próximas horas</div>
-      <div class="hourly-scroll">${hourlyHTML}</div>
     </div>
     <div class="places-section" id="placesSection">
       <button class="places-toggle" id="placesToggle" onclick="togglePlaces()">
@@ -2029,7 +2393,7 @@ function buildHTML(data, aqiData = null) {
 
     <button class="refresh-btn" onclick="loadWeather()">↻ Actualizar</button>
     <div class="footer">Datos meteorológicos: Open-Meteo.com · Geocodificación: OpenStreetMap</div>
-    <div class="signature">CarlosPN Interactive® <span>· Clima App</span></div>
+    <div class="signature">Carlos P. Nauto Interactive <span>· Clima App</span></div>
   `;
 }
 
@@ -2367,15 +2731,22 @@ async function updateTemperaturesRealTime() {
       minmaxEl.innerHTML = `<span class="t-max">↑ ${toTemp(daily.temperature_2m_max[idx0])}${tempUnit()}</span><span class="t-min">↓ ${toTemp(daily.temperature_2m_min[idx0])}${tempUnit()}</span>`;
     }
 
-    // Fila de sensación / humedad / viento
-    const statVals = document.querySelectorAll('.feel-row .stat-val');
-    if (statVals[0]) statVals[0].innerHTML = `${toTemp(cur.apparent_temperature)}${tempUnit()}`;
-    if (statVals[1]) statVals[1].innerHTML = `${cur.relative_humidity_2m}%`;
-    if (statVals[2]) statVals[2].innerHTML = `${toWind(cur.wind_speed_10m)} ${windLabel()}`;
+    // Fila estadísticas (nuevo diseño mc-stats-row)
+    const mcStats = document.querySelectorAll('.mc-stat');
+    if (mcStats[0]) mcStats[0].lastChild.textContent = `${cur.relative_humidity_2m}%`;
+    if (mcStats[1]) mcStats[1].lastChild.textContent = `${toWind(cur.wind_speed_10m)} ${windLabel()}`;
+    // mc-stat[2] = lluvia hoy, se actualiza con la barra abajo
+    // Sensación en mc-feels
+    const mcFeels = document.querySelector('.mc-feels');
+    if (mcFeels) mcFeels.textContent = `Sensación ${toTemp(cur.apparent_temperature)}${tempUnit()}`;
+    // Actualizar escena visual
+    const scene = document.querySelector('.mc-scene');
+    if (scene) { scene.dataset.s = getSceneClass(cur.weather_code); scene.querySelectorAll(':scope > *:not(.mc-scene-bg):not(.sc-ground)').forEach(el => el.remove()); const tmp = document.createElement('div'); tmp.innerHTML = getSceneElements(cur.weather_code); Array.from(tmp.children).forEach(el => scene.insertBefore(el, scene.querySelector('.sc-ground'))); }
 
     // Precipitación actual
     const precipEl = document.getElementById('currentPrecip');
     if (precipEl) precipEl.textContent = `${cur.precipitation} mm`;
+    if (mcStats[2]) { const todayRain = (tIdx >= 0 && daily.precipitation_sum) ? daily.precipitation_sum[tIdx] : cur.precipitation; mcStats[2].lastChild.textContent = `${(todayRain || 0).toFixed(1)} mm`; }
 
     // Presión
     const pressEl = document.getElementById('currentPressure');
@@ -2494,9 +2865,12 @@ function closeAll() { document.getElementById('settingsPanel').classList.remove(
 document.getElementById('settingsBtn').addEventListener('click', openSettings);
 document.getElementById('modalOverlay').addEventListener('click', closeAll);
 
-const THEMES = ['','amanecer','bosque','polar','desierto','volcan','oceano','noche','sakura','tormenta','aurora','monzon','stratus'];
+const THEMES = ['','amanecer','bosque','polar','desierto','volcan','oceano','blanco','sakura','tormenta','cielo','monzon','stratus'];
 function applyTheme(theme) { document.documentElement.setAttribute('data-theme', theme); document.querySelectorAll('.theme-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === theme)); try { localStorage.setItem('climaTema', theme); } catch(_) {} }
 document.getElementById('themeSwitcher').addEventListener('click', e => { const b = e.target.closest('.theme-btn'); if (b) applyTheme(b.dataset.theme); });
+
+function applyFont(font) { document.documentElement.setAttribute('data-font', font || ''); document.querySelectorAll('.font-btn').forEach(b => b.classList.toggle('active', b.dataset.font === (font || ''))); try { localStorage.setItem('climaFuente', font || ''); } catch(_) {} }
+document.getElementById('fontSwitcher').addEventListener('click', e => { const b = e.target.closest('.font-btn'); if (b) applyFont(b.dataset.font); });
 
 function applyUnit(f) { useFahrenheit = f; document.getElementById('btnC').classList.toggle('active', !f); document.getElementById('btnF').classList.toggle('active', f); try { localStorage.setItem('climaUnidad', f ? 'F' : 'C'); } catch(_) {} loadWeather(); }
 document.getElementById('btnC').addEventListener('click', () => applyUnit(false));
@@ -2520,6 +2894,7 @@ initCityInfoTabs();
 
 try {
   const t = localStorage.getItem('climaTema'); if (t && THEMES.includes(t)) applyTheme(t);
+  const f = localStorage.getItem('climaFuente'); if (f !== null) applyFont(f);
   const u = localStorage.getItem('climaUnidad'); if (u === 'F') { useFahrenheit = true; document.getElementById('btnF').classList.add('active'); document.getElementById('btnC').classList.remove('active'); }
   const v = localStorage.getItem('climaViento'); if (v) { windUnit = v; document.querySelectorAll('#windToggle .s-toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.wind === v)); }
   const h = localStorage.getItem('climaHora'); if (h === '12') { use12h = true; document.querySelectorAll('#hourToggle .s-toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.hour === '12')); }
@@ -2531,7 +2906,7 @@ try {
 loadWeather();
 setTimeout(initLicense, 1500);
 
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbxws7KA23vQm3LLxZzKG0Kn4bFeJG14lMUZ1CWmMx03_bJgNm9SoP1fKTQUqy0H0tIL/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycby4Nfjbdjz12bTkkLeoXwbCMIXBikdKo9aab17NqJFxt9z8cXasNoLOcdqZHBhJ-NcU/exec';
 const PLAN_LABELS = { basico: { name: '🌡 Básico', price: 'Contactar', features: 'Clima actual · Próximas horas' }, estandar: { name: '📅 Estándar', price: 'Contactar', features: 'Básico + Pronóstico 7 días · Info ciudad · Temas' }, premium: { name: '⭐ Premium', price: 'Contactar', features: 'Todo incluido · Sin restricciones' } };
 
 let licenseStatus = 'unknown'; let licenseModules = {}; let selectedPlan = 'estandar'; let deviceId = null;
@@ -2553,14 +2928,18 @@ function saveToIDB(key, value) { return new Promise(function(resolve) { try { co
 
 async function initLicense() {
   deviceId = await generateFingerprint();
+  try { var pa = localStorage.getItem('climaPendingActivation'); if (pa) { showActivateOtpForm(pa); return; } } catch(_) {}
   try { var p = JSON.parse(localStorage.getItem('climaPendingOtp') || 'null'); if (p && p.email && p.phone) { showOtpForm(p.email, p.phone); pollSyncStatus(); return; } } catch(_) {}
   try {
-    const res = await gasPost({ action: 'checkLicense', userId: deviceId });
-    if (!res.ok) { await registerSilent(deviceId); return; }
+    const storedEmail = localStorage.getItem('climaUserEmail');
+    const checkBody = { action: 'checkLicense', userId: deviceId };
+    if (storedEmail) checkBody.email = storedEmail;
+    const res = await gasPost(checkBody);
+    if (!res.ok) { showWelcomeChoice(); return; }
     licenseStatus = res.status; licenseModules = res.modules || {};
     if (res.trialEnd) trialEndTimestamp = new Date(res.trialEnd).getTime();
     applyModules();
-    if (res.status === 'not_found') { await registerSilent(deviceId); }
+    if (res.status === 'not_found') { showWelcomeChoice(); }
     else if (res.status === 'expired') { showRegistrationForm(true); }
     else if (res.status === 'blocked') { showBlockedScreen('Acceso suspendido'); }
     else if (res.status === 'pending') { showPendingPlanScreen(); }
@@ -2644,7 +3023,6 @@ async function submitOTP(email, phone) {
 function showBlockedScreen(msg) { document.getElementById('trialPanel').innerHTML = '<h3>' + (msg || 'Acceso suspendido') + '</h3>'; document.getElementById('trialOverlay').classList.add('show'); }
 
 function closeTrialOverlay() {
-  // No se puede cerrar si el trial expiró o el usuario está bloqueado
   if (licenseStatus === 'expired' || licenseStatus === 'blocked') return;
   document.getElementById('trialOverlay').classList.remove('show');
 }
