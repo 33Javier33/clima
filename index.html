@@ -2747,7 +2747,7 @@ async function pollSyncStatus() {
           if (lic.status === 'not_found') { showBlockedScreen('Tu cuenta ha sido eliminada por el administrador.'); return; }
           licenseStatus = lic.status; licenseModules = lic.modules || {}; applyModules();
           if (lic.status === 'blocked') { showBlockedScreen('Acceso suspendido por el administrador.'); }
-          else if (lic.status === 'pendiente') { showBlockedScreen('Validación de seguridad pendiente.'); }
+          else if (lic.status === 'pending' || lic.status === 'pendiente') { showPendingPlanScreen(); }
           else { closeTrialOverlay(); }
         }
       }
