@@ -7,7 +7,7 @@
 <link rel="manifest" href="./manifest.json"/>
 <meta name="theme-color" content="#0d1117"/>
 <link rel="apple-touch-icon" href="./img/icon-192x192.png"/>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400&family=Noto+Serif:ital,wght@0,400;0,700;1,400&family=Space+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400&family=Noto+Serif:ital,wght@0,400;0,700;1,400&family=Space+Grotesk:wght@300;400;500;600&family=Inter:wght@300;400;500;600&family=Nunito:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Josefin+Sans:wght@300;400;600&display=swap" rel="stylesheet"/>
 <style>
   /* ── TEMAS OSCUROS (8) ── */
   :root {
@@ -17,7 +17,16 @@
     --bg:linear-gradient(160deg,#03080e 0%,#07101e 35%,#0c182a 65%,#060a0f 100%);
     --bg-glow:radial-gradient(ellipse 90% 70% at 20% 10%,rgba(50,130,200,0.20) 0%,transparent 55%);
     --card-border:rgba(106,180,224,0.13);
+    --font-body:'DM Mono',monospace;
+    --font-display:'Playfair Display',serif;
   }
+
+  /* ── FUENTES ── */
+  [data-font="inter"]   { --font-body:'Inter',sans-serif; --font-display:'Inter',sans-serif; }
+  [data-font="nunito"]  { --font-body:'Nunito',sans-serif; --font-display:'Nunito',sans-serif; }
+  [data-font="lora"]    { --font-body:'Lora',serif; --font-display:'Lora',serif; }
+  [data-font="josefin"] { --font-body:'Josefin Sans',sans-serif; --font-display:'Josefin Sans',sans-serif; }
+
   [data-theme="amanecer"] {
     --ink:#0d0712;--glass:rgba(180,80,255,0.09);--glass2:rgba(180,80,255,0.16);
     --cold:#c060f0;--ice:#e8b0ff;--rain:#8020c0;--text:#f0d0ff;--dim:#9858b0;
@@ -132,7 +141,7 @@
   body {
     background: var(--ink);
     color: var(--text);
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-body);
     min-height: 100vh;
     position: relative;
     transition: background 0.5s ease, color 0.5s ease;
@@ -150,7 +159,7 @@
     background: var(--ink) !important;
     border-radius: inherit;
     display: flex; align-items: center; justify-content: center;
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-body);
     font-size: 0.6rem; letter-spacing: 0.1em;
     color: var(--dim); text-transform: uppercase;
     border: 1px solid var(--card-border);
@@ -175,7 +184,7 @@
     border: 1px solid var(--card-border);
     border-radius: 14px;
     display: flex; align-items: center; justify-content: center;
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-body);
     font-size: 0.6rem; color: var(--dim);
     letter-spacing: 0.1em; text-transform: uppercase;
     white-space: nowrap;
@@ -259,7 +268,7 @@
     animation: fadeDown 0.7s ease both;
   }
   .header .city {
-    font-family: 'Playfair Display', serif;
+    font-family: var(--font-display);
     font-size: 2rem;
     font-weight: 700;
     letter-spacing: 0.03em;
@@ -295,7 +304,7 @@
     border: 1px solid var(--card-border);
     border-radius: 10px;
     padding: 9px 14px;
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-body);
     font-size: 0.75rem;
     color: var(--ice);
     outline: none;
@@ -392,7 +401,7 @@
     margin-bottom: 16px;
   }
   .temp-big {
-    font-family: 'Playfair Display', serif;
+    font-family: var(--font-display);
     font-size: 5.5rem;
     line-height: 1;
     color: var(--ice);
@@ -637,11 +646,11 @@
     margin-bottom: 8px;
   }
   .extra-card .e-val {
-    font-family: 'Playfair Display', serif;
+    font-family: var(--font-display);
     font-size: 2rem; color: var(--ice); line-height: 1;
   }
   .extra-card .e-unit {
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-body);
     font-size: 0.65rem; color: var(--cold); margin-top: 4px;
   }
   .wind-dir { font-size: 0.7rem; color: var(--dim); margin-top: 4px; }
@@ -703,7 +712,7 @@
     background: var(--glass2);
     border: 1px solid var(--card-border);
     color: var(--cold);
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-body);
     font-size: 0.65rem;
     letter-spacing: 0.15em;
     text-transform: uppercase;
@@ -753,7 +762,7 @@
     font-size: 0.42rem;
     color: var(--dim);
     white-space: nowrap;
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-body);
   }
   .t-lago     { background: radial-gradient(circle at 40% 40%, #6ab4e0, #060a0f); }
   .t-amanecer { background: radial-gradient(circle at 40% 40%, #c060f0, #0d0712); }
@@ -768,6 +777,10 @@
   .t-cielo    { background: radial-gradient(circle at 40% 40%, #0872d4, #edf6ff); border: 1px solid rgba(8,114,212,0.22); }
   .t-desierto { background: radial-gradient(circle at 40% 40%, #c87020, #fff8e8); border: 1px solid rgba(200,112,32,0.22); }
   .t-monzon   { background: radial-gradient(circle at 40% 40%, #1a8840, #eef8f2); border: 1px solid rgba(26,136,64,0.22); }
+  .font-row { display:flex; flex-wrap:wrap; gap:8px; }
+  .font-btn { background: var(--glass); border: 1.5px solid var(--card-border); color: var(--text); padding: 7px 14px; border-radius: 10px; font-size: 0.88rem; cursor: pointer; transition: background 0.2s, border-color 0.2s, color 0.2s; letter-spacing: 0.01em; }
+  .font-btn:hover { background: var(--glass2); }
+  .font-btn.active { background: var(--cold); color: var(--ink); border-color: var(--cold); font-weight: 600; }
 
   /* ── Temas claros: ajustes de contraste ── */
   [data-theme="blanco"] .bg-layer::before,
@@ -949,7 +962,7 @@
   .unit-btn {
     flex: 1;
     padding: 9px 0;
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-body);
     font-size: 0.75rem;
     color: var(--dim);
     background: none;
@@ -1073,7 +1086,7 @@
     font-size: 0.6rem; padding: 5px 12px;
     border-radius: 99px; border: 1px solid var(--card-border);
     background: none; color: var(--dim);
-    cursor: pointer; font-family: 'DM Mono', monospace;
+    cursor: pointer; font-family: var(--font-body);
     transition: all 0.2s; letter-spacing: 0.05em;
   }
   .ci-tab.active, .ci-tab:hover {
@@ -1115,7 +1128,7 @@
   }
   .help-panel::-webkit-scrollbar { display:none; }
   .help-panel h2 {
-    font-family: 'Playfair Display', serif;
+    font-family: var(--font-display);
     font-size: 1.4rem; color: var(--ice);
     margin-bottom: 4px; font-weight: 700;
   }
@@ -1140,7 +1153,7 @@
   }
   .help-text h3 {
     font-size: 0.78rem; color: var(--ice);
-    margin-bottom: 4px; font-family: 'DM Mono', monospace;
+    margin-bottom: 4px; font-family: var(--font-body);
   }
   .help-text p {
     font-size: 0.68rem; color: var(--dim); line-height: 1.6;
@@ -1151,7 +1164,7 @@
     background: rgba(126,184,212,0.12);
     border: 1px solid var(--card-border);
     color: var(--ice);
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-body);
     font-size: 0.7rem; letter-spacing: 0.1em;
     text-transform: uppercase;
     padding: 13px; border-radius: 12px;
@@ -1163,7 +1176,7 @@
     font-size: 0.58rem; color: var(--dim);
     margin-top: 10px; cursor: pointer;
     background: none; border: none;
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-body);
     transition: color 0.2s; width: 100%;
   }
   .help-no-show:hover { color: var(--cold); }
@@ -1176,7 +1189,7 @@
   }
   .s-toggle-btn {
     flex: 1; padding: 8px 4px;
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-body);
     font-size: 0.65rem; color: var(--dim);
     background: none; border: none; cursor: pointer;
     transition: background 0.2s, color 0.2s;
@@ -1227,7 +1240,7 @@
     text-transform: uppercase; background: rgba(255,152,0,0.15);
     color: #ff9800; border-radius: 99px; padding: 3px 12px; margin-bottom: 14px;
   }
-  .trial-panel h2 { font-family:'Playfair Display',serif; font-size:1.5rem; color:var(--ice); margin-bottom:8px; }
+  .trial-panel h2 { font-family:var(--font-display); font-size:1.5rem; color:var(--ice); margin-bottom:8px; }
   .trial-panel .t-sub { font-size:0.68rem; color:var(--dim); line-height:1.6; margin-bottom:20px; }
   .plan-cards { display:flex; flex-direction:column; gap:10px; margin-bottom:20px; }
   .plan-card {
@@ -1243,14 +1256,14 @@
   .t-input {
     background:var(--glass2); border:1px solid var(--card-border);
     border-radius:10px; padding:11px 14px;
-    font-family:'DM Mono',monospace; font-size:0.78rem; color:var(--ice); outline:none;
+    font-family:var(--font-body); font-size:0.78rem; color:var(--ice); outline:none;
   }
   .t-input:focus { border-color:var(--cold); }
   .t-input::placeholder { color:var(--dim); }
   .t-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .t-submit {
     background:rgba(126,184,212,0.15); border:1px solid var(--card-border);
-    color:var(--ice); font-family:'DM Mono',monospace; font-size:0.72rem;
+    color:var(--ice); font-family:var(--font-body); font-size:0.72rem;
     letter-spacing:0.12em; text-transform:uppercase; padding:13px;
     border-radius:12px; cursor:pointer; transition:background 0.2s; margin-top:4px; width:100%;
   }
@@ -1265,21 +1278,21 @@
   .trial-banner.hidden { display:none; }
   .t-success { text-align:center; padding:20px 0; }
   .t-success .s-icon { font-size:2.5rem; margin-bottom:12px; }
-  .t-success h3 { font-family:'Playfair Display',serif; color:var(--ice); margin-bottom:8px; }
+  .t-success h3 { font-family:var(--font-display); color:var(--ice); margin-bottom:8px; }
   .t-success p { font-size:0.68rem; color:var(--dim); line-height:1.6; }
 
   /* Estilos para Input de OTP */
   .otp-input {
     background: var(--glass2); border: 1px solid var(--card-border);
     border-radius: 10px; padding: 14px; font-size: 1.5rem;
-    font-family: 'DM Mono', monospace; color: var(--ice);
+    font-family: var(--font-body); color: var(--ice);
     text-align: center; letter-spacing: 0.5em; width: 100%;
     outline: none; margin-bottom: 12px;
   }
   .otp-input:focus { border-color: var(--cold); }
   .t-back {
     background: none; border: none; color: var(--dim);
-    font-family: 'DM Mono', monospace; font-size: 0.65rem;
+    font-family: var(--font-body); font-size: 0.65rem;
     cursor: pointer; margin-top: 12px; transition: color 0.2s;
     text-decoration: underline; width: 100%; display: block; text-align: center;
   }
@@ -1291,11 +1304,11 @@
     background: rgba(0,0,0,0.92); backdrop-filter: blur(8px);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     opacity: 0; pointer-events: none; transition: opacity 0.3s;
-    color: var(--ice); font-family: 'DM Mono', monospace; text-align: center;
+    color: var(--ice); font-family: var(--font-body); text-align: center;
   }
   .validation-overlay.show { opacity: 1; pointer-events: all; }
   .val-spinner { font-size: 3.5rem; animation: pulse 1.5s infinite; margin-bottom: 24px; filter: drop-shadow(0 0 12px rgba(126,184,212,0.4)); }
-  .val-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; margin-bottom: 12px; font-weight: 700; }
+  .val-title { font-family: var(--font-display); font-size: 1.8rem; margin-bottom: 12px; font-weight: 700; }
   .val-text { font-size: 0.8rem; color: var(--dim); line-height: 1.6; padding: 0 24px; letter-spacing: 0.05em; }
 
   /* Sección de lugares */
@@ -1308,7 +1321,7 @@
     padding: 14px 16px;
     display: flex; align-items: center; gap: 10px;
     cursor: pointer; color: var(--text);
-    font-family: 'DM Mono', monospace; font-size: 0.75rem;
+    font-family: var(--font-body); font-size: 0.75rem;
     transition: background 0.2s, border-color 0.2s;
     -webkit-tap-highlight-color: transparent;
   }
@@ -1339,7 +1352,7 @@
     font-size: 0.6rem; padding: 5px 12px; white-space: nowrap;
     border-radius: 99px; border: 1px solid var(--card-border);
     background: none; color: var(--dim); cursor: pointer;
-    font-family: 'DM Mono', monospace; transition: all 0.2s; flex-shrink: 0;
+    font-family: var(--font-body); transition: all 0.2s; flex-shrink: 0;
   }
   .place-tab.active { background: rgba(126,184,212,0.12); color: var(--ice); border-color: var(--cold); }
   .places-list { display: flex; flex-direction: column; gap: 8px; }
@@ -1466,7 +1479,7 @@
     gap: 12px;
     align-items: center;
     box-shadow: 0 8px 32px rgba(0,0,0,0.6);
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-body);
     font-size: 0.72rem;
     color: var(--ice);
     white-space: nowrap;
@@ -1479,7 +1492,7 @@
     color: var(--ice);
     border-radius: 8px;
     padding: 6px 14px;
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-body);
     font-size: 0.65rem;
     cursor: pointer;
     letter-spacing: 0.08em;
@@ -1822,6 +1835,17 @@
       <button class="theme-btn t-cielo"         data-theme="cielo"    data-label="Celeste"></button>
       <button class="theme-btn t-desierto"      data-theme="desierto" data-label="Ámbar"></button>
       <button class="theme-btn t-monzon"        data-theme="monzon"   data-label="Eucalipto"></button>
+    </div>
+  </div>
+
+  <div class="setting-row">
+    <div class="setting-label">Tipografía</div>
+    <div class="font-row" id="fontSwitcher">
+      <button class="font-btn active" data-font=""        style="font-family:'DM Mono',monospace">Aa Mono</button>
+      <button class="font-btn"        data-font="inter"   style="font-family:'Inter',sans-serif">Aa Sans</button>
+      <button class="font-btn"        data-font="nunito"  style="font-family:'Nunito',sans-serif">Aa Redondo</button>
+      <button class="font-btn"        data-font="lora"    style="font-family:'Lora',serif">Aa Clásico</button>
+      <button class="font-btn"        data-font="josefin" style="font-family:'Josefin Sans',sans-serif">Aa Estilizado</button>
     </div>
   </div>
 
@@ -2846,6 +2870,9 @@ const THEMES = ['','amanecer','bosque','polar','desierto','volcan','oceano','bla
 function applyTheme(theme) { document.documentElement.setAttribute('data-theme', theme); document.querySelectorAll('.theme-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === theme)); try { localStorage.setItem('climaTema', theme); } catch(_) {} }
 document.getElementById('themeSwitcher').addEventListener('click', e => { const b = e.target.closest('.theme-btn'); if (b) applyTheme(b.dataset.theme); });
 
+function applyFont(font) { document.documentElement.setAttribute('data-font', font || ''); document.querySelectorAll('.font-btn').forEach(b => b.classList.toggle('active', b.dataset.font === (font || ''))); try { localStorage.setItem('climaFuente', font || ''); } catch(_) {} }
+document.getElementById('fontSwitcher').addEventListener('click', e => { const b = e.target.closest('.font-btn'); if (b) applyFont(b.dataset.font); });
+
 function applyUnit(f) { useFahrenheit = f; document.getElementById('btnC').classList.toggle('active', !f); document.getElementById('btnF').classList.toggle('active', f); try { localStorage.setItem('climaUnidad', f ? 'F' : 'C'); } catch(_) {} loadWeather(); }
 document.getElementById('btnC').addEventListener('click', () => applyUnit(false));
 document.getElementById('btnF').addEventListener('click', () => applyUnit(true));
@@ -2868,6 +2895,7 @@ initCityInfoTabs();
 
 try {
   const t = localStorage.getItem('climaTema'); if (t && THEMES.includes(t)) applyTheme(t);
+  const f = localStorage.getItem('climaFuente'); if (f !== null) applyFont(f);
   const u = localStorage.getItem('climaUnidad'); if (u === 'F') { useFahrenheit = true; document.getElementById('btnF').classList.add('active'); document.getElementById('btnC').classList.remove('active'); }
   const v = localStorage.getItem('climaViento'); if (v) { windUnit = v; document.querySelectorAll('#windToggle .s-toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.wind === v)); }
   const h = localStorage.getItem('climaHora'); if (h === '12') { use12h = true; document.querySelectorAll('#hourToggle .s-toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.hour === '12')); }
