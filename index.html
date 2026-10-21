@@ -400,6 +400,15 @@
     justify-content: space-between;
     margin-bottom: 16px;
   }
+  .now-label {
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    color: var(--cold);
+    font-family: var(--font-body);
+    font-weight: 600;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+  }
   .temp-big {
     font-family: var(--font-display);
     font-size: 5.5rem;
@@ -2154,7 +2163,7 @@ function buildHTML(data, aqiData = null) {
 
   const hourlyHTML = hourlyFiltered.map(h => `
     <div class="hour-card ${h.isNow ? 'now' : ''}">
-      <div class="h-time">${h.isNow ? 'Ahora' : h.time}</div>
+      <div class="h-time">${h.time}</div>
       <div class="h-icon">${h.icon}</div>
       <div class="h-temp">${toTemp(h.tempC)}°</div>
       ${h.feel != null ? `<div class="h-feel sensacion-horas-data">ST ${toTemp(h.feel)}°</div>` : ''}
@@ -2273,6 +2282,7 @@ function buildHTML(data, aqiData = null) {
     <div class="main-card gap-section">
       <div class="mc-top">
         <div class="mc-left">
+          <div class="now-label">AHORA</div>
           <div class="temp-big">${toTemp(cur.temperature_2m)}<sup>${tempUnit()}</sup></div>
           <div class="today-minmax">
             <span class="t-max">↑ ${toTemp(daily.temperature_2m_max[todayIdx >= 0 ? todayIdx : 0])}${tempUnit()}</span>
