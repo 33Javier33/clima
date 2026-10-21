@@ -394,7 +394,7 @@ function updateModule(body) {
           premium:  MODULES,
         };
         MODULES.forEach(m => { modules[m] = (plans[plan] || []).includes(m); });
-        master.getRange(i + 1, 7).setValue('premium');
+        master.getRange(i + 1, 7).setValue(plan);
       } else {
         modules[module] = value;
       }
@@ -634,16 +634,37 @@ function verifyOTP(body) {
 
   for (let i = 1; i < data.length; i++) {
     if (data[i][2] === email) {
+      // Si el deviceId cambió (nuevo dispositivo), actualizarlo en la hoja
+      if (deviceId && data[i][0] !== deviceId) {
+        master.getRange(i + 1, 1).setValue(deviceId);
+        appendLog(SS, 'ACTIVATE_DEVICE', email, 'Nuevo deviceId: ' + deviceId);
+      }
+      // Si el usuario solicita un plan pago y no tiene uno activo, marcar como pendiente
+      const currentStatus = data[i][6] || 'trial';
+      const isPaidPlan = plan && (plan === 'estandar' || plan === 'premium');
+      const alreadyPaid = currentStatus === 'estandar' || currentStatus === 'premium';
+      if (isPaidPlan && !alreadyPaid) {
+        master.getRange(i + 1, 7).setValue('pending');
+        appendLog(SS, 'PLAN_REQUEST', email, 'Plan solicitado: ' + plan);
+        notifyAdmin(data[i][1], '', email, data[i][3], plan);
+        return {
+          ok: true, userId: deviceId || data[i][0],
+          status: 'pending',
+          trialEnd: data[i][5],
+          modules: JSON.parse(data[i][7] || '{}'),
+          planRequested: plan,
+        };
+      }
       return {
-        ok: true, userId: data[i][0],
-        status:  data[i][6] || 'trial',
+        ok: true, userId: deviceId || data[i][0],
+        status:  currentStatus,
         trialEnd: data[i][5],
         modules:  JSON.parse(data[i][7] || '{}'),
       };
     }
   }
 
-  // Nuevo usuario: crear registro trial
+  // Nuevo usuario: crear registro
   const trialValor  = parseInt(PROPS.getProperty('trial_valor')  || '7');
   const trialUnidad = PROPS.getProperty('trial_unidad') || 'dias';
   const trialEnd = new Date();
@@ -654,18 +675,27 @@ function verifyOTP(body) {
   const userId = deviceId || generateId(email);
   const nombre = email.split('@')[0];
 
+  const isPaidPlan = plan && (plan === 'estandar' || plan === 'premium');
+  const initialStatus = isPaidPlan ? 'pending' : 'trial';
+
   const modulesInit = {};
-  MODULES.forEach(m => {
-    modulesInit[m] = (PROPS.getProperty('trial_mod_' + m) === 'true');
-  });
-  if (modulesInit['clima_basico'] === undefined) modulesInit['clima_basico'] = true;
+  if (isPaidPlan) {
+    // Plan pago pendiente de activación por admin: solo acceso básico por ahora
+    MODULES.forEach(m => { modulesInit[m] = false; });
+    modulesInit['clima_basico'] = true;
+  } else {
+    MODULES.forEach(m => {
+      modulesInit[m] = (PROPS.getProperty('trial_mod_' + m) === 'true');
+    });
+    if (modulesInit['clima_basico'] === undefined) modulesInit['clima_basico'] = true;
+  }
 
-  master.appendRow([userId, nombre, email, phone || '', new Date().toISOString(), trialEndStr, 'trial', JSON.stringify(modulesInit), 'activo']);
+  master.appendRow([userId, nombre, email, phone || '', new Date().toISOString(), trialEndStr, initialStatus, JSON.stringify(modulesInit), 'activo']);
   createUserSheet(SS, userId, nombre, '', email, phone || '', trialEndStr, modulesInit);
-  notifyAdmin(nombre, '', email, phone || '');
-  appendLog(SS, 'REGISTER_OTP', email, 'Plan: ' + (plan || 'basico') + ' | Trial hasta ' + trialEndStr);
+  notifyAdmin(nombre, '', email, phone || '', isPaidPlan ? plan : null);
+  appendLog(SS, 'REGISTER_OTP', email, 'Plan: ' + (plan || 'basico') + ' | Estado: ' + initialStatus);
 
-  return { ok: true, userId, status: 'trial', trialEnd: trialEndStr, modules: modulesInit };
+  return { ok: true, userId, status: initialStatus, trialEnd: trialEndStr, modules: modulesInit, planRequested: isPaidPlan ? plan : null };
 }
 
 function appendLog(SS, action, email, detail) {
@@ -676,21 +706,24 @@ function appendLog(SS, action, email, detail) {
 // ══════════════════════════════════════════════════════════════
 // NOTIFICACIÓN AL ADMIN
 // ══════════════════════════════════════════════════════════════
-function notifyAdmin(nombre, apellido, email, whatsapp) {
+function notifyAdmin(nombre, apellido, email, whatsapp, planSolicitado) {
   try {
     const adminEmail = PROPS.getProperty('ADMIN_EMAIL');
     if (!adminEmail) return;
     const wa = PROPS.getProperty('ADMIN_WHATSAPP');
+    const isPlanRequest = planSolicitado && (planSolicitado === 'estandar' || planSolicitado === 'premium');
     MailApp.sendEmail({
       to:      adminEmail,
-      subject: `🌤 Clima App — Nuevo registro: ${nombre} ${apellido}`,
+      subject: isPlanRequest
+        ? `⭐ Clima App — Solicitud de plan ${planSolicitado}: ${nombre} ${apellido}`
+        : `🌤 Clima App — Nuevo registro: ${nombre} ${apellido}`,
       htmlBody: `<div style="font-family:monospace;background:#0d1117;color:#b8dce8;padding:24px;border-radius:12px">
-        <h2 style="color:#7eb8d4">Nuevo usuario registrado</h2>
+        <h2 style="color:#7eb8d4">${isPlanRequest ? '⭐ Solicitud de plan: ' + planSolicitado : 'Nuevo usuario registrado'}</h2>
         <table>
           <tr><td><b>Nombre:</b></td><td>${nombre} ${apellido}</td></tr>
           <tr><td><b>Email:</b></td><td>${email}</td></tr>
           <tr><td><b>WhatsApp:</b></td><td>${whatsapp}</td></tr>
-          <tr><td><b>Trial:</b></td><td>Según config admin</td></tr>
+          ${isPlanRequest ? '<tr><td><b>Plan solicitado:</b></td><td style="color:#ffd700"><b>' + planSolicitado.toUpperCase() + '</b> — Activa el plan desde el admin panel</td></tr>' : '<tr><td><b>Trial:</b></td><td>Según config admin</td></tr>'}
         </table>
         <p style="color:#7a92a8;margin-top:16px">Contacto admin (privado): ${wa}</p>
       </div>`,
