@@ -2082,7 +2082,7 @@ function initRain(weatherCode, precipitation) {
 async function fetchWeather() {
   const { lat, lon } = currentCity;
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
-    `&current=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,wind_speed_10m,wind_direction_10m,wind_gusts_10m,weather_code,uv_index,surface_pressure,cloud_cover,visibility,is_day` +
+    `&current=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,rain,showers,snowfall,wind_speed_10m,wind_direction_10m,wind_gusts_10m,weather_code,uv_index,surface_pressure,cloud_cover,visibility,is_day` +
     `&hourly=temperature_2m,apparent_temperature,precipitation_probability,weather_code,precipitation,wind_speed_10m,relative_humidity_2m` +
     `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,sunrise,sunset,uv_index_max,wind_speed_10m_max` +
     `&timezone=auto&models=best_match&forecast_days=7&_t=${Date.now()}`;
@@ -2101,10 +2101,22 @@ async function fetchAirQuality(lat, lon) {
   } catch(e) { return null; }
 }
 
+function resolveWeatherCode(cur) {
+  const code = cur.weather_code;
+  const precip = (cur.precipitation || 0) + (cur.rain || 0) + (cur.showers || 0);
+  const snow = cur.snowfall || 0;
+  if (code <= 3 && snow >= 0.1) return 71;
+  if (code <= 3 && precip >= 3)  return 63;
+  if (code <= 3 && precip >= 0.5) return 61;
+  if (code <= 3 && precip > 0)   return 51;
+  return code;
+}
+
 function buildHTML(data, aqiData = null) {
   const cur = data.current;
   const hourly = data.hourly;
   const daily = data.daily;
+  cur.weather_code = resolveWeatherCode(cur);
   const wmo = getWmoInfo(cur.weather_code);
 
   initRain(cur.weather_code, cur.precipitation);
@@ -2713,6 +2725,7 @@ async function updateTemperaturesRealTime() {
     const data = await fetchWeather();
     const cur  = data.current;
     const daily = data.daily;
+    cur.weather_code = resolveWeatherCode(cur);
 
     // Temperatura principal
     const tempBig = document.querySelector('.temp-big');
