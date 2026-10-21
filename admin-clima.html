@@ -493,7 +493,7 @@ function saveTrialConfig() {
 // ── USUARIOS ──────────────────────────────────────────────────
 function loadUsers() {
   document.getElementById('userList').innerHTML = '<div class="loading">Actualizando...</div>';
-  gasPost({ action: 'getUsers', adminPass: adminPass })
+  return gasPost({ action: 'getUsers', adminPass: adminPass })
     .then(function(res) {
       if (!res.ok) throw new Error(res.error);
       // NO se toca la config — el botón Actualizar solo refresca la lista
@@ -710,10 +710,14 @@ function onGlobalClick(e) {
     var uid  = planBtn.dataset.uid;
     var plan = planBtn.dataset.plan;
     if (!confirm('Aplicar ' + plan + ' al usuario?')) return;
+    var expandedUid = uid;
     gasPost({ action: 'updateModule', adminPass: adminPass, userId: uid, plan: plan })
       .then(function(res) {
         if (!res.ok) throw new Error(res.error);
-        loadUsers();
+        loadUsers().then(function() {
+          var card = document.getElementById('card-' + expandedUid);
+          if (card) card.classList.add('expanded');
+        });
         showToast('Plan ' + plan + ' aplicado');
       })
       .catch(function(e) { showToast('Error: ' + e.message, true); });

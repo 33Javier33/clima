@@ -2915,6 +2915,7 @@ async function initLicense() {
     if (res.status === 'not_found') { showWelcomeChoice(); }
     else if (res.status === 'expired') { showRegistrationForm(true); }
     else if (res.status === 'blocked') { showBlockedScreen('Acceso suspendido'); }
+    else if (res.status === 'pending') { showPendingPlanScreen(); }
     else if (res.status === 'trial') { _showTrialBanner(res.daysLeft, res.hoursLeft); startTrialExpiryWatcher(); }
     pollSyncStatus();
   } catch(_) {
@@ -2976,10 +2977,16 @@ async function submitOTP(email, phone) {
   try {
     const res = await gasPost({ action: 'verifyOTP', deviceId: deviceId, email: email, phone: phone, otp: otp, plan: selectedPlan });
     if (res.ok) {
-      if (valOverlay) valOverlay.classList.remove('show'); document.getElementById('trialPanel').innerHTML = '<div class="t-success"><div class="s-icon">✅</div><h3>Identidad verificada</h3><p>Acceso concedido exitosamente. Ya puedes disfrutar de la aplicación.</p></div>';
+      if (valOverlay) valOverlay.classList.remove('show');
       localStorage.removeItem('climaPendingOtp');
       licenseStatus = res.status || 'trial'; licenseModules = res.modules || {}; applyModules();
-      setTimeout(() => { closeTrialOverlay(); }, 3000);
+      if (res.status === 'pending') {
+        const planLabel = res.planRequested === 'premium' ? 'Premium ⭐' : 'Estándar';
+        document.getElementById('trialPanel').innerHTML = '<div class="t-success"><div class="s-icon">⏳</div><h3>Solicitud recibida</h3><p>Tu solicitud de plan <b>' + planLabel + '</b> fue recibida. El administrador activará tu plan pronto.<br><br>Mientras tanto tienes acceso básico.</p><button class="t-submit" style="margin-top:16px" onclick="closeTrialOverlay()">Continuar →</button></div>';
+      } else {
+        document.getElementById('trialPanel').innerHTML = '<div class="t-success"><div class="s-icon">✅</div><h3>Identidad verificada</h3><p>Acceso concedido exitosamente. Ya puedes disfrutar de la aplicación.</p></div>';
+        setTimeout(() => { closeTrialOverlay(); }, 3000);
+      }
     } else {
       if (valOverlay) valOverlay.classList.remove('show'); btn.disabled = false; btn.textContent = 'Verificar Identidad'; alert('Código incorrecto o expirado. Intenta nuevamente.'); otpInput.value = ''; otpInput.focus();
     }
@@ -2991,6 +2998,12 @@ function showBlockedScreen(msg) { document.getElementById('trialPanel').innerHTM
 function closeTrialOverlay() {
   if (licenseStatus === 'expired' || licenseStatus === 'blocked') return;
   document.getElementById('trialOverlay').classList.remove('show');
+}
+
+function showPendingPlanScreen() {
+  const panel = document.getElementById('trialPanel');
+  panel.innerHTML = '<div class="panel-handle"></div><div class="trial-badge">⏳ Plan en proceso</div><h2 style="text-align:center">Tu plan está siendo activado</h2><p class="t-sub" style="text-align:center;margin-bottom:28px">El administrador revisará tu solicitud y activará tu plan a la brevedad.<br>Mientras tanto tienes acceso básico a la app.</p><button class="t-submit" onclick="closeTrialOverlay()">Continuar con acceso básico →</button>';
+  document.getElementById('trialOverlay').classList.add('show');
 }
 
 function showWelcomeChoice() {
@@ -3085,7 +3098,7 @@ async function pollSyncStatus() {
           if (lic.status === 'not_found') { showBlockedScreen('Tu cuenta ha sido eliminada por el administrador.'); return; }
           licenseStatus = lic.status; licenseModules = lic.modules || {}; applyModules();
           if (lic.status === 'blocked') { showBlockedScreen('Acceso suspendido por el administrador.'); }
-          else if (lic.status === 'pendiente') { showBlockedScreen('Validación de seguridad pendiente.'); }
+          else if (lic.status === 'pending' || lic.status === 'pendiente') { showPendingPlanScreen(); }
           else { closeTrialOverlay(); }
         }
       }
