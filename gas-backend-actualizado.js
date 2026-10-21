@@ -562,16 +562,33 @@ function updateUserSheet(SS, userId, modules, estado, acceso) {
 }
 
 // ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// UTILIDAD: Enviar WhatsApp via CallMeBot
+// Requiere que el destinatario haya activado su número en callmebot.com
+// El admin configura su clave en: ADMIN_CALLMEBOT_KEY (Script Properties)
+// ══════════════════════════════════════════════════════════════
+function sendWhatsApp(phone, message, apiKey) {
+  if (!phone || !apiKey) return false;
+  try {
+    // Normalizar teléfono: quitar +, espacios, guiones
+    var cleanPhone = String(phone).replace(/[^\d]/g, '');
+    var text = encodeURIComponent(message);
+    var url = 'https://api.callmebot.com/whatsapp.php?phone=' + cleanPhone + '&text=' + text + '&apikey=' + apiKey;
+    var resp = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+    return resp.getResponseCode() === 200;
+  } catch(e) { return false; }
+}
+
+// ══════════════════════════════════════════════════════════════
 // OTP: SOLICITAR CÓDIGO DE VERIFICACIÓN
 // ══════════════════════════════════════════════════════════════
 function requestOTP(body) {
   const { email, phone, plan } = body;
   if (!email) return { ok: false, message: 'Correo requerido.' };
 
-  // Generar código de 6 dígitos
   const code = String(Math.floor(100000 + Math.random() * 900000));
+  const planLabel = plan === 'premium' ? 'Premium' : plan === 'estandar' ? 'Estándar' : 'Básico';
 
-  // Guardar en caché con TTL de 10 minutos (600s)
   try {
     const cache = CacheService.getScriptCache();
     cache.put('otp_' + email, JSON.stringify({ code: code, phone: phone, plan: plan || 'basico' }), 600);
@@ -579,26 +596,45 @@ function requestOTP(body) {
     return { ok: false, message: 'Error interno al generar el código. Intenta de nuevo.' };
   }
 
-  // Enviar por email
+  // ── Enviar por email ──────────────────────────────────────
   try {
     MailApp.sendEmail({
       to: email,
-      subject: '🔐 Clima App — Tu código de acceso: ' + code,
+      name: 'Clima App',
+      replyTo: PROPS.getProperty('ADMIN_EMAIL') || email,
+      subject: 'Código de verificación Clima App: ' + code,
+      body: 'Tu código de acceso a Clima App es: ' + code + '\n\nExpira en 10 minutos.\nPlan: ' + planLabel + '\n\nSi no solicitaste este código ignora este mensaje.',
       htmlBody: [
-        '<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#0d1117;color:#ccd9e6;border-radius:16px;padding:32px">',
-        '<h2 style="color:#7eb8d4;margin-top:0">Clima App</h2>',
-        '<p style="font-size:15px">Tu código de verificación es:</p>',
-        '<div style="font-size:42px;font-weight:bold;letter-spacing:10px;color:#b8dce8;margin:24px 0;text-align:center">' + code + '</div>',
-        '<p style="color:#7a92a8;font-size:13px">Este código expira en 10 minutos.<br>Si no solicitaste este código, ignora este mensaje.</p>',
-        '<p style="color:#7a92a8;font-size:12px;margin-top:24px">Plan seleccionado: <b style="color:#ccd9e6">' + (plan || 'básico') + '</b></p>',
-        '</div>'
+        '<div style="font-family:Arial,Helvetica,sans-serif;max-width:500px;margin:0 auto;padding:0">',
+        '<div style="background:#0d1117;border-radius:16px;padding:32px 36px">',
+        '<p style="color:#7eb8d4;font-size:18px;font-weight:bold;margin:0 0 8px">Clima App 🌤</p>',
+        '<p style="color:#ccd9e6;font-size:15px;margin:0 0 24px">Ingresa este código para verificar tu identidad:</p>',
+        '<div style="background:#161b22;border-radius:12px;padding:20px;text-align:center;margin-bottom:24px">',
+        '<span style="font-size:44px;font-weight:bold;letter-spacing:12px;color:#b8dce8;font-family:monospace">' + code + '</span>',
+        '</div>',
+        '<p style="color:#7a92a8;font-size:13px;margin:0 0 8px">⏱ Este código expira en <b style="color:#ccd9e6">10 minutos</b>.</p>',
+        '<p style="color:#7a92a8;font-size:13px;margin:0">Plan seleccionado: <b style="color:#ccd9e6">' + planLabel + '</b></p>',
+        '<hr style="border:none;border-top:1px solid #21262d;margin:24px 0">',
+        '<p style="color:#4a6070;font-size:11px;margin:0">Si no solicitaste este código, ignora este mensaje.</p>',
+        '</div></div>'
       ].join(''),
     });
   } catch(e) {
-    return { ok: false, message: 'No se pudo enviar el correo. Verifica la dirección e intenta de nuevo.' };
+    return { ok: false, message: 'No se pudo enviar el correo a ' + email + '. Verifica la dirección e intenta de nuevo.' };
   }
 
-  return { ok: true };
+  // ── Enviar por WhatsApp (CallMeBot) ───────────────────────
+  // Cada usuario necesita activar su número en callmebot.com UNA VEZ.
+  // Sin esa activación el mensaje no llega (limitación de WhatsApp/CallMeBot).
+  // El campo USER_CALLMEBOT_KEY no aplica aquí — se usa la clave del destinatario.
+  // Para la notificación al ADMIN sí se usa ADMIN_CALLMEBOT_KEY.
+  var waKey = PROPS.getProperty('CALLMEBOT_USER_KEY');
+  if (phone && waKey) {
+    var waMsg = '🔐 *Clima App* — Tu código de verificación es: *' + code + '*\n\nExpira en 10 minutos.\nPlan: ' + planLabel;
+    sendWhatsApp(phone, waMsg, waKey);
+  }
+
+  return { ok: true, emailSent: true, whatsappAttempted: !!(phone && waKey) };
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -706,28 +742,60 @@ function appendLog(SS, action, email, detail) {
 // NOTIFICACIÓN AL ADMIN
 // ══════════════════════════════════════════════════════════════
 function notifyAdmin(nombre, apellido, email, whatsapp, planSolicitado) {
+  const adminEmail = PROPS.getProperty('ADMIN_EMAIL');
+  if (!adminEmail) return;
+  const isPlanRequest = planSolicitado && (planSolicitado === 'estandar' || planSolicitado === 'premium');
+  const subject = isPlanRequest
+    ? 'Clima App — Solicitud de plan ' + planSolicitado + ': ' + nombre + ' ' + apellido
+    : 'Clima App — Nuevo registro: ' + nombre + ' ' + apellido;
+
+  // ── Email al admin ────────────────────────────────────────
   try {
-    const adminEmail = PROPS.getProperty('ADMIN_EMAIL');
-    if (!adminEmail) return;
-    const wa = PROPS.getProperty('ADMIN_WHATSAPP');
-    const isPlanRequest = planSolicitado && (planSolicitado === 'estandar' || planSolicitado === 'premium');
     MailApp.sendEmail({
       to:      adminEmail,
-      subject: isPlanRequest
-        ? `⭐ Clima App — Solicitud de plan ${planSolicitado}: ${nombre} ${apellido}`
-        : `🌤 Clima App — Nuevo registro: ${nombre} ${apellido}`,
-      htmlBody: `<div style="font-family:monospace;background:#0d1117;color:#b8dce8;padding:24px;border-radius:12px">
-        <h2 style="color:#7eb8d4">${isPlanRequest ? '⭐ Solicitud de plan: ' + planSolicitado : 'Nuevo usuario registrado'}</h2>
-        <table>
-          <tr><td><b>Nombre:</b></td><td>${nombre} ${apellido}</td></tr>
-          <tr><td><b>Email:</b></td><td>${email}</td></tr>
-          <tr><td><b>WhatsApp:</b></td><td>${whatsapp}</td></tr>
-          ${isPlanRequest ? '<tr><td><b>Plan solicitado:</b></td><td style="color:#ffd700"><b>' + planSolicitado.toUpperCase() + '</b> — Activa el plan desde el admin panel</td></tr>' : '<tr><td><b>Trial:</b></td><td>Según config admin</td></tr>'}
-        </table>
-        <p style="color:#7a92a8;margin-top:16px">Contacto admin (privado): ${wa}</p>
-      </div>`,
+      name:    'Clima App',
+      subject: subject,
+      body: [
+        isPlanRequest ? '⭐ SOLICITUD DE PLAN: ' + planSolicitado.toUpperCase() : '🌤 NUEVO USUARIO REGISTRADO',
+        '',
+        'Nombre:    ' + nombre + ' ' + apellido,
+        'Email:     ' + email,
+        'WhatsApp:  ' + whatsapp,
+        isPlanRequest ? 'Plan:      ' + planSolicitado.toUpperCase() + ' — Activa desde el admin panel' : 'Estado:    Trial iniciado',
+        '',
+        'Admin panel: https://33javier33.github.io/clima/admin-clima.html'
+      ].join('\n'),
+      htmlBody: [
+        '<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto">',
+        '<div style="background:#0d1117;border-radius:16px;padding:28px 32px;color:#b8dce8">',
+        '<p style="color:#7eb8d4;font-size:17px;font-weight:bold;margin:0 0 16px">',
+          isPlanRequest ? '⭐ Solicitud de plan: ' + planSolicitado.toUpperCase() : '🌤 Nuevo usuario registrado',
+        '</p>',
+        '<table style="border-collapse:collapse;width:100%;font-size:14px">',
+        '<tr><td style="color:#7a92a8;padding:6px 12px 6px 0;white-space:nowrap">Nombre</td><td style="color:#ccd9e6;padding:6px 0"><b>' + nombre + ' ' + apellido + '</b></td></tr>',
+        '<tr><td style="color:#7a92a8;padding:6px 12px 6px 0">Email</td><td style="color:#ccd9e6;padding:6px 0"><a href="mailto:' + email + '" style="color:#7eb8d4">' + email + '</a></td></tr>',
+        '<tr><td style="color:#7a92a8;padding:6px 12px 6px 0">WhatsApp</td><td style="color:#ccd9e6;padding:6px 0"><a href="https://wa.me/' + String(whatsapp).replace(/[^\d]/g,'') + '" style="color:#25d366">+' + String(whatsapp).replace(/[^\d]/g,'') + '</a></td></tr>',
+        isPlanRequest
+          ? '<tr><td style="color:#7a92a8;padding:6px 12px 6px 0">Plan</td><td style="padding:6px 0"><b style="color:#ffd700">' + planSolicitado.toUpperCase() + '</b> — Activa desde el panel</td></tr>'
+          : '<tr><td style="color:#7a92a8;padding:6px 12px 6px 0">Estado</td><td style="color:#ccd9e6;padding:6px 0">Trial iniciado</td></tr>',
+        '</table>',
+        '<hr style="border:none;border-top:1px solid #21262d;margin:20px 0">',
+        '<a href="https://33javier33.github.io/clima/admin-clima.html" style="display:inline-block;background:#1a4a6a;color:#7eb8d4;padding:10px 20px;border-radius:8px;text-decoration:none;font-size:13px">Abrir Admin Panel →</a>',
+        '</div></div>'
+      ].join(''),
     });
   } catch(_) {}
+
+  // ── WhatsApp al admin (CallMeBot) ─────────────────────────
+  // Configurar en Script Properties: ADMIN_CALLMEBOT_KEY y ADMIN_WHATSAPP
+  var adminWaKey   = PROPS.getProperty('ADMIN_CALLMEBOT_KEY');
+  var adminWaPhone = PROPS.getProperty('ADMIN_WHATSAPP');
+  if (adminWaKey && adminWaPhone) {
+    var waMsg = isPlanRequest
+      ? '⭐ *Clima App* — Solicitud de plan ' + planSolicitado.toUpperCase() + '\n\nNombre: ' + nombre + ' ' + apellido + '\nEmail: ' + email + '\nWhatsApp: ' + whatsapp + '\n\n👉 Activa el plan desde el admin panel.'
+      : '🌤 *Clima App* — Nuevo registro\n\nNombre: ' + nombre + ' ' + apellido + '\nEmail: ' + email + '\nWhatsApp: ' + whatsapp;
+    sendWhatsApp(adminWaPhone, waMsg, adminWaKey);
+  }
 }
 
 // ══════════════════════════════════════════════════════════════
