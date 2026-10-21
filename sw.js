@@ -1,7 +1,7 @@
 // sw.js — Clima App
-// CarlosPN Interactive® 
+// Carlos P. Nauto Interactive
 
-const CACHE_NAME = 'clima-app-v2';
+const CACHE_NAME = 'clima-app-v3';
 
 const PRECACHE = [
   './index.html',

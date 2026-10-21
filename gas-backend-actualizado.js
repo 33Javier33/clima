@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // CLIMA APP — Google Apps Script Backend  [VERSIÓN ACTUALIZADA]
-// CarlosPN Interactive®
+// Carlos P. Nauto Interactive
 // ═══════════════════════════════════════════════════════════════
 // CAMBIOS vs versión anterior:
 //  ✅ Acción deleteUser agregada
