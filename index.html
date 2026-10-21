@@ -1588,6 +1588,28 @@
     background: var(--card-border);
     margin: 0 -24px 14px;
   }
+  .day-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 14px;
+  }
+  .day-summary-chip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--glass);
+    border: 1px solid var(--card-border);
+    border-radius: 99px;
+    padding: 5px 12px;
+    font-size: 0.72rem;
+    color: var(--text);
+    letter-spacing: 0.01em;
+  }
+  .day-summary-chip.rain  { border-color: rgba(106,180,224,0.30); color: var(--cold); }
+  .day-summary-chip.storm { border-color: rgba(255,120,60,0.35);  color: var(--ice); }
+  .day-summary-chip.clear { border-color: rgba(255,220,80,0.25);  color: var(--ice); }
+  .day-summary-chip.snow  { border-color: rgba(200,220,255,0.30); color: var(--ice); }
   .mc-hourly-title {
     font-size: 0.56rem;
     letter-spacing: 0.2em;
@@ -2110,6 +2132,80 @@ async function fetchAirQuality(lat, lon) {
   } catch(e) { return null; }
 }
 
+function buildDaySummary(hourly, todayStr, currentHour) {
+  const chips = [];
+  const times = hourly.time;
+  const probs = hourly.precipitation_probability;
+  const codes = hourly.weather_code;
+  const temps = hourly.temperature_2m;
+
+  // Recopilar horas restantes de hoy
+  const todayHours = [];
+  for (let i = 0; i < times.length; i++) {
+    if (!times[i].startsWith(todayStr)) continue;
+    const h = parseInt(times[i].split('T')[1]);
+    if (h < currentHour) continue;
+    todayHours.push({ h, prob: probs[i] || 0, code: codes[i] || 0, temp: temps[i] });
+  }
+  if (!todayHours.length) return '';
+
+  // Temperatura máxima del día
+  const maxTemp = Math.max(...todayHours.map(x => x.temp));
+  const maxHour = todayHours.find(x => x.temp === maxTemp);
+
+  // Buscar ventanas de lluvia (prob >= 55%)
+  const rainHours = todayHours.filter(x => x.prob >= 55 || x.code >= 51);
+  // Buscar ventanas de tormenta
+  const stormHours = todayHours.filter(x => x.code >= 95);
+  // Buscar ventanas despejadas (prob < 15% y code <= 2)
+  const clearHours = todayHours.filter(x => x.prob < 15 && x.code <= 2);
+  // Nieve
+  const snowHours = todayHours.filter(x => x.code >= 71 && x.code <= 77);
+
+  // Agrupar horas consecutivas en bloques
+  function groupConsecutive(hrs) {
+    if (!hrs.length) return [];
+    const blocks = [];
+    let start = hrs[0].h, last = hrs[0].h;
+    for (let i = 1; i < hrs.length; i++) {
+      if (hrs[i].h <= last + 2) { last = hrs[i].h; }
+      else { blocks.push({ start, end: last }); start = hrs[i].h; last = hrs[i].h; }
+    }
+    blocks.push({ start, end: last });
+    return blocks;
+  }
+  function fmtBlock(b) {
+    return b.start === b.end ? `las ${b.start}:00` : `entre las ${b.start}:00 y ${b.end}:00`;
+  }
+  function fmt1(b) { return `las ${b.start}:00`; }
+
+  const stormBlocks = groupConsecutive(stormHours);
+  const rainBlocks  = groupConsecutive(rainHours.filter(x => x.code < 95));
+  const clearBlocks = groupConsecutive(clearHours);
+  const snowBlocks  = groupConsecutive(snowHours);
+
+  stormBlocks.forEach(b => chips.push({ cls:'storm', icon:'⛈', text:`Tormenta alrededor de ${fmt1(b)}` }));
+  snowBlocks.forEach(b  => chips.push({ cls:'snow',  icon:'❄️', text:`Nieve posible ${fmtBlock(b)}` }));
+  rainBlocks.forEach(b  => chips.push({ cls:'rain',  icon:'🌧', text:`Lluvia probable ${fmtBlock(b)}` }));
+  clearBlocks.slice(0, 2).forEach(b => chips.push({ cls:'clear', icon:'☀️', text:`Despejado ${fmtBlock(b)}` }));
+
+  if (!chips.length) {
+    const avg = Math.round(todayHours.reduce((s,x)=>s+x.prob,0)/todayHours.length);
+    if (avg < 20) chips.push({ cls:'clear', icon:'🌤', text:'Sin lluvia esperada hoy' });
+    else chips.push({ cls:'rain', icon:'🌦', text:`${avg}% prob. lluvia esta tarde` });
+  }
+
+  if (maxHour) {
+    const unit = useFahrenheit ? '°F' : '°C';
+    const val  = useFahrenheit ? Math.round(maxHour.temp * 9/5 + 32) : Math.round(maxHour.temp);
+    chips.push({ cls:'', icon:'🌡', text:`Máx. ${val}${unit} a las ${maxHour.h}:00` });
+  }
+
+  return `<div class="day-summary">${chips.map(c =>
+    `<span class="day-summary-chip ${c.cls}">${c.icon} ${c.text}</span>`
+  ).join('')}</div>`;
+}
+
 function resolveWeatherCode(cur) {
   const code = cur.weather_code;
   const precip = (cur.precipitation || 0) + (cur.rain || 0) + (cur.showers || 0);
@@ -2301,6 +2397,7 @@ function buildHTML(data, aqiData = null) {
         <div class="mc-stat"><span>Lluvia hoy</span>${rainToday.toFixed(1)} mm</div>
       </div>
       <div class="mc-divider"></div>
+      ${buildDaySummary(hourly, todayStr, currentHour)}
       <div class="mc-hourly-wrap" id="secPronosticoHoras">
         <div class="mc-hourly-title">Próximas horas</div>
         <div class="hourly-scroll">${hourlyHTML}</div>
