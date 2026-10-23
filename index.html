@@ -1322,73 +1322,6 @@
   .val-title { font-family: var(--font-display); font-size: 1.8rem; margin-bottom: 12px; font-weight: 700; }
   .val-text { font-size: 0.8rem; color: var(--dim); line-height: 1.6; padding: 0 24px; letter-spacing: 0.05em; }
 
-  /* Sección de lugares */
-  .places-section { margin-bottom: 20px; animation: fadeUp 0.7s 0.5s ease both; }
-  .places-toggle {
-    width: 100%;
-    background: var(--glass);
-    border: 1px solid var(--card-border);
-    border-radius: 14px;
-    padding: 14px 16px;
-    display: flex; align-items: center; gap: 10px;
-    cursor: pointer; color: var(--text);
-    font-family: var(--font-body); font-size: 0.75rem;
-    transition: background 0.2s, border-color 0.2s;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .places-toggle:active { background: var(--glass2); }
-  .places-toggle.open { border-color: rgba(126,184,212,0.22); background: var(--glass2); }
-  .places-toggle-emoji { font-size: 1.1rem; }
-  .places-toggle-txt { flex: 1; text-align: left; }
-  .places-toggle-sub { font-size: 0.58rem; color: var(--dim); display: block; margin-top: 1px; }
-  .places-toggle-arrow { font-size: 0.7rem; color: var(--dim); transition: transform 0.3s; }
-  .places-toggle.open .places-toggle-arrow { transform: rotate(180deg); }
-
-  .places-body {
-    max-height: 0; overflow: hidden;
-    transition: max-height 0.45s cubic-bezier(0.4,0,0.2,1);
-  }
-  .places-body.open { max-height: 420px; overflow-y: auto; }
-  .places-body.open::-webkit-scrollbar { width: 3px; }
-  .places-body.open::-webkit-scrollbar-track { background: transparent; }
-  .places-body.open::-webkit-scrollbar-thumb { background: rgba(126,184,212,0.25); border-radius: 99px; }
-  .places-body-inner { padding-top: 10px; padding-right: 2px; }
-
-  .places-tabs {
-    display: flex; gap: 6px; overflow-x: auto;
-    padding-bottom: 6px; scrollbar-width: none; margin-bottom: 12px;
-  }
-  .places-tabs::-webkit-scrollbar { display: none; }
-  .place-tab {
-    font-size: 0.6rem; padding: 5px 12px; white-space: nowrap;
-    border-radius: 99px; border: 1px solid var(--card-border);
-    background: none; color: var(--dim); cursor: pointer;
-    font-family: var(--font-body); transition: all 0.2s; flex-shrink: 0;
-  }
-  .place-tab.active { background: rgba(126,184,212,0.12); color: var(--ice); border-color: var(--cold); }
-  .places-list { display: flex; flex-direction: column; gap: 8px; }
-  .place-card {
-    background: var(--glass); border: 1px solid var(--card-border);
-    border-radius: 14px; padding: 12px 14px;
-    display: flex; align-items: center; gap: 12px;
-    cursor: pointer; transition: border-color 0.2s, background 0.2s;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .place-card:active { background: var(--glass2); border-color: rgba(126,184,212,0.2); }
-  .place-icon {
-    font-size: 1.3rem; flex-shrink: 0; width: 36px; height: 36px;
-    background: var(--glass2); border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .place-info { flex: 1; min-width: 0; }
-  .place-name { font-size: 0.78rem; color: var(--ice); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .place-meta { font-size: 0.58rem; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .place-dist { font-size: 0.6rem; color: var(--cold); flex-shrink: 0; }
-  .places-loading { text-align: center; padding: 20px; font-size: 0.65rem; color: var(--dim); }
-  .places-empty  { text-align: center; padding: 20px; font-size: 0.68rem; color: var(--dim); line-height: 1.8; }
-  .places-retry-btn { margin-top: 8px; padding: 6px 16px; border-radius: 99px; background: var(--glass); border: 1px solid var(--card-border); color: var(--ice); font-size: 0.65rem; cursor: pointer; font-family: var(--font-body); }
-  .places-retry-btn:active { background: var(--glass2); }
-  .place-maps-hint { display: block; font-size: 0.7rem; margin-top: 2px; opacity: 0.6; }
   .app.searching #content { display: none; }
   .search-results {
     display: none;
@@ -2418,26 +2351,6 @@ function buildHTML(data, aqiData = null) {
         </div>
       </div>
     </div>
-    <div class="places-section" id="placesSection">
-      <button class="places-toggle" id="placesToggle" onclick="togglePlaces()">
-        <span class="places-toggle-emoji">🗺</span>
-        <span class="places-toggle-txt">Explorar ${currentCity.name}<span class="places-toggle-sub">Restaurantes, hoteles, turismo y más</span></span>
-        <span class="places-toggle-arrow">▾</span>
-      </button>
-      <div class="places-body" id="placesBody">
-        <div class="places-body-inner">
-          <div class="places-tabs" id="placesTabs">
-            <button class="place-tab active" data-cat="restaurant">🍽 Restaurantes</button>
-            <button class="place-tab" data-cat="hotel">🏨 Hoteles</button>
-            <button class="place-tab" data-cat="hostel">🏠 Hospedajes</button>
-            <button class="place-tab" data-cat="attraction">🏛 Turismo</button>
-            <button class="place-tab" data-cat="supermarket">🛒 Supermercados</button>
-            <button class="place-tab" data-cat="toilets">🚽 Baños</button>
-          </div>
-          <div class="places-list" id="placesList"></div>
-        </div>
-      </div>
-    </div>
     <div class="extra-cards gap-section" id="secDatosDetalle">
       ${aqiHtml}
       <div class="extra-card" id="modUV" onclick="toggleExtraCard(this)">
@@ -2525,163 +2438,6 @@ function buildHTML(data, aqiData = null) {
 
 function uvLabel(uv) {
   if (uv < 3) return 'Bajo'; if (uv < 6) return 'Moderado'; if (uv < 8) return 'Alto'; if (uv < 11) return 'Muy alto'; return 'Extremo';
-}
-
-const placesCache = {};
-const PLACES_CACHE_TTL = 10 * 60 * 1000;
-let activePlaceCat = 'restaurant';
-const PLACE_CATEGORIES = {
-  restaurant:  { label:'Restaurantes', icon:'🍽', query: (lat,lon) => `node["amenity"~"restaurant|cafe|bar|fast_food"](around:4000,${lat},${lon});way["amenity"~"restaurant|cafe|bar|fast_food"](around:4000,${lat},${lon});` },
-  hotel:       { label:'Hoteles',      icon:'🏨', query: (lat,lon) => `node["tourism"~"hotel|motel"](around:8000,${lat},${lon});way["tourism"~"hotel|motel"](around:8000,${lat},${lon});` },
-  hostel:      { label:'Hospedajes',   icon:'🏠', query: (lat,lon) => `node["tourism"~"hostel|guest_house|apartment|chalet"](around:8000,${lat},${lon});way["tourism"~"hostel|guest_house|apartment|chalet"](around:8000,${lat},${lon});` },
-  attraction:  { label:'Turismo',      icon:'🏛', query: (lat,lon) => `node["tourism"~"attraction|museum|viewpoint|gallery|artwork|information"](around:8000,${lat},${lon});node["historic"](around:8000,${lat},${lon});way["tourism"~"attraction|museum|viewpoint"](around:8000,${lat},${lon});` },
-  supermarket: { label:'Supermercados',icon:'🛒', query: (lat,lon) => `node["shop"~"supermarket|convenience|grocery"](around:5000,${lat},${lon});way["shop"~"supermarket|convenience|grocery"](around:5000,${lat},${lon});` },
-  toilets:     { label:'Baños',        icon:'🚽', query: (lat,lon) => `node["amenity"="toilets"](around:5000,${lat},${lon});` },
-};
-
-function distKm(lat1, lon1, lat2, lon2) {
-  const R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLon = (lon2-lon1)*Math.PI/180;
-  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-}
-function fmtDist(km) { return km < 1 ? Math.round(km*1000)+'m' : km.toFixed(1)+'km'; }
-
-async function _overpassFetch(url, timeoutMs) {
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
-  try {
-    const res = await fetch(url, { signal: ctrl.signal });
-    clearTimeout(timer);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
-  } catch(e) {
-    clearTimeout(timer);
-    throw e;
-  }
-}
-
-async function fetchPlacesCat(lat, lon, cat) {
-  const key = `${lat.toFixed(3)},${lon.toFixed(3)},${cat}`;
-  const cached = placesCache[key];
-  if (cached && (Date.now() - cached.ts < PLACES_CACHE_TTL)) return cached.data;
-  const catDef = PLACE_CATEGORIES[cat];
-  const query = `[out:json][timeout:15];(${catDef.query(lat,lon)});out center body 25;`;
-  const ENDPOINTS = [
-    'https://overpass-api.de/api/interpreter',
-    'https://overpass.kumi.systems/api/interpreter',
-    'https://overpass.openstreetmap.ru/api/interpreter'
-  ];
-  // Lanzar todos los endpoints en paralelo — el primero que responda gana
-  const attempts = ENDPOINTS.map(ep =>
-    _overpassFetch(`${ep}?data=${encodeURIComponent(query)}`, 15000)
-  );
-  let data;
-  try {
-    data = await Promise.any(attempts);
-  } catch(_) {
-    throw new Error('Sin respuesta de Overpass');
-  }
-  const results = (data.elements || []).map(e => {
-      const t = e.tags || {};
-      const name = t.name || t['name:es'] || t.brand || t.operator || null;
-      return {
-        name,
-        noName: !name,
-        lat: e.lat ?? e.center?.lat,
-        lon: e.lon ?? e.center?.lon,
-        addr: [t['addr:street'], t['addr:housenumber']].filter(Boolean).join(' ') || t['addr:full'] || t['addr:place'] || '',
-        opening: t.opening_hours || '',
-        phone: t.phone || t['contact:phone'] || '',
-        website: t.website || t['contact:website'] || '',
-      };
-    }).filter(e => e.lat && e.lon)
-    .sort((a,b) => {
-      // Places with names first, then by distance
-      if (a.noName !== b.noName) return a.noName ? 1 : -1;
-      return distKm(lat,lon,a.lat,a.lon) - distKm(lat,lon,b.lat,b.lon);
-    })
-    .slice(0, 15);
-  placesCache[key] = { data: results, ts: Date.now() };
-  return results;
-}
-
-function renderPlaces(places, lat, lon, cat) {
-  const list = document.getElementById('placesList');
-  if (!list) return;
-  const catDef = PLACE_CATEGORIES[cat];
-  if (!places.length) {
-    list.innerHTML = `<div class="places-empty">📭 No encontramos ${catDef.label.toLowerCase()} cerca.<br><span style="font-size:0.58rem;opacity:0.7">Es posible que no estén registrados en OpenStreetMap.</span></div>`;
-    return;
-  }
-  list.innerHTML = places.map(p => {
-    const d = fmtDist(distKm(lat, lon, p.lat, p.lon));
-    const meta = [p.addr, p.opening].filter(Boolean).join(' · ') || '';
-    const mapsUrl = `https://maps.google.com/maps?q=${p.lat},${p.lon}`;
-    const displayName = p.name
-      ? p.name.replace(/</g,'&lt;').replace(/>/g,'&gt;')
-      : `<span style="opacity:0.5;font-style:italic">Sin nombre registrado</span>`;
-    return `<div class="place-card" onclick="window.open('${mapsUrl}','_blank')">
-      <div class="place-icon">${catDef.icon}</div>
-      <div class="place-info">
-        <div class="place-name">${displayName}</div>
-        ${meta ? `<div class="place-meta">${meta}</div>` : ''}
-      </div>
-      <div class="place-dist">${d}<span class="place-maps-hint">📍</span></div>
-    </div>`;
-  }).join('');
-}
-
-async function loadPlacesCat(cat) {
-  const list = document.getElementById('placesList');
-  if (!list) return;
-  list.innerHTML = `<div class="places-loading">🔍 Buscando ${PLACE_CATEGORIES[cat].label.toLowerCase()}...</div>`;
-  try {
-    const places = await fetchPlacesCat(currentCity.lat, currentCity.lon, cat);
-    renderPlaces(places, currentCity.lat, currentCity.lon, cat);
-  } catch(e) {
-    list.innerHTML = `<div class="places-empty">⚠️ No se pudo cargar.<br><button class="places-retry-btn" onclick="loadPlacesCat('${cat}')">↻ Reintentar</button></div>`;
-  }
-}
-
-let placesLoaded = false;
-function togglePlaces() {
-  const btn  = document.getElementById('placesToggle');
-  const body = document.getElementById('placesBody');
-  if (!btn || !body) return;
-  const isOpen = body.classList.contains('open');
-  body.classList.toggle('open', !isOpen);
-  btn.classList.toggle('open', !isOpen);
-  if (!isOpen && !placesLoaded) { placesLoaded = true; loadPlacesCat(activePlaceCat); }
-}
-
-function loadPlaces(lat, lon, name) {
-  const body = document.getElementById('placesBody');
-  const wasOpen = body ? body.classList.contains('open') : false;
-  activePlaceCat = 'restaurant';
-  placesLoaded = false;
-  const btn = document.getElementById('placesToggle');
-  if (btn)  btn.classList.remove('open');
-  if (body) body.classList.remove('open');
-  const list = document.getElementById('placesList');
-  if (list) list.innerHTML = '';
-  const tabs = document.getElementById('placesTabs');
-  if (!tabs) return;
-  // Event delegation: assigning onclick replaces previous handler automatically
-  tabs.onclick = (e) => {
-    const tab = e.target.closest('.place-tab');
-    if (!tab) return;
-    tabs.querySelectorAll('.place-tab').forEach(x => x.classList.remove('active'));
-    tab.classList.add('active');
-    activePlaceCat = tab.dataset.cat;
-    loadPlacesCat(activePlaceCat);
-  };
-  // If section was open when city changed, re-open and reload for new city
-  if (wasOpen) {
-    if (btn)  btn.classList.add('open');
-    if (body) body.classList.add('open');
-    placesLoaded = true;
-    loadPlacesCat(activePlaceCat);
-  }
 }
 
 function toggleExtraCard(el) {
@@ -2886,7 +2642,7 @@ async function loadWeather() {
     content.innerHTML = buildHTML(data, aqiData);
     applyModules(); renderFavStrip();
     const photoName = currentCity.name.includes(',') ? currentCity.name.split(',').slice(-1)[0].trim() : currentCity.name;
-    loadCityPhoto(photoName); loadPlaces(currentCity.lat, currentCity.lon, currentCity.name);
+    loadCityPhoto(photoName);
     loadMap(currentCity.lat, currentCity.lon); // NUEVO: Cargar mapa
   } catch(e) {
     content.innerHTML = `<div class="error-state"><p>⚠️ No se pudo cargar el clima.<br>Revisa tu conexión e intenta de nuevo.</p><button class="refresh-btn" onclick="loadWeather()" style="margin-top:20px">↻ Reintentar</button></div>`;
@@ -3324,8 +3080,8 @@ setInterval(pollSyncStatus, 45000);
 
 function applyModules() {
   localStorage.setItem('climaLicenseCache', JSON.stringify({ status: licenseStatus, modules: licenseModules, trialEnd: trialEndTimestamp, cachedAt: Date.now() }));
-  const MODULE_ELEMENTS = { pronostico_horas: 'secPronosticoHoras', pronostico_dias: 'secPronosticoDias', seccion_explorar: 'placesSection', temas_visuales: 'settingsBtn', info_ciudad: 'infoBtn', foto_ciudad: 'cityPhotoCard', datos_detalle: 'secDatosDetalle', datos_uv: 'modUV', datos_viento: 'modViento', datos_presion: 'modPresion', datos_nubosidad: 'modNubosidad', datos_visibilidad: 'modVisibilidad', datos_amanecer: 'modAmanecer', mapa_ciudad: 'secMapaCiudad' };
-  const MODULE_LABELS   = { pronostico_horas: 'Pronostico por horas', pronostico_dias: 'Pronostico 6 dias', seccion_explorar: 'Explorar ciudad', temas_visuales: 'Cambiar temas', info_ciudad: 'Info ciudad', foto_ciudad: 'Foto ciudad', datos_detalle: 'Datos del tiempo', datos_uv: 'Indice UV', datos_viento: 'Viento', datos_presion: 'Presion', datos_nubosidad: 'Nubosidad', datos_visibilidad: 'Visibilidad', datos_amanecer: 'Amanecer', mapa_ciudad: 'Mapa ciudad' };
+  const MODULE_ELEMENTS = { pronostico_horas: 'secPronosticoHoras', pronostico_dias: 'secPronosticoDias', temas_visuales: 'settingsBtn', info_ciudad: 'infoBtn', foto_ciudad: 'cityPhotoCard', datos_detalle: 'secDatosDetalle', datos_uv: 'modUV', datos_viento: 'modViento', datos_presion: 'modPresion', datos_nubosidad: 'modNubosidad', datos_visibilidad: 'modVisibilidad', datos_amanecer: 'modAmanecer', mapa_ciudad: 'secMapaCiudad' };
+  const MODULE_LABELS   = { pronostico_horas: 'Pronostico por horas', pronostico_dias: 'Pronostico 6 dias', temas_visuales: 'Cambiar temas', info_ciudad: 'Info ciudad', foto_ciudad: 'Foto ciudad', datos_detalle: 'Datos del tiempo', datos_uv: 'Indice UV', datos_viento: 'Viento', datos_presion: 'Presion', datos_nubosidad: 'Nubosidad', datos_visibilidad: 'Visibilidad', datos_amanecer: 'Amanecer', mapa_ciudad: 'Mapa ciudad' };
   function setLocked(elId, locked, isSection, modKey) {
     const el = document.getElementById(elId); if (!el) return;
     const cls = isSection ? 'mod-locked-section' : 'mod-locked';
@@ -3338,7 +3094,7 @@ function applyModules() {
     }
   }
   if (licenseStatus === 'premium') { Object.values(MODULE_ELEMENTS).forEach(id => setLocked(id, false, false, null)); return; }
-  setLocked('secPronosticoHoras', !licenseModules['pronostico_horas'], true,  'pronostico_horas'); setLocked('secPronosticoDias', !licenseModules['pronostico_dias'], true, 'pronostico_dias'); setLocked('placesSection', !licenseModules['seccion_explorar'], true, 'seccion_explorar'); setLocked('cityPhotoCard', !licenseModules['foto_ciudad'], true, 'foto_ciudad');
+  setLocked('secPronosticoHoras', !licenseModules['pronostico_horas'], true,  'pronostico_horas'); setLocked('secPronosticoDias', !licenseModules['pronostico_dias'], true, 'pronostico_dias'); setLocked('cityPhotoCard', !licenseModules['foto_ciudad'], true, 'foto_ciudad');
   const themeBtn = document.getElementById('settingsBtn'); if (themeBtn) { themeBtn.style.opacity = licenseModules['temas_visuales'] ? '' : '0.35'; themeBtn.style.pointerEvents = licenseModules['temas_visuales'] ? '' : 'none'; }
   const infoBtn = document.getElementById('infoBtn'); if (infoBtn) { infoBtn.style.opacity = licenseModules['info_ciudad'] ? '' : '0.35'; infoBtn.style.pointerEvents = licenseModules['info_ciudad'] ? '' : 'none'; }
   if (licenseModules['datos_detalle'] === false) { setLocked('secDatosDetalle', true, true, 'datos_detalle'); } else { setLocked('secDatosDetalle', false, false, null); setLocked('modUV', licenseModules['datos_uv'] === false, false, 'datos_uv'); setLocked('modViento', licenseModules['datos_viento'] === false, false, 'datos_viento'); setLocked('modPresion', licenseModules['datos_presion'] === false, false, 'datos_presion'); setLocked('modNubosidad', licenseModules['datos_nubosidad'] === false, false, 'datos_nubosidad'); setLocked('modVisibilidad', licenseModules['datos_visibilidad'] === false, false, 'datos_visibilidad'); setLocked('modAmanecer', licenseModules['datos_amanecer'] === false, false, 'datos_amanecer'); }
