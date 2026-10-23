@@ -751,6 +751,8 @@
     letter-spacing: 0.08em;
   }
   .signature span { opacity: 0.5; color: var(--dim); }
+  .app-version { margin-left: 8px; opacity: 0.4 !important; font-size: 0.55rem; cursor: pointer; transition: opacity 0.2s; }
+  .app-version:hover { opacity: 0.7 !important; }
 
   .theme-btn {
     width: 36px; height: 36px;
@@ -1776,8 +1778,9 @@
 
 <!-- Banner de actualización PWA -->
 <div id="update-banner">
-  🔄 <span>Nueva versión disponible</span>
-  <button class="upd-btn" onclick="activarActualizacion()">Actualizar</button>
+  🔄 <span id="update-banner-text">Nueva versión disponible</span>
+  <button class="upd-btn" onclick="activarActualizacion()">Instalar</button>
+  <button class="upd-btn" onclick="document.getElementById('update-banner').classList.remove('visible')" style="background:transparent;border-color:transparent;opacity:0.5">✕</button>
 </div>
 
 <!-- Modal Trial/Premium -->
@@ -2516,7 +2519,7 @@ function buildHTML(data, aqiData = null) {
 
     <button class="refresh-btn" onclick="loadWeather()">↻ Actualizar</button>
     <div class="footer">Datos meteorológicos: Open-Meteo.com · Geocodificación: OpenStreetMap</div>
-    <div class="signature">Carlos P. Nauto Interactive <span>· Clima App</span></div>
+    <div class="signature">Carlos P. Nauto Interactive <span>· Clima App</span><span class="app-version" id="appVersion" onclick="checkForUpdate()" title="Verificar actualización">v${APP_VERSION}</span></div>
   `;
 }
 
@@ -2562,16 +2565,25 @@ async function fetchPlacesCat(lat, lon, cat) {
     } catch(_) { continue; }
   }
   if (!data) throw new Error('Sin respuesta de Overpass');
-  const results = (data.elements || []).filter(e => e.tags?.name).map(e => ({
-      name: e.tags.name,
-      lat: e.lat ?? e.center?.lat,
-      lon: e.lon ?? e.center?.lon,
-      addr: [e.tags['addr:street'], e.tags['addr:housenumber']].filter(Boolean).join(' ') || e.tags['addr:full'] || '',
-      opening: e.tags.opening_hours || '',
-      phone: e.tags.phone || e.tags['contact:phone'] || '',
-      website: e.tags.website || e.tags['contact:website'] || '',
-    })).filter(e => e.lat && e.lon)
-    .sort((a,b) => distKm(lat,lon,a.lat,a.lon) - distKm(lat,lon,b.lat,b.lon))
+  const results = (data.elements || []).map(e => {
+      const t = e.tags || {};
+      const name = t.name || t['name:es'] || t.brand || t.operator || null;
+      return {
+        name,
+        noName: !name,
+        lat: e.lat ?? e.center?.lat,
+        lon: e.lon ?? e.center?.lon,
+        addr: [t['addr:street'], t['addr:housenumber']].filter(Boolean).join(' ') || t['addr:full'] || t['addr:place'] || '',
+        opening: t.opening_hours || '',
+        phone: t.phone || t['contact:phone'] || '',
+        website: t.website || t['contact:website'] || '',
+      };
+    }).filter(e => e.lat && e.lon)
+    .sort((a,b) => {
+      // Places with names first, then by distance
+      if (a.noName !== b.noName) return a.noName ? 1 : -1;
+      return distKm(lat,lon,a.lat,a.lon) - distKm(lat,lon,b.lat,b.lon);
+    })
     .slice(0, 15);
   placesCache[key] = { data: results, ts: Date.now() };
   return results;
@@ -2589,11 +2601,13 @@ function renderPlaces(places, lat, lon, cat) {
     const d = fmtDist(distKm(lat, lon, p.lat, p.lon));
     const meta = [p.addr, p.opening].filter(Boolean).join(' · ') || '';
     const mapsUrl = `https://maps.google.com/maps?q=${p.lat},${p.lon}`;
-    const safeName = p.name.replace(/'/g, '&#39;');
+    const displayName = p.name
+      ? p.name.replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      : `<span style="opacity:0.5;font-style:italic">Sin nombre registrado</span>`;
     return `<div class="place-card" onclick="window.open('${mapsUrl}','_blank')">
       <div class="place-icon">${catDef.icon}</div>
       <div class="place-info">
-        <div class="place-name">${safeName}</div>
+        <div class="place-name">${displayName}</div>
         ${meta ? `<div class="place-meta">${meta}</div>` : ''}
       </div>
       <div class="place-dist">${d}<span class="place-maps-hint">📍</span></div>
@@ -3063,6 +3077,7 @@ try {
 loadWeather();
 setTimeout(initLicense, 1500);
 
+const APP_VERSION = '1.4';
 const GAS_URL = 'https://script.google.com/macros/s/AKfycby4Nfjbdjz12bTkkLeoXwbCMIXBikdKo9aab17NqJFxt9z8cXasNoLOcdqZHBhJ-NcU/exec';
 const PLAN_LABELS = { basico: { name: '🌡 Básico', price: 'Contactar', features: 'Clima actual · Próximas horas' }, estandar: { name: '📅 Estándar', price: 'Contactar', features: 'Básico + Pronóstico 7 días · Info ciudad · Temas' }, premium: { name: '⭐ Premium', price: 'Contactar', features: 'Todo incluido · Sin restricciones' } };
 
@@ -3319,9 +3334,7 @@ function applyModules() {
 async function gasPost(data) { const res = await fetch(GAS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(data), redirect: 'follow' }); return res.json(); }
 const PING_INTERVAL_MS = 5 * 60 * 1000; let _pingTimer = null; function startUsagePing() { if (_pingTimer) return; _sendPing(); _pingTimer = setInterval(_sendPing, PING_INTERVAL_MS); } function stopUsagePing() { if (_pingTimer) { clearInterval(_pingTimer); _pingTimer = null; } } async function _sendPing() { if (!deviceId) return; try { await gasPost({ action:'trackUsage', deviceId:deviceId, minutes:5 }); } catch(_) {} } document.addEventListener('visibilitychange', function() { if (document.visibilityState === 'visible') startUsagePing(); else stopUsagePing(); }); if (document.visibilityState === 'visible') startUsagePing();
 
-if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').then(reg => { reg.addEventListener('updatefound', () => { const newWorker = reg.installing; newWorker.addEventListener('statechange', () => { if (newWorker.state === 'installed' && navigator.serviceWorker.controller) document.getElementById('update-banner').classList.add('visible'); }); }); }); }); }
-
-// NUEVO: Funciones para compartir y mapa
+// Funciones para compartir y mapa
 function shareWeather() {
   const curTemp = document.querySelector('.temp-big')?.innerText || '';
   const wmoDesc = document.querySelector('.weather-desc')?.innerText || '';
@@ -3343,6 +3356,55 @@ function loadMap(lat, lon) {
 
 // Event Listeners nuevos
 document.getElementById('shareBtn').addEventListener('click', shareWeather);
+
+// ── Actualización de la app ──
+let _swReg = null;
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      _swReg = reg;
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            document.getElementById('update-banner').classList.add('visible');
+          }
+        });
+      });
+      // Verificar actualizaciones cada vez que la app vuelve al foco
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') reg.update().catch(() => {});
+      });
+    }).catch(() => {});
+  });
+}
+
+function activarActualizacion() {
+  if (_swReg?.waiting) {
+    _swReg.waiting.postMessage('SKIP_WAITING');
+    navigator.serviceWorker.addEventListener('controllerchange', () => location.reload());
+  } else {
+    location.reload();
+  }
+}
+
+function checkForUpdate() {
+  const badge = document.getElementById('appVersion');
+  const origText = badge.textContent;
+  badge.textContent = '⟳';
+  if (_swReg) {
+    _swReg.update().then(() => {
+      if (_swReg.waiting) {
+        document.getElementById('update-banner').classList.add('visible');
+      } else {
+        badge.textContent = '✓';
+        setTimeout(() => { badge.textContent = origText; }, 2000);
+      }
+    }).catch(() => { badge.textContent = origText; });
+  } else {
+    setTimeout(() => { badge.textContent = origText; }, 1500);
+  }
+}
 </script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 // sw.js — Clima App
 // Carlos P. Nauto Interactive
 
-const CACHE_NAME = 'clima-app-v3';
+const CACHE_NAME = 'clima-app-v4';
 
 const PRECACHE = [
   './index.html',
@@ -43,6 +43,10 @@ self.addEventListener('fetch', event => {
     url.includes('open-meteo.com') ||
     url.includes('geocoding-api') ||
     url.includes('nominatim.openstreetmap.org') ||
+    url.includes('overpass-api.de') ||
+    url.includes('overpass.kumi.systems') ||
+    url.includes('overpass.openstreetmap.ru') ||
+    url.includes('maps.google.com') ||
     url.includes('ipapi.co') ||
     url.includes('wikipedia.org') ||
     url.includes('fonts.googleapis.com') ||
