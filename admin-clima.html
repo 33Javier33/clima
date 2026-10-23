@@ -249,6 +249,30 @@ var allUsers     = [];
 var globalConfig = {};
 var trialUnit    = 'dias';
 var _autoRefreshTimer = null;
+var _inactivityTimer  = null;
+var INACTIVITY_MS     = 15 * 60 * 1000; // 15 minutos
+
+function sessionSave(pass) {
+  try { sessionStorage.setItem('climaAdminPass', pass); } catch(_) {}
+}
+function sessionClear() {
+  try { sessionStorage.removeItem('climaAdminPass'); } catch(_) {}
+}
+function sessionGet() {
+  try { return sessionStorage.getItem('climaAdminPass') || ''; } catch(_) { return ''; }
+}
+function resetInactivity() {
+  if (!adminPass) return;
+  if (_inactivityTimer) clearTimeout(_inactivityTimer);
+  _inactivityTimer = setTimeout(function() {
+    doLogout();
+    document.getElementById('loginError').style.display = 'none';
+    // Mostrar aviso de cierre por inactividad
+    var err = document.getElementById('loginError');
+    err.textContent = 'Sesión cerrada por inactividad (15 min).';
+    err.style.display = 'block';
+  }, INACTIVITY_MS);
+}
 
 var MODULE_NAMES = {
   'clima_basico':      '🌡 Clima basico (temp, condicion, humedad)',
@@ -291,9 +315,28 @@ function init() {
   document.getElementById('btnHoras').addEventListener('click', function() { setUnit('horas'); });
   document.addEventListener('click', onGlobalClick);
   document.addEventListener('change', onGlobalChange);
+  // Resetear inactividad en cualquier interacción
+  ['click','keydown','mousemove','touchstart'].forEach(function(ev) {
+    document.addEventListener(ev, resetInactivity, { passive: true });
+  });
 
   // Renderizar el grid de módulos trial de inmediato (todos desactivados por defecto).
   renderTrialMods({});
+
+  // Restaurar sesión guardada (F5 / recarga)
+  var savedPass = sessionGet();
+  if (savedPass) {
+    adminPass = savedPass;
+    gasPost({ action: 'getUsers', adminPass: savedPass }).then(function(res) {
+      if (!res.ok) { adminPass = ''; sessionClear(); return; }
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('adminApp').style.display    = 'block';
+      if (res.config) applyGlobalConfig(res.config);
+      renderUsers(res.users);
+      resetInactivity();
+      startAutoRefresh();
+    }).catch(function() { adminPass = ''; sessionClear(); });
+  }
 }
 
 // ── CAMBIOS / ALERTAS ─────────────────────────────────────────
@@ -362,70 +405,14 @@ function doLogin() {
     .then(function(res) {
       if (!res.ok) throw new Error('no auth');
       adminPass = pass;
+      sessionSave(pass);
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('adminApp').style.display    = 'block';
-      // applyGlobalConfig actualiza los toggles del grid ya renderizado
       if (res.config) applyGlobalConfig(res.config);
       renderUsers(res.users);
-
-      function getExpandedIds() {
-        var ids = [];
-        document.querySelectorAll('.user-card.expanded').forEach(function(el) { if (el.id) ids.push(el.id.replace('card-','')); });
-        return ids;
-      }
-      function restoreExpanded(ids) {
-        ids.forEach(function(id) { var el = document.getElementById('card-' + id); if (el) el.classList.add('expanded'); });
-      }
-      function updateSyncBadge() {
-        var badge = document.getElementById('lastSyncBadge');
-        if (!badge) return;
-        var now = new Date();
-        badge.textContent = '⟳ ' + now.toLocaleTimeString('es-CL', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
-        badge.style.opacity = '0.7';
-      }
       updateSyncBadge();
-
-      var _refreshing = false;
-      _autoRefreshTimer = setInterval(function() {
-        if (!adminPass || _refreshing) return;
-        _refreshing = true;
-        gasPost({ action: 'getUsers', adminPass: adminPass }).then(function(r) {
-          _refreshing = false;
-          if (!r.ok) return;
-          if (r.users) {
-            var oldMap = {};
-            allUsers.forEach(function(u) { oldMap[u.userId] = u; });
-            var newUsers = 0;
-            var subscriptions = 0;
-            var dataChanges = 0;
-            var newClientNames = [];
-            r.users.forEach(function(u) {
-              var old = oldMap[u.userId];
-              if (!old) {
-                newUsers++;
-                newClientNames.push(u.nombre || u.email || 'Nuevo cliente');
-              } else if ((old.estado !== 'premium' && u.estado === 'premium') ||
-                         (old.estado !== 'estandar' && u.estado === 'estandar')) {
-                subscriptions++;
-              } else if (userDataChanged(old, u)) {
-                dataChanges++;
-              }
-            });
-            var expanded = getExpandedIds();
-            allUsers = r.users;
-            renderUsers(allUsers);
-            restoreExpanded(expanded);
-            updateSyncBadge();
-            if (newUsers > 0) {
-              var nombres = newClientNames.slice(0, 2).join(', ') + (newClientNames.length > 2 ? ' y ' + (newClientNames.length - 2) + ' más' : '');
-              showAlert('🟠 Nuevo cliente: ' + nombres, 'new-client');
-              showToast('🟠 Nuevo cliente: ' + newClientNames[0]);
-            } else if (subscriptions > 0) {
-              showAlert('⭐ Plan activado para ' + subscriptions + ' usuario(s)');
-            }
-          }
-        }).catch(function() { _refreshing = false; });
-      }, 15000);
+      resetInactivity();
+      startAutoRefresh();
     })
     .catch(function() {
       document.getElementById('loginError').style.display = 'block';
@@ -433,9 +420,67 @@ function doLogin() {
     });
 }
 
+function getExpandedIds() {
+  var ids = [];
+  document.querySelectorAll('.user-card.expanded').forEach(function(el) { if (el.id) ids.push(el.id.replace('card-','')); });
+  return ids;
+}
+function restoreExpanded(ids) {
+  ids.forEach(function(id) { var el = document.getElementById('card-' + id); if (el) el.classList.add('expanded'); });
+}
+function updateSyncBadge() {
+  var badge = document.getElementById('lastSyncBadge');
+  if (!badge) return;
+  badge.textContent = '⟳ ' + new Date().toLocaleTimeString('es-CL', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  badge.style.opacity = '0.7';
+}
+
+function startAutoRefresh() {
+  if (_autoRefreshTimer) clearInterval(_autoRefreshTimer);
+  var _refreshing = false;
+  _autoRefreshTimer = setInterval(function() {
+    if (!adminPass || _refreshing) return;
+    _refreshing = true;
+    gasPost({ action: 'getUsers', adminPass: adminPass }).then(function(r) {
+      _refreshing = false;
+      if (!r.ok) return;
+      if (r.users) {
+        var oldMap = {};
+        allUsers.forEach(function(u) { oldMap[u.userId] = u; });
+        var newUsers = 0, subscriptions = 0;
+        var newClientNames = [];
+        r.users.forEach(function(u) {
+          var old = oldMap[u.userId];
+          if (!old) {
+            newUsers++;
+            newClientNames.push(u.nombre || u.email || 'Nuevo cliente');
+          } else if ((old.estado !== 'premium' && u.estado === 'premium') ||
+                     (old.estado !== 'estandar' && u.estado === 'estandar')) {
+            subscriptions++;
+          }
+        });
+        var expanded = getExpandedIds();
+        allUsers = r.users;
+        renderUsers(allUsers);
+        restoreExpanded(expanded);
+        updateSyncBadge();
+        if (newUsers > 0) {
+          var nombres = newClientNames.slice(0, 2).join(', ') + (newClientNames.length > 2 ? ' y ' + (newClientNames.length - 2) + ' más' : '');
+          showAlert('🟠 Nuevo cliente: ' + nombres, 'new-client');
+          showToast('🟠 Nuevo cliente: ' + newClientNames[0]);
+        } else if (subscriptions > 0) {
+          showAlert('⭐ Plan activado para ' + subscriptions + ' usuario(s)');
+        }
+      }
+    }).catch(function() { _refreshing = false; });
+  }, 15000);
+}
+
 function doLogout() {
   adminPass = '';
+  sessionClear();
   if (_autoRefreshTimer) { clearInterval(_autoRefreshTimer); _autoRefreshTimer = null; }
+  if (_inactivityTimer)  { clearTimeout(_inactivityTimer);  _inactivityTimer  = null; }
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('adminApp').style.display    = 'none';
   document.getElementById('passInput').value = '';
