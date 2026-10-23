@@ -1383,7 +1383,10 @@
   .place-meta { font-size: 0.58rem; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .place-dist { font-size: 0.6rem; color: var(--cold); flex-shrink: 0; }
   .places-loading { text-align: center; padding: 20px; font-size: 0.65rem; color: var(--dim); }
-  .places-empty  { text-align: center; padding: 20px; font-size: 0.68rem; color: var(--dim); }
+  .places-empty  { text-align: center; padding: 20px; font-size: 0.68rem; color: var(--dim); line-height: 1.8; }
+  .places-retry-btn { margin-top: 8px; padding: 6px 16px; border-radius: 99px; background: var(--glass); border: 1px solid var(--card-border); color: var(--ice); font-size: 0.65rem; cursor: pointer; font-family: var(--font-body); }
+  .places-retry-btn:active { background: var(--glass2); }
+  .place-maps-hint { display: block; font-size: 0.7rem; margin-top: 2px; opacity: 0.6; }
   .app.searching #content { display: none; }
   .search-results {
     display: none;
@@ -2428,7 +2431,7 @@ function buildHTML(data, aqiData = null) {
             <button class="place-tab" data-cat="supermarket">🛒 Supermercados</button>
             <button class="place-tab" data-cat="toilets">🚽 Baños</button>
           </div>
-          <div class="places-list" id="placesList"><div class="places-loading">🔍 Buscando lugares...</div></div>
+          <div class="places-list" id="placesList"></div>
         </div>
       </div>
     </div>
@@ -2522,14 +2525,15 @@ function uvLabel(uv) {
 }
 
 const placesCache = {};
+const PLACES_CACHE_TTL = 10 * 60 * 1000;
 let activePlaceCat = 'restaurant';
 const PLACE_CATEGORIES = {
-  restaurant:  { label:'Restaurantes', icon:'🍽', query: (lat,lon) => `node["amenity"="restaurant"](around:3000,${lat},${lon});way["amenity"="restaurant"](around:3000,${lat},${lon});` },
-  hotel:       { label:'Hoteles',      icon:'🏨', query: (lat,lon) => `node["tourism"="hotel"](around:5000,${lat},${lon});` },
-  hostel:      { label:'Hospedajes',   icon:'🏠', query: (lat,lon) => `node["tourism"~"hostel|guest_house|motel|apartment"](around:5000,${lat},${lon});` },
-  attraction:  { label:'Turismo',      icon:'🏛', query: (lat,lon) => `node["tourism"~"attraction|museum|viewpoint|gallery|artwork"](around:5000,${lat},${lon});node["historic"](around:5000,${lat},${lon});` },
-  supermarket: { label:'Supermercados',icon:'🛒', query: (lat,lon) => `node["shop"~"supermarket|convenience"](around:3000,${lat},${lon});` },
-  toilets:     { label:'Baños',        icon:'🚽', query: (lat,lon) => `node["amenity"="toilets"](around:3000,${lat},${lon});` },
+  restaurant:  { label:'Restaurantes', icon:'🍽', query: (lat,lon) => `node["amenity"~"restaurant|cafe|bar|fast_food"](around:4000,${lat},${lon});way["amenity"~"restaurant|cafe|bar|fast_food"](around:4000,${lat},${lon});` },
+  hotel:       { label:'Hoteles',      icon:'🏨', query: (lat,lon) => `node["tourism"~"hotel|motel"](around:8000,${lat},${lon});way["tourism"~"hotel|motel"](around:8000,${lat},${lon});` },
+  hostel:      { label:'Hospedajes',   icon:'🏠', query: (lat,lon) => `node["tourism"~"hostel|guest_house|apartment|chalet"](around:8000,${lat},${lon});way["tourism"~"hostel|guest_house|apartment|chalet"](around:8000,${lat},${lon});` },
+  attraction:  { label:'Turismo',      icon:'🏛', query: (lat,lon) => `node["tourism"~"attraction|museum|viewpoint|gallery|artwork|information"](around:8000,${lat},${lon});node["historic"](around:8000,${lat},${lon});way["tourism"~"attraction|museum|viewpoint"](around:8000,${lat},${lon});` },
+  supermarket: { label:'Supermercados',icon:'🛒', query: (lat,lon) => `node["shop"~"supermarket|convenience|grocery"](around:5000,${lat},${lon});way["shop"~"supermarket|convenience|grocery"](around:5000,${lat},${lon});` },
+  toilets:     { label:'Baños',        icon:'🚽', query: (lat,lon) => `node["amenity"="toilets"](around:5000,${lat},${lon});` },
 };
 
 function distKm(lat1, lon1, lat2, lon2) {
@@ -2541,10 +2545,15 @@ function fmtDist(km) { return km < 1 ? Math.round(km*1000)+'m' : km.toFixed(1)+'
 
 async function fetchPlacesCat(lat, lon, cat) {
   const key = `${lat.toFixed(3)},${lon.toFixed(3)},${cat}`;
-  if (placesCache[key]) return placesCache[key];
+  const cached = placesCache[key];
+  if (cached && (Date.now() - cached.ts < PLACES_CACHE_TTL)) return cached.data;
   const catDef = PLACE_CATEGORIES[cat];
-  const query = `[out:json][timeout:25];(${catDef.query(lat,lon)});out body 20;`;
-  const ENDPOINTS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
+  const query = `[out:json][timeout:30];(${catDef.query(lat,lon)});out center body 25;`;
+  const ENDPOINTS = [
+    'https://overpass-api.de/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter',
+    'https://overpass.openstreetmap.ru/api/interpreter'
+  ];
   let data = null;
   for (const endpoint of ENDPOINTS) {
     try {
@@ -2554,11 +2563,17 @@ async function fetchPlacesCat(lat, lon, cat) {
   }
   if (!data) throw new Error('Sin respuesta de Overpass');
   const results = (data.elements || []).filter(e => e.tags?.name).map(e => ({
-      name: e.tags.name, lat: e.lat ?? e.center?.lat, lon: e.lon ?? e.center?.lon,
+      name: e.tags.name,
+      lat: e.lat ?? e.center?.lat,
+      lon: e.lon ?? e.center?.lon,
       addr: [e.tags['addr:street'], e.tags['addr:housenumber']].filter(Boolean).join(' ') || e.tags['addr:full'] || '',
       opening: e.tags.opening_hours || '',
-    })).filter(e => e.lat && e.lon).sort((a,b) => distKm(lat,lon,a.lat,a.lon) - distKm(lat,lon,b.lat,b.lon)).slice(0, 12);
-  placesCache[key] = results;
+      phone: e.tags.phone || e.tags['contact:phone'] || '',
+      website: e.tags.website || e.tags['contact:website'] || '',
+    })).filter(e => e.lat && e.lon)
+    .sort((a,b) => distKm(lat,lon,a.lat,a.lon) - distKm(lat,lon,b.lat,b.lon))
+    .slice(0, 15);
+  placesCache[key] = { data: results, ts: Date.now() };
   return results;
 }
 
@@ -2566,15 +2581,23 @@ function renderPlaces(places, lat, lon, cat) {
   const list = document.getElementById('placesList');
   if (!list) return;
   const catDef = PLACE_CATEGORIES[cat];
-  if (!places.length) { list.innerHTML = `<div class="places-empty">No encontramos ${catDef.label.toLowerCase()} cercanos.</div>`; return; }
+  if (!places.length) {
+    list.innerHTML = `<div class="places-empty">📭 No encontramos ${catDef.label.toLowerCase()} cerca.<br><span style="font-size:0.58rem;opacity:0.7">Es posible que no estén registrados en OpenStreetMap.</span></div>`;
+    return;
+  }
   list.innerHTML = places.map(p => {
     const d = fmtDist(distKm(lat, lon, p.lat, p.lon));
-    const meta = [p.addr, p.opening].filter(Boolean).join(' · ') || 'Sin dirección registrada';
-    const mapsUrl = `https://www.openstreetmap.org/?mlat=${p.lat}&mlon=${p.lon}&zoom=17`;
+    const meta = [p.addr, p.opening].filter(Boolean).join(' · ') || '';
+    const mapsUrl = `https://maps.google.com/maps?q=${p.lat},${p.lon}`;
+    const safeName = p.name.replace(/'/g, '&#39;');
     return `<div class="place-card" onclick="window.open('${mapsUrl}','_blank')">
       <div class="place-icon">${catDef.icon}</div>
-      <div class="place-info"><div class="place-name">${p.name}</div><div class="place-meta">${meta}</div></div>
-      <div class="place-dist">${d}</div></div>`;
+      <div class="place-info">
+        <div class="place-name">${safeName}</div>
+        ${meta ? `<div class="place-meta">${meta}</div>` : ''}
+      </div>
+      <div class="place-dist">${d}<span class="place-maps-hint">📍</span></div>
+    </div>`;
   }).join('');
 }
 
@@ -2585,7 +2608,9 @@ async function loadPlacesCat(cat) {
   try {
     const places = await fetchPlacesCat(currentCity.lat, currentCity.lon, cat);
     renderPlaces(places, currentCity.lat, currentCity.lon, cat);
-  } catch(_) { list.innerHTML = `<div class="places-empty">No se pudo cargar. Verifica tu conexión.</div>`; }
+  } catch(e) {
+    list.innerHTML = `<div class="places-empty">⚠️ No se pudo cargar.<br><button class="places-retry-btn" onclick="loadPlacesCat('${cat}')">↻ Reintentar</button></div>`;
+  }
 }
 
 let placesLoaded = false;
@@ -2600,22 +2625,33 @@ function togglePlaces() {
 }
 
 function loadPlaces(lat, lon, name) {
+  const body = document.getElementById('placesBody');
+  const wasOpen = body ? body.classList.contains('open') : false;
   activePlaceCat = 'restaurant';
   placesLoaded = false;
-  const btn  = document.getElementById('placesToggle');
-  const body = document.getElementById('placesBody');
+  const btn = document.getElementById('placesToggle');
   if (btn)  btn.classList.remove('open');
   if (body) body.classList.remove('open');
+  const list = document.getElementById('placesList');
+  if (list) list.innerHTML = '';
   const tabs = document.getElementById('placesTabs');
   if (!tabs) return;
-  tabs.querySelectorAll('.place-tab').forEach(t => {
-    t.addEventListener('click', () => {
-      tabs.querySelectorAll('.place-tab').forEach(x => x.classList.remove('active'));
-      t.classList.add('active');
-      activePlaceCat = t.dataset.cat;
-      loadPlacesCat(activePlaceCat);
-    });
-  });
+  // Event delegation: assigning onclick replaces previous handler automatically
+  tabs.onclick = (e) => {
+    const tab = e.target.closest('.place-tab');
+    if (!tab) return;
+    tabs.querySelectorAll('.place-tab').forEach(x => x.classList.remove('active'));
+    tab.classList.add('active');
+    activePlaceCat = tab.dataset.cat;
+    loadPlacesCat(activePlaceCat);
+  };
+  // If section was open when city changed, re-open and reload for new city
+  if (wasOpen) {
+    if (btn)  btn.classList.add('open');
+    if (body) body.classList.add('open');
+    placesLoaded = true;
+    loadPlacesCat(activePlaceCat);
+  }
 }
 
 function toggleExtraCard(el) {
