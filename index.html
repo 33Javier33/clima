@@ -143,6 +143,7 @@
     color: var(--text);
     font-family: var(--font-body);
     min-height: 100vh;
+    min-height: 100dvh;
     position: relative;
     transition: background 0.5s ease, color 0.5s ease;
   }
@@ -152,6 +153,8 @@
     position: relative;
     pointer-events: none !important;
     opacity: 0.35 !important;
+    -webkit-user-select: none;
+    -moz-user-select: none;
     user-select: none;
   }
 
@@ -188,8 +191,8 @@
 
   /* ── BADGE DE PLAN ── */
   .plan-badge {
-    display: flex; align-items: center; justify-content: center;
-    width: fit-content; margin: 0 auto 14px;
+    display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-justify-content: center; justify-content: center;
+    width: -webkit-fit-content; width: fit-content; margin: 0 auto 14px;
     padding: 5px 14px; border-radius: 99px;
     font-size: 0.6rem; letter-spacing: 0.06em;
     font-family: var(--font-body); cursor: default;
@@ -201,7 +204,7 @@
   .plan-badge.pending  { background: rgba(251,146,60,0.09);  border: 1px solid rgba(251,146,60,0.28);  color: #fb923c; }
 
   .bg-layer {
-    position: fixed; inset: 0; z-index: 0; overflow: hidden;
+    position: fixed; top:0; left:0; right:0; bottom:0; z-index: 0; overflow: hidden;
     background: var(--bg-glow), var(--bg);
     transition: background 0.6s ease;
   }
@@ -237,7 +240,7 @@
   }
 
   .rain-container {
-    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    position: fixed; top:0; left:0; right:0; bottom:0; z-index: 1; pointer-events: none;
     overflow: hidden;
   }
   .drop {
@@ -265,6 +268,7 @@
     margin: 0 auto;
     padding: 16px 20px 24px;
     min-height: 100vh;
+    min-height: 100dvh;
   }
 
   .header {
@@ -393,6 +397,7 @@
     border: 1px solid var(--card-border);
     border-radius: 20px;
     padding: 28px 24px;
+    -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
     box-shadow: 0 4px 24px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.06);
     margin-bottom: 16px;
@@ -563,6 +568,8 @@
     gap: 12px;
     padding: 13px 16px;
     cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
   }
@@ -826,6 +833,7 @@
   [data-theme="monzon"] .hour-card,   [data-theme="monzon"] .day-accordion,
   [data-theme="monzon"] .settings-panel {
     box-shadow: 0 2px 20px rgba(0,0,0,0.10);
+    -webkit-backdrop-filter: blur(18px);
     backdrop-filter: blur(18px);
   }
   [data-theme="blanco"] .rain-bar-bg,   [data-theme="cielo"] .rain-bar-bg,
@@ -871,6 +879,7 @@
     letter-spacing: 0.18em;
   }
   [data-theme="stratus"] .main-card {
+    -webkit-backdrop-filter: blur(24px);
     backdrop-filter: blur(24px);
     background: rgba(49,53,60,0.4);
     border-color: rgba(144,143,157,0.15);
@@ -893,7 +902,7 @@
     filter: brightness(0.45) saturate(0.3) contrast(1.1);
   }
   .city-photo-overlay {
-    position: absolute; inset: 0;
+    position: absolute; top:0; left:0; right:0; bottom:0;
     background: linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 55%);
     display: flex; align-items: flex-end;
     padding: 14px 16px;
@@ -904,7 +913,7 @@
   }
   .photo-badge {
     position: absolute; top: 12px; right: 12px;
-    background: rgba(0,0,0,0.4); backdrop-filter: blur(6px);
+    background: rgba(0,0,0,0.4); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
     border: 1px solid rgba(255,255,255,0.12);
     border-radius: 99px; padding: 3px 10px;
     font-size: 0.5rem; color: rgba(255,255,255,0.55);
@@ -912,8 +921,9 @@
   }
 
   .modal-overlay {
-    position: fixed; inset: 0; z-index: 200;
+    position: fixed; top:0; left:0; right:0; bottom:0; z-index: 200;
     background: rgba(0,0,0,0.55);
+    -webkit-backdrop-filter: blur(4px);
     backdrop-filter: blur(4px);
     opacity: 0; pointer-events: none;
     transition: opacity 0.3s ease;
@@ -1125,8 +1135,9 @@
   }
 
   .help-overlay {
-    position: fixed; inset: 0; z-index: 300;
+    position: fixed; top:0; left:0; right:0; bottom:0; z-index: 300;
     background: rgba(0,0,0,0.75);
+    -webkit-backdrop-filter: blur(6px);
     backdrop-filter: blur(6px);
     display: flex; align-items: flex-end;
     transition: opacity 0.3s;
@@ -1238,8 +1249,8 @@
 
   /* ── Sistema Trial/Premium ── */
   .trial-overlay {
-    position: fixed; inset: 0; z-index: 9000;
-    background: rgba(0,0,0,0.92); backdrop-filter: blur(8px);
+    position: fixed; top:0; left:0; right:0; bottom:0; z-index: 9000;
+    background: rgba(0,0,0,0.92); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
     display: flex; align-items: flex-end;
     opacity: 0; pointer-events: none; transition: opacity 0.4s;
   }
@@ -1318,8 +1329,8 @@
 
   /* ── Overlay de Validación ── */
   .validation-overlay {
-    position: fixed; inset: 0; z-index: 99999;
-    background: rgba(0,0,0,0.92); backdrop-filter: blur(8px);
+    position: fixed; top:0; left:0; right:0; bottom:0; z-index: 99999;
+    background: rgba(0,0,0,0.92); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     opacity: 0; pointer-events: none; transition: opacity 0.3s;
     color: var(--ice); font-family: var(--font-body); text-align: center;
@@ -1575,7 +1586,7 @@
   }
   .mc-scene-bg {
     position: absolute;
-    inset: 0;
+    top: 0; left: 0; right: 0; bottom: 0;
   }
   /* Sol */
   .mc-scene[data-s="sun"] .mc-scene-bg { background: linear-gradient(180deg,#0a1a2e 0%,#1a3a6e 40%,#7a4020 80%,#c05010 100%); }
@@ -1616,7 +1627,7 @@
   .mc-scene[data-s="rain"] .mc-scene-bg  { background: linear-gradient(180deg,#060d14 0%,#0d1a26 45%,#152233 100%); }
   .mc-scene[data-s="drizzle"] .mc-scene-bg { background: linear-gradient(180deg,#0a1520 0%,#172538 50%,#1e3048 100%); }
   .sc-rain {
-    position: absolute; inset: 0;
+    position: absolute; top:0; left:0; right:0; bottom:0;
     background-image: repeating-linear-gradient(
       176deg,
       transparent 0px, transparent 10px,
@@ -1640,7 +1651,7 @@
   /* Nieve */
   .mc-scene[data-s="snow"] .mc-scene-bg { background: linear-gradient(180deg,#0a1520 0%,#152030 50%,#1e2f40 100%); }
   .sc-snow {
-    position: absolute; inset: 0;
+    position: absolute; top:0; left:0; right:0; bottom:0;
     background-image:
       radial-gradient(circle, rgba(200,230,255,0.7) 1px, transparent 1px),
       radial-gradient(circle, rgba(200,230,255,0.4) 1px, transparent 1px);
@@ -1655,7 +1666,7 @@
   /* Tormenta */
   .mc-scene[data-s="storm"] .mc-scene-bg { background: linear-gradient(180deg,#050810 0%,#0d1420 50%,#141e2e 100%); }
   .sc-storm-rain {
-    position: absolute; inset: 0;
+    position: absolute; top:0; left:0; right:0; bottom:0;
     background-image: repeating-linear-gradient(
       173deg,
       transparent 0px, transparent 8px,
@@ -1672,7 +1683,7 @@
   }
   .sc-lightning::before {
     content: '';
-    position: absolute; inset: 0;
+    position: absolute; top:0; left:0; right:0; bottom:0;
     background: linear-gradient(180deg,#fef08a,#fde047 50%,transparent);
     clip-path: polygon(35% 0%,65% 0%,75% 48%,100% 48%,35% 100%,60% 52%,0% 52%);
     filter: blur(1px);
@@ -1685,7 +1696,7 @@
   /* Niebla */
   .mc-scene[data-s="fog"] .mc-scene-bg { background: linear-gradient(180deg,#151f28 0%,#243040 50%,#2e3c4c 100%); }
   .sc-fog {
-    position: absolute; inset: 0;
+    position: absolute; top:0; left:0; right:0; bottom:0;
     background: linear-gradient(180deg,
       transparent 0%,
       rgba(160,190,210,0.12) 30%,
