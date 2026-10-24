@@ -1716,6 +1716,137 @@
     pointer-events: none;
   }
   .sc-ground svg { width: 100%; height: 100%; display: block; }
+
+  /* ═══════════════════════════════════════════
+     RESPONSIVE — Tablet (≥ 640px)
+  ═══════════════════════════════════════════ */
+  @media (min-width: 640px) {
+    .app { max-width: 680px; padding: 24px 32px 32px; }
+    .temp-big { font-size: 5.5rem; }
+    .weather-icon { font-size: 3.5rem; }
+    .city-photo-card { height: 200px; }
+    .hour-card { min-width: 68px; padding: 12px 8px; }
+    .main-card { padding: 32px 28px; }
+    .extra-cards { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .signature { font-size: 0.65rem; }
+  }
+
+  /* ═══════════════════════════════════════════
+     RESPONSIVE — Desktop (≥ 960px)
+  ═══════════════════════════════════════════ */
+  @media (min-width: 960px) {
+    /* Layout base */
+    .app { max-width: 1200px; padding: 32px 48px 48px; }
+
+    /* Header más espacioso */
+    .header { margin-bottom: 28px; }
+    .city  { font-size: 1.8rem; }
+    .region { font-size: 0.65rem; }
+
+    /* Grid de dos columnas */
+    #content {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+      column-gap: 28px;
+      align-items: start;
+    }
+    .col-left  { display: block; min-width: 0; }
+    .col-right { display: block; min-width: 0; }
+
+    /* Elementos de ancho completo */
+    #planBadge, .refresh-btn, .footer, .signature, .trial-banner, .update-bar {
+      grid-column: 1 / -1;
+    }
+
+    /* Foto de ciudad como banner más alto */
+    .city-photo-card { height: 220px; margin-bottom: 20px; }
+
+    /* Tarjeta principal */
+    .main-card { padding: 32px 28px; }
+    .temp-big  { font-size: 6rem; }
+    .weather-icon { font-size: 4rem; }
+
+    /* Módulos de detalle en 2 columnas dentro de la columna derecha */
+    .extra-cards { grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    /* Mapa más alto en desktop */
+    #mapContainer { height: 280px; }
+
+    /* Scroll horizontal de horas */
+    .hourly-scroll { padding-bottom: 8px; }
+
+    /* Botón actualizar más compacto */
+    .refresh-btn { margin: 20px auto 0; max-width: 320px; }
+
+    /* ── Paneles bottom-sheet → modales centrados ── */
+    .modal-overlay { -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+
+    .settings-panel, .info-panel {
+      bottom: auto !important; right: auto !important;
+      top: 50%; left: 50%;
+      transform: translate(-50%, calc(-50% + 20px)) scale(0.97);
+      border-radius: 20px !important;
+      border: 1px solid rgba(126,184,212,0.18) !important;
+      border-top: 1px solid rgba(126,184,212,0.18) !important;
+      max-width: 520px; width: 90vw;
+      max-height: 82vh;
+      margin: 0 !important;
+      transition: transform 0.3s cubic-bezier(0.32,0.72,0,1), opacity 0.3s, visibility 0s linear 0.3s !important;
+    }
+    .settings-panel.open, .info-panel.open {
+      transform: translate(-50%, -50%) scale(1) !important;
+      transition: transform 0.3s cubic-bezier(0.32,0.72,0,1), opacity 0.3s, visibility 0s linear 0s !important;
+    }
+
+    /* Cuadro de suscripción centrado */
+    .trial-overlay { -webkit-align-items: center; align-items: center; }
+    .trial-panel {
+      border-radius: 20px !important;
+      border: 1px solid rgba(126,184,212,0.2) !important;
+      border-top: 1px solid rgba(126,184,212,0.2) !important;
+      max-height: 86vh;
+      padding-bottom: 32px;
+    }
+
+    /* Panel de ayuda centrado */
+    .help-overlay {
+      -webkit-align-items: center; align-items: center;
+      -webkit-justify-content: center; justify-content: center;
+    }
+    .help-panel {
+      border-radius: 20px !important;
+      border: 1px solid rgba(126,184,212,0.15);
+      max-width: 580px; width: 90vw;
+      max-height: 82vh;
+    }
+
+    /* Ocultar handle de arrastre en desktop (sin sentido con mouse) */
+    .panel-handle { display: none; }
+
+    /* Scrollbar estilizada en desktop */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(126,184,212,0.2); border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(126,184,212,0.35); }
+  }
+
+  /* ═══════════════════════════════════════════
+     RESPONSIVE — Large desktop (≥ 1280px)
+  ═══════════════════════════════════════════ */
+  @media (min-width: 1280px) {
+    .app { max-width: 1360px; padding: 40px 64px 56px; }
+    .temp-big { font-size: 7rem; }
+    .city-photo-card { height: 240px; }
+    #content { column-gap: 36px; }
+    #mapContainer { height: 320px; }
+    .extra-cards { gap: 12px; }
+  }
+
+  /* Móvil: col-left/col-right son contenedores transparentes (flow normal) */
+  .col-left, .col-right { display: contents; }
+  @media (min-width: 960px) {
+    .col-left, .col-right { display: block; }
+  }
 </style>
 </head>
 <body>
@@ -2329,6 +2460,7 @@ function buildHTML(data, aqiData = null) {
   }
 
   return `
+    <div class="col-left">
     <div class="city-photo-card" id="cityPhotoCard">
       <div style="width:100%;height:100%;background:var(--glass2);display:flex;align-items:center;justify-content:center;font-size:0.6rem;color:var(--dim)">Cargando foto...</div>
     </div>
@@ -2369,6 +2501,8 @@ function buildHTML(data, aqiData = null) {
         </div>
       </div>
     </div>
+    </div><!-- /col-left -->
+    <div class="col-right">
     <div class="extra-cards gap-section" id="secDatosDetalle">
       ${aqiHtml}
       <div class="extra-card" id="modUV" onclick="toggleExtraCard(this)">
@@ -2447,6 +2581,7 @@ function buildHTML(data, aqiData = null) {
         <div class="map-overlay">📍 ${currentCity.name} · ${currentCity.region}</div>
       </div>
     </div>
+    </div><!-- /col-right -->
 
     <div id="planBadge" class="plan-badge" style="display:none"></div>
     <button class="refresh-btn" onclick="loadWeather()">↻ Actualizar</button>
