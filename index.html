@@ -147,53 +147,58 @@
     transition: background 0.5s ease, color 0.5s ease;
   }
 
-  /* ── SISTEMA DE BLOQUEO (MEJORADO: FONDO SÓLIDO) ── */
+  /* ── SISTEMA DE BLOQUEO — botones pequeños ── */
   .mod-locked {
     position: relative;
     pointer-events: none !important;
+    opacity: 0.35 !important;
     user-select: none;
   }
-  .mod-locked::after {
-    content: attr(data-lock-label);
-    position: absolute; inset: 0;
-    background: var(--ink) !important;
-    border-radius: inherit;
-    display: flex; align-items: center; justify-content: center;
-    font-family: var(--font-body);
-    font-size: 0.6rem; letter-spacing: 0.1em;
-    color: var(--dim); text-transform: uppercase;
-    border: 1px solid var(--card-border);
-    pointer-events: all !important;
-    cursor: not-allowed;
-    z-index: 100;
-  }
-  .mod-locked > * {
-    opacity: 0 !important;
-    visibility: hidden !important;
-  }
 
-  .mod-locked-section {
-    position: relative;
-    pointer-events: none !important;
+  /* ── TEASER: secciones bloqueadas colapsadas ── */
+  .mod-is-locked {
+    height: 62px !important;
+    overflow: hidden !important;
+    border-radius: 16px !important;
+    border: 1px dashed rgba(126,184,212,0.18) !important;
+    background: rgba(126,184,212,0.03) !important;
+    margin-bottom: 12px;
+    box-shadow: none !important;
   }
-  .mod-locked-section::before {
-    content: attr(data-lock-label);
-    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    z-index: 110;
-    background: var(--ink) !important;
-    border: 1px solid var(--card-border);
-    border-radius: 14px;
+  .mod-teaser-bar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 16px; height: 62px;
+    pointer-events: auto;
+  }
+  .mod-teaser-icon { font-size: 1rem; opacity: 0.45; flex-shrink: 0; }
+  .mod-teaser-text {
+    flex: 1; font-size: 0.6rem; color: var(--dim);
+    line-height: 1.5; font-family: var(--font-body);
+  }
+  .mod-teaser-text b { color: var(--cold); font-weight: 500; display: block; }
+  .mod-teaser-btn {
+    padding: 6px 12px; border-radius: 99px; flex-shrink: 0;
+    background: rgba(126,184,212,0.08);
+    border: 1px solid rgba(126,184,212,0.25);
+    color: var(--cold); font-size: 0.58rem; cursor: pointer;
+    white-space: nowrap; font-family: var(--font-body);
+    transition: background 0.2s; letter-spacing: 0.05em;
+  }
+  .mod-teaser-btn:active { background: rgba(126,184,212,0.18); }
+
+  /* ── BADGE DE PLAN ── */
+  .plan-badge {
     display: flex; align-items: center; justify-content: center;
-    font-family: var(--font-body);
-    font-size: 0.6rem; color: var(--dim);
-    letter-spacing: 0.1em; text-transform: uppercase;
-    white-space: nowrap;
-    pointer-events: all !important;
+    width: fit-content; margin: 0 auto 14px;
+    padding: 5px 14px; border-radius: 99px;
+    font-size: 0.6rem; letter-spacing: 0.06em;
+    font-family: var(--font-body); cursor: default;
   }
-  .mod-locked-section > * { 
-    opacity: 0 !important; 
-    visibility: hidden !important;
-  }
+  .plan-badge.trial    { background: rgba(126,184,212,0.07); border: 1px solid rgba(126,184,212,0.18); color: var(--dim); }
+  .plan-badge.basico   { background: rgba(126,184,212,0.09); border: 1px solid rgba(126,184,212,0.25); color: var(--cold); }
+  .plan-badge.estandar { background: rgba(59,130,246,0.09);  border: 1px solid rgba(59,130,246,0.28);  color: #7eb8d4; }
+  .plan-badge.premium  { background: rgba(253,186,0,0.09);   border: 1px solid rgba(253,186,0,0.3);    color: #ffd700; }
+  .plan-badge.pending  { background: rgba(251,146,60,0.09);  border: 1px solid rgba(251,146,60,0.28);  color: #fb923c; }
 
   .bg-layer {
     position: fixed; inset: 0; z-index: 0; overflow: hidden;
@@ -2430,6 +2435,7 @@ function buildHTML(data, aqiData = null) {
       </div>
     </div>
 
+    <div id="planBadge" class="plan-badge" style="display:none"></div>
     <button class="refresh-btn" onclick="loadWeather()">↻ Actualizar</button>
     <div class="footer">Datos meteorológicos: Open-Meteo.com · Geocodificación: OpenStreetMap</div>
     <div class="signature">Carlos P. Nauto Interactive <span>· Clima App</span><span class="app-version" id="appVersion" onclick="checkForUpdate()" title="Verificar actualización">v${APP_VERSION}</span></div>
@@ -2849,7 +2855,7 @@ try {
 loadWeather();
 setTimeout(initLicense, 1500);
 
-const APP_VERSION = '1.4';
+const APP_VERSION = '1.5';
 const GAS_URL = 'https://script.google.com/macros/s/AKfycby4Nfjbdjz12bTkkLeoXwbCMIXBikdKo9aab17NqJFxt9z8cXasNoLOcdqZHBhJ-NcU/exec';
 const PLAN_LABELS = { basico: { name: '🌡 Básico', price: 'Contactar', features: 'Clima actual · Próximas horas' }, estandar: { name: '📅 Estándar', price: 'Contactar', features: 'Básico + Pronóstico 7 días · Info ciudad · Temas' }, premium: { name: '⭐ Premium', price: 'Contactar', features: 'Todo incluido · Sin restricciones' } };
 
@@ -3095,23 +3101,59 @@ async function pollSyncStatus() {
 }
 setInterval(pollSyncStatus, 45000);
 
+function upgradePlan() {
+  const overlay = document.getElementById('trialOverlay');
+  if (overlay) overlay.classList.add('show');
+  showRegistrationForm(false);
+}
+
 function applyModules() {
   localStorage.setItem('climaLicenseCache', JSON.stringify({ status: licenseStatus, modules: licenseModules, trialEnd: trialEndTimestamp, cachedAt: Date.now() }));
+
+  // Badge de plan visible en el footer
+  const planBadge = document.getElementById('planBadge');
+  if (planBadge) {
+    const PLAN_DISPLAY = {
+      trial:    { text: '\u23F1 Prueba gratuita', cls: 'trial' },
+      basico:   { text: '\uD83C\uDF21 Plan B\u00E1sico',     cls: 'basico' },
+      estandar: { text: '\uD83D\uDCC5 Plan Est\u00E1ndar',   cls: 'estandar' },
+      premium:  { text: '\u2B50 Plan Premium',    cls: 'premium' },
+      pending:  { text: '\u23F3 Activaci\u00F3n pendiente', cls: 'pending' },
+    };
+    const pInfo = PLAN_DISPLAY[licenseStatus];
+    if (pInfo) { planBadge.textContent = pInfo.text; planBadge.className = 'plan-badge ' + pInfo.cls; planBadge.style.display = ''; }
+    else { planBadge.style.display = 'none'; }
+  }
+
   const MODULE_ELEMENTS = { pronostico_horas: 'secPronosticoHoras', pronostico_dias: 'secPronosticoDias', temas_visuales: 'settingsBtn', info_ciudad: 'infoBtn', foto_ciudad: 'cityPhotoCard', datos_detalle: 'secDatosDetalle', datos_uv: 'modUV', datos_viento: 'modViento', datos_presion: 'modPresion', datos_nubosidad: 'modNubosidad', datos_visibilidad: 'modVisibilidad', datos_amanecer: 'modAmanecer', mapa_ciudad: 'secMapaCiudad' };
-  const MODULE_LABELS   = { pronostico_horas: 'Pronostico por horas', pronostico_dias: 'Pronostico 6 dias', temas_visuales: 'Cambiar temas', info_ciudad: 'Info ciudad', foto_ciudad: 'Foto ciudad', datos_detalle: 'Datos del tiempo', datos_uv: 'Indice UV', datos_viento: 'Viento', datos_presion: 'Presion', datos_nubosidad: 'Nubosidad', datos_visibilidad: 'Visibilidad', datos_amanecer: 'Amanecer', mapa_ciudad: 'Mapa ciudad' };
+  const MODULE_LABELS   = { pronostico_horas: 'Pron\u00F3stico por horas', pronostico_dias: 'Pron\u00F3stico 6 d\u00EDas', temas_visuales: 'Cambiar temas', info_ciudad: 'Info ciudad', foto_ciudad: 'Foto ciudad', datos_detalle: 'Datos del tiempo', datos_uv: '\u00CDndice UV', datos_viento: 'Viento', datos_presion: 'Presi\u00F3n', datos_nubosidad: 'Nubosidad', datos_visibilidad: 'Visibilidad', datos_amanecer: 'Amanecer', mapa_ciudad: 'Mapa ciudad' };
+  const MODULE_PLAN     = { pronostico_horas: 'Est\u00E1ndar o Premium', sensacion_horas: 'Est\u00E1ndar o Premium', pronostico_dias: 'Est\u00E1ndar o Premium', foto_ciudad: 'Premium', info_ciudad: 'Est\u00E1ndar o Premium', mapa_ciudad: 'Premium', temas_visuales: 'Est\u00E1ndar o Premium', datos_detalle: 'B\u00E1sico o superior', datos_uv: 'Est\u00E1ndar o Premium', datos_viento: 'Est\u00E1ndar o Premium', datos_presion: 'Premium', datos_nubosidad: 'Premium', datos_visibilidad: 'Premium', datos_amanecer: 'Est\u00E1ndar o Premium' };
+
   function setLocked(elId, locked, isSection, modKey) {
     const el = document.getElementById(elId); if (!el) return;
-    const cls = isSection ? 'mod-locked-section' : 'mod-locked';
-    if (locked) {
-      el.setAttribute('data-lock-label', '\uD83D\uDD12 ' + (MODULE_LABELS[modKey] || 'Funcion') + ' - No disponible en tu plan');
-      el.classList.add(cls); el.style.pointerEvents = 'none';
+    const prev = el.querySelector('.mod-teaser-bar'); if (prev) prev.remove();
+    el.classList.remove('mod-locked', 'mod-locked-section', 'mod-is-locked');
+    el.removeAttribute('data-lock-label'); el.style.pointerEvents = '';
+    if (!locked) return;
+    if (isSection) {
+      const plan = MODULE_PLAN[modKey] || 'un plan superior';
+      const name = MODULE_LABELS[modKey] || 'Esta funci\u00F3n';
+      const bar = document.createElement('div');
+      bar.className = 'mod-teaser-bar';
+      bar.innerHTML = '<span class="mod-teaser-icon">\uD83D\uDD12</span>'
+        + '<span class="mod-teaser-text"><b>' + name + '</b>Disponible en Plan ' + plan + '</span>'
+        + '<button class="mod-teaser-btn" onclick="upgradePlan()">Ver planes \u2192</button>';
+      el.classList.add('mod-is-locked');
+      el.insertBefore(bar, el.firstChild);
     } else {
-      el.removeAttribute('data-lock-label');
-      el.classList.remove('mod-locked', 'mod-locked-section'); el.style.pointerEvents = 'auto';
+      el.classList.add('mod-locked'); el.style.pointerEvents = 'none';
     }
   }
+
   if (licenseStatus === 'premium') { Object.values(MODULE_ELEMENTS).forEach(id => setLocked(id, false, false, null)); return; }
-  setLocked('secPronosticoHoras', !licenseModules['pronostico_horas'], true,  'pronostico_horas'); setLocked('secPronosticoDias', !licenseModules['pronostico_dias'], true, 'pronostico_dias'); setLocked('cityPhotoCard', !licenseModules['foto_ciudad'], true, 'foto_ciudad');
+  setLocked('secPronosticoHoras', !licenseModules['pronostico_horas'], true, 'pronostico_horas');
+  setLocked('secPronosticoDias', !licenseModules['pronostico_dias'], true, 'pronostico_dias');
+  setLocked('cityPhotoCard', !licenseModules['foto_ciudad'], true, 'foto_ciudad');
   const themeBtn = document.getElementById('settingsBtn'); if (themeBtn) { themeBtn.style.opacity = licenseModules['temas_visuales'] ? '' : '0.35'; themeBtn.style.pointerEvents = licenseModules['temas_visuales'] ? '' : 'none'; }
   const infoBtn = document.getElementById('infoBtn'); if (infoBtn) { infoBtn.style.opacity = licenseModules['info_ciudad'] ? '' : '0.35'; infoBtn.style.pointerEvents = licenseModules['info_ciudad'] ? '' : 'none'; }
   if (licenseModules['datos_detalle'] === false) { setLocked('secDatosDetalle', true, true, 'datos_detalle'); } else { setLocked('secDatosDetalle', false, false, null); setLocked('modUV', licenseModules['datos_uv'] === false, false, 'datos_uv'); setLocked('modViento', licenseModules['datos_viento'] === false, false, 'datos_viento'); setLocked('modPresion', licenseModules['datos_presion'] === false, false, 'datos_presion'); setLocked('modNubosidad', licenseModules['datos_nubosidad'] === false, false, 'datos_nubosidad'); setLocked('modVisibilidad', licenseModules['datos_visibilidad'] === false, false, 'datos_visibilidad'); setLocked('modAmanecer', licenseModules['datos_amanecer'] === false, false, 'datos_amanecer'); }

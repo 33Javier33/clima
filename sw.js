@@ -1,7 +1,7 @@
 // sw.js — Clima App
 // Carlos P. Nauto Interactive
 
-const CACHE_NAME = 'clima-app-v4';
+const CACHE_NAME = 'clima-app-v5';
 
 const PRECACHE = [
   './index.html',
