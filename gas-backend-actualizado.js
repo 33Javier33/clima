@@ -766,6 +766,8 @@ function notifyAdmin(nombre, apellido, email, telefono, planSolicitado) {
   const isPlanRequest = planSolicitado && (planSolicitado === 'estandar' || planSolicitado === 'premium');
   const planLabel = planSolicitado === 'premium' ? 'Premium' : 'Estándar';
   const waLink = telefono ? 'https://wa.me/' + String(telefono).replace(/[^\d]/g,'') : null;
+  const appUrl = (PROPS.getProperty('APP_URL') || 'https://clima-ashy.vercel.app').replace(/\/$/, '');
+  const adminUrl = appUrl + '/admin-clima.html';
 
   try {
     MailApp.sendEmail({
@@ -783,7 +785,7 @@ function notifyAdmin(nombre, apellido, email, telefono, planSolicitado) {
         'Teléfono:  ' + (telefono || '—'),
         isPlanRequest ? 'Plan:      ' + planLabel + ' — ACTIVA DESDE EL ADMIN PANEL' : 'Estado:    Trial iniciado',
         '',
-        'Admin panel: https://33javier33.github.io/clima/admin-clima.html',
+        'Admin panel: ' + adminUrl,
       ].join('\n'),
       htmlBody: [
         '<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto">',
@@ -803,7 +805,7 @@ function notifyAdmin(nombre, apellido, email, telefono, planSolicitado) {
           : '<tr><td style="color:#7a92a8;padding:6px 12px 6px 0">Estado</td><td style="color:#ccd9e6;padding:6px 0">Trial iniciado</td></tr>',
         '</table>',
         '<hr style="border:none;border-top:1px solid #21262d;margin:20px 0">',
-        '<a href="https://33javier33.github.io/clima/admin-clima.html" ',
+        '<a href="' + adminUrl + '" ',
           'style="display:inline-block;background:#1a4a6a;color:#7eb8d4;padding:10px 20px;border-radius:8px;text-decoration:none;font-size:13px">',
           'Abrir Admin Panel →</a>',
         '</div></div>'
