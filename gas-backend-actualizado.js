@@ -13,6 +13,7 @@
 const PROPS        = PropertiesService.getScriptProperties();
 const MASTER_SHEET = 'Control';
 const LOG_SHEET    = 'Log';
+const OTP_SHEET    = 'OTPs';
 
 // Módulos — deben coincidir exactamente con admin-clima.html
 const MODULES = [
@@ -514,6 +515,7 @@ function ensureMasterSheet() {
     log.setFrozenRows(1);
     log.getRange(1,1,1,4).setBackground('#1a2d40').setFontColor('#ffffff').setFontWeight('bold');
   }
+  ensureOtpSheet(SS);
   Logger.log('Hojas verificadas correctamente.');
 }
 
@@ -563,6 +565,45 @@ function updateUserSheet(SS, userId, modules, estado, acceso) {
 
 // ══════════════════════════════════════════════════════════════
 // ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// OTP STORAGE — usa hoja de cálculo (más confiable que CacheService)
+// ══════════════════════════════════════════════════════════════
+function ensureOtpSheet(SS) {
+  let sheet = SS.getSheetByName(OTP_SHEET);
+  if (!sheet) {
+    sheet = SS.insertSheet(OTP_SHEET);
+    sheet.appendRow(['email', 'code', 'plan', 'phone', 'createdAt']);
+    sheet.getRange('A1:E1').setFontWeight('bold');
+  }
+  return sheet;
+}
+
+function storeOtp(SS, email, code, plan, phone) {
+  const sheet = ensureOtpSheet(SS);
+  const data = sheet.getDataRange().getValues();
+  const norm = email.trim().toLowerCase();
+  for (let i = data.length - 1; i >= 1; i--) {
+    if (String(data[i][0]).trim().toLowerCase() === norm) sheet.deleteRow(i + 1);
+  }
+  sheet.appendRow([norm, String(code), plan || 'basico', phone || '', new Date().toISOString()]);
+}
+
+function getAndDeleteOtp(SS, email) {
+  const sheet = SS.getSheetByName(OTP_SHEET);
+  if (!sheet) return null;
+  const data = sheet.getDataRange().getValues();
+  const norm = email.trim().toLowerCase();
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]).trim().toLowerCase() === norm) {
+      const entry = { code: String(data[i][1]), plan: data[i][2], phone: data[i][3], createdAt: data[i][4] };
+      sheet.deleteRow(i + 1);
+      return entry;
+    }
+  }
+  return null;
+}
+
+// ══════════════════════════════════════════════════════════════
 // OTP: SOLICITAR CÓDIGO DE VERIFICACIÓN
 // Envía el código solo por email. El teléfono se guarda solo como dato.
 // ══════════════════════════════════════════════════════════════
@@ -574,8 +615,8 @@ function requestOTP(body) {
   const planLabel = plan === 'premium' ? 'Premium' : plan === 'estandar' ? 'Estándar' : 'Básico';
 
   try {
-    const cache = CacheService.getScriptCache();
-    cache.put('otp_' + email, JSON.stringify({ code: code, phone: phone, plan: plan || 'basico' }), 600);
+    const SS = getSS();
+    storeOtp(SS, email, code, plan, phone);
   } catch(e) {
     return { ok: false, message: 'Error interno al generar el código. Intenta de nuevo.' };
   }
@@ -616,23 +657,26 @@ function verifyOTP(body) {
   const { email, phone, otp, plan, deviceId } = body;
   if (!email || !otp) return { ok: false, message: 'Datos incompletos.' };
 
-  // Leer código almacenado
+  // Leer y eliminar código almacenado (operación atómica)
   let stored;
   try {
-    const cache = CacheService.getScriptCache();
-    const raw = cache.get('otp_' + email);
-    if (!raw) return { ok: false, message: 'El código expiró o no existe. Solicita uno nuevo.' };
-    stored = JSON.parse(raw);
+    const SS = getSS();
+    stored = getAndDeleteOtp(SS, email);
   } catch(e) {
     return { ok: false, message: 'Error al verificar. Intenta de nuevo.' };
   }
 
-  if (String(stored.code) !== String(otp).trim()) {
-    return { ok: false, message: 'Código incorrecto.' };
+  if (!stored) return { ok: false, message: 'El código expiró o no existe. Solicita uno nuevo.' };
+
+  // Verificar expiración (15 minutos de margen)
+  const ageMs = Date.now() - new Date(stored.createdAt).getTime();
+  if (ageMs > 15 * 60 * 1000) {
+    return { ok: false, message: 'El código expiró (más de 15 minutos). Solicita uno nuevo.' };
   }
 
-  // Código válido: invalidarlo inmediatamente
-  try { CacheService.getScriptCache().remove('otp_' + email); } catch(_) {}
+  if (String(stored.code) !== String(otp).trim()) {
+    return { ok: false, message: 'Código incorrecto. Verifica el número e intenta de nuevo.' };
+  }
 
   // Registrar o recuperar usuario
   const SS = getSS();

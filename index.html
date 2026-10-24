@@ -2854,6 +2854,7 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycby4Nfjbdjz12bTkkLeoXwbC
 const PLAN_LABELS = { basico: { name: '🌡 Básico', price: 'Contactar', features: 'Clima actual · Próximas horas' }, estandar: { name: '📅 Estándar', price: 'Contactar', features: 'Básico + Pronóstico 7 días · Info ciudad · Temas' }, premium: { name: '⭐ Premium', price: 'Contactar', features: 'Todo incluido · Sin restricciones' } };
 
 let licenseStatus = 'unknown'; let licenseModules = {}; let selectedPlan = 'estandar'; let deviceId = null;
+let _otpCtx = { email: '', phone: '' };
 let trialEndTimestamp = null; let _trialWatcher = null;
 
 async function generateFingerprint() {
@@ -2922,8 +2923,9 @@ function showRegistrationForm(expired, hoursLeft, daysLeft) {
 function selectPlan(plan) { selectedPlan = plan; document.querySelectorAll('.plan-card').forEach(function(c) { c.classList.toggle('selected', c.dataset.plan === plan); }); }
 
 async function submitRegistration() {
-  const email = document.getElementById('tEmail') ? document.getElementById('tEmail').value.trim() : ''; const phone = document.getElementById('tPhone') ? document.getElementById('tPhone').value.trim() : '';
-  if (!email || !phone) return alert('Completa los datos para continuar.');
+  const email = (document.getElementById('tEmail') ? document.getElementById('tEmail').value.trim() : '').toLowerCase();
+  const phone = document.getElementById('tPhone') ? document.getElementById('tPhone').value.trim() : '';
+  if (!email || !email.includes('@')) return alert('Ingresa un correo electrónico válido.');
   const btn = document.getElementById('tSubmit'); btn.disabled = true; btn.textContent = 'Enviando código...';
   const valOverlay = document.getElementById('validationOverlay');
   if (valOverlay) { valOverlay.querySelector('.val-text').innerHTML = 'Generando y enviando código de seguridad...<br>Por favor espera.'; valOverlay.classList.add('show'); }
@@ -2934,14 +2936,19 @@ async function submitRegistration() {
 }
 
 function showOtpForm(email, phone) {
+  _otpCtx = { email: email.trim().toLowerCase(), phone: phone || '' };
   const panel = document.getElementById('trialPanel');
-  panel.innerHTML = '<div class="panel-handle"></div><div class="trial-badge">🔒 Verificación de seguridad</div><h2>Ingresa tu código</h2><div class="t-sub">Hemos enviado un código de 6 dígitos a <b>' + email + '</b> y al WhatsApp <b>' + phone + '</b>. Revisa tus bandejas.</div><div class="trial-form"><input class="otp-input" id="tOtpCode" type="text" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code"/></div><button class="t-submit" id="tVerifyBtn" onclick="submitOTP(\'' + email + '\', \'' + phone + '\')">Verificar Identidad</button><button class="t-back" onclick="showRegistrationForm(false)">Volver / Cambiar datos</button>';
+  const safeEmail = email.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  panel.innerHTML = '<div class="panel-handle"></div><div class="trial-badge">🔒 Verificación de seguridad</div><h2>Ingresa tu código</h2><div class="t-sub">Enviamos un código de 6 dígitos a <b>' + safeEmail + '</b>. Revisa tu bandeja de entrada.</div><div class="trial-form"><input class="otp-input" id="tOtpCode" type="text" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code"/></div><button class="t-submit" id="tVerifyBtn" onclick="submitOTP()">Verificar código</button><button class="t-back" onclick="showRegistrationForm(false)">← Volver / Cambiar datos</button>';
   document.getElementById('trialOverlay').classList.add('show');
+  setTimeout(() => { const inp = document.getElementById('tOtpCode'); if (inp) inp.focus(); }, 200);
 }
 
-async function submitOTP(email, phone) {
-  const otpInput = document.getElementById('tOtpCode'); const otp = otpInput ? otpInput.value.trim() : '';
-  if (otp.length < 4) return alert('Ingresa un código válido.');
+async function submitOTP() {
+  const { email, phone } = _otpCtx;
+  const otpInput = document.getElementById('tOtpCode');
+  const otp = otpInput ? otpInput.value.trim() : '';
+  if (otp.length < 6) return alert('El código tiene 6 dígitos. Verifica e intenta de nuevo.');
   const btn = document.getElementById('tVerifyBtn'); btn.disabled = true; btn.textContent = 'Verificando...';
   const valOverlay = document.getElementById('validationOverlay');
   if (valOverlay) { valOverlay.querySelector('.val-text').innerHTML = 'Validando código de seguridad...<br>No cierres la aplicación.'; valOverlay.classList.add('show'); }
@@ -2955,13 +2962,20 @@ async function submitOTP(email, phone) {
         const planLabel = res.planRequested === 'premium' ? 'Premium ⭐' : 'Estándar';
         document.getElementById('trialPanel').innerHTML = '<div class="t-success"><div class="s-icon">⏳</div><h3>Solicitud recibida</h3><p>Tu solicitud de plan <b>' + planLabel + '</b> fue recibida. El administrador activará tu plan pronto.<br><br>Mientras tanto tienes acceso básico.</p><button class="t-submit" style="margin-top:16px" onclick="closeTrialOverlay()">Continuar →</button></div>';
       } else {
-        document.getElementById('trialPanel').innerHTML = '<div class="t-success"><div class="s-icon">✅</div><h3>Identidad verificada</h3><p>Acceso concedido exitosamente. Ya puedes disfrutar de la aplicación.</p></div>';
-        setTimeout(() => { closeTrialOverlay(); }, 3000);
+        document.getElementById('trialPanel').innerHTML = '<div class="t-success"><div class="s-icon">✅</div><h3>¡Acceso verificado!</h3><p>Identidad confirmada. Ya puedes disfrutar de la aplicación.</p></div>';
+        setTimeout(() => { closeTrialOverlay(); }, 2500);
       }
     } else {
-      if (valOverlay) valOverlay.classList.remove('show'); btn.disabled = false; btn.textContent = 'Verificar Identidad'; alert('Código incorrecto o expirado. Intenta nuevamente.'); otpInput.value = ''; otpInput.focus();
+      if (valOverlay) valOverlay.classList.remove('show');
+      btn.disabled = false; btn.textContent = 'Verificar código';
+      alert(res.message || 'Código incorrecto o expirado. Intenta nuevamente.');
+      if (otpInput) { otpInput.value = ''; otpInput.focus(); }
     }
-  } catch(e) { if (valOverlay) valOverlay.classList.remove('show'); btn.disabled = false; btn.textContent = 'Verificar Identidad'; alert('Error de conexión al verificar el código.'); }
+  } catch(e) {
+    if (valOverlay) valOverlay.classList.remove('show');
+    btn.disabled = false; btn.textContent = 'Verificar código';
+    alert('Error de conexión al verificar el código. Revisa tu internet e intenta de nuevo.');
+  }
 }
 
 function showBlockedScreen(msg) { document.getElementById('trialPanel').innerHTML = '<h3>' + (msg || 'Acceso suspendido') + '</h3>'; document.getElementById('trialOverlay').classList.add('show'); }
@@ -3009,15 +3023,18 @@ async function submitActivation() {
 }
 
 function showActivateOtpForm(email) {
+  _otpCtx.activationEmail = email.trim().toLowerCase();
   const panel = document.getElementById('trialPanel');
-  panel.innerHTML = '<div class="panel-handle"></div><div class="trial-badge">🔒 Verificación</div><h2>Código de activación</h2><div class="t-sub">Hemos enviado un código a <b>' + email + '</b>. Revisa tu bandeja de entrada.</div><div class="trial-form"><input class="otp-input" id="aOtpCode" type="text" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code"/></div><button class="t-submit" id="aVerifyBtn" onclick="verifyActivation(\'' + email + '\')">Activar dispositivo</button><button class="t-back" onclick="showActivateForm()">← Volver</button>';
+  const safeEmail = email.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  panel.innerHTML = '<div class="panel-handle"></div><div class="trial-badge">🔒 Verificación</div><h2>Código de activación</h2><div class="t-sub">Enviamos un código a <b>' + safeEmail + '</b>. Revisa tu bandeja de entrada.</div><div class="trial-form"><input class="otp-input" id="aOtpCode" type="text" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code"/></div><button class="t-submit" id="aVerifyBtn" onclick="verifyActivation()">Activar dispositivo</button><button class="t-back" onclick="showActivateForm()">← Volver</button>';
   document.getElementById('trialOverlay').classList.add('show');
   setTimeout(function() { const el = document.getElementById('aOtpCode'); if (el) el.focus(); }, 100);
 }
 
-async function verifyActivation(email) {
+async function verifyActivation() {
+  const email = _otpCtx.activationEmail || '';
   const otpInput = document.getElementById('aOtpCode'); const otp = otpInput ? otpInput.value.trim() : '';
-  if (otp.length < 4) return alert('Ingresa un código válido.');
+  if (otp.length < 6) return alert('El código tiene 6 dígitos. Verifica e intenta de nuevo.');
   const btn = document.getElementById('aVerifyBtn'); btn.disabled = true; btn.textContent = 'Verificando...';
   try {
     const res = await gasPost({ action: 'verifyOTP', deviceId: deviceId, email: email, phone: '', otp: otp, plan: '' });
